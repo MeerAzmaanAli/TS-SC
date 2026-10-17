@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+.pnp
+
+# builds
+dist/
+build/
+*.tsbuildinfo
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# env & secrets
+.env
+.env.local
+*.pem
+*.key
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/
