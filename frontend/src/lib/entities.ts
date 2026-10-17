@@ -107,6 +107,17 @@ export const ENTITIES: EntityDef[] = [
       { name: 'credits', label: 'Credits', type: 'number' },
       { name: 'sessions_per_week', label: 'Sessions / week', type: 'number', required: true },
       { name: 'lab_required', label: 'Lab required', type: 'boolean' },
+      { name: 'is_elective', label: 'Elective (scheduled in reserved blocks)', type: 'boolean' },
+    ],
+  },
+  {
+    name: 'section_courses',
+    label: 'Section courses',
+    singular: 'Section course',
+    fields: [
+      { name: 'section_id', label: 'Section', type: 'select', reference: 'sections', required: true },
+      { name: 'course_id', label: 'Course', type: 'select', reference: 'courses', required: true },
+      { name: 'sessions_per_week', label: 'Sessions / week (blank = course default)', type: 'number' },
     ],
   },
   {

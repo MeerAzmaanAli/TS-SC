@@ -22,5 +22,15 @@ docker run -p 8000:8000 ts-sc-solver
 ## API
 
 - `GET /health` → `{ "status": "ok" }`
-- `POST /generate` → timetable entries or an infeasibility report
-  (see `app/schemas.py`; full implementation in Phase 3)
+- `POST /generate` → `{ status: "ok", entries: [...], violations: {...} }`
+  or `{ status: "infeasible", message, causes: [...] }`
+  (see `app/schemas.py`)
+
+## Tests
+
+```bash
+pytest tests/ -q
+```
+
+Covers: feasible generation with clash/room/qualification checks,
+infeasibility cause reporting, and elective slot-block enforcement.

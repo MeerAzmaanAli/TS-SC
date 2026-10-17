@@ -48,6 +48,11 @@ begin
     (v_f2, v_c2), (v_f2, v_c1),
     (v_f3, v_c3), (v_f3, v_c2);
 
+  -- which courses each section takes (NULL sessions => course default)
+  insert into section_courses (section_id, course_id) values
+    (v_sec_a, v_c1), (v_sec_a, v_c2), (v_sec_a, v_c3),
+    (v_sec_b, v_c1), (v_sec_b, v_c3);
+
   -- Mon–Fri, 6 periods/day, 09:00–15:00 with an hour lunch after period 3
   for d in 1..5 loop
     for p in 1..6 loop
