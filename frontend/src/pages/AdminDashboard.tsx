@@ -17,9 +17,12 @@ export default function AdminDashboard() {
 
       <h3>Timetable</h3>
       <ul>
-        <li>Generate Timetable — Phase 4</li>
-        <li>Conflict Inspector — Phase 4</li>
-        <li>Publish / unpublish — Phase 4</li>
+        <li>
+          <Link to="/admin/generate">Generate timetable</Link>
+        </li>
+        <li>
+          <Link to="/admin/versions">Conflict Inspector &amp; publish</Link>
+        </li>
       </ul>
 
       <h3>Substitution</h3>
