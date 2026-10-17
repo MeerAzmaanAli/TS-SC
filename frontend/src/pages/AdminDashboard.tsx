@@ -1,14 +1,30 @@
+import { Link } from 'react-router-dom'
+import { ENTITIES } from '../lib/entities'
+
 export default function AdminDashboard() {
   return (
     <section>
       <h2>Admin dashboard</h2>
-      <p>Phase 2 will build entity CRUD here:</p>
+
+      <h3>Manage data</h3>
       <ul>
-        <li>Rooms, courses, faculty, sections, qualifications</li>
-        <li>Time-slot grid + elective slot-blocks</li>
-        <li>Constraints table</li>
-        <li>Generate Timetable, Conflict Inspector, publish / unpublish</li>
-        <li>Substitution penalty report</li>
+        {ENTITIES.map((e) => (
+          <li key={e.name}>
+            <Link to={`/admin/data/${e.name}`}>{e.label}</Link>
+          </li>
+        ))}
+      </ul>
+
+      <h3>Timetable</h3>
+      <ul>
+        <li>Generate Timetable — Phase 4</li>
+        <li>Conflict Inspector — Phase 4</li>
+        <li>Publish / unpublish — Phase 4</li>
+      </ul>
+
+      <h3>Substitution</h3>
+      <ul>
+        <li>Penalty report — Phase 5</li>
       </ul>
     </section>
   )

@@ -1,5 +1,6 @@
 import { Link, Route, Routes } from 'react-router-dom'
 import AdminDashboard from './pages/AdminDashboard'
+import EntitiesPage from './pages/admin/EntitiesPage'
 import FacultyView from './pages/FacultyView'
 import StudentView from './pages/StudentView'
 
@@ -17,6 +18,8 @@ export default function App() {
       <main style={{ marginTop: 24 }}>
         <Routes>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/data" element={<EntitiesPage />} />
+          <Route path="/admin/data/:entity" element={<EntitiesPage />} />
           <Route path="/faculty" element={<FacultyView />} />
           <Route path="/student" element={<StudentView />} />
           <Route
