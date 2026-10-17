@@ -27,7 +27,9 @@ export default function AdminDashboard() {
 
       <h3>Substitution</h3>
       <ul>
-        <li>Penalty report — Phase 5</li>
+        <li>
+          <Link to="/admin/penalties">Penalty report</Link>
+        </li>
       </ul>
     </section>
   )

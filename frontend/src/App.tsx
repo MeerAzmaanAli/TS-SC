@@ -4,6 +4,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import EntitiesPage from './pages/admin/EntitiesPage'
 import GeneratePage from './pages/admin/GeneratePage'
 import InspectPage from './pages/admin/InspectPage'
+import PenaltiesPage from './pages/admin/PenaltiesPage'
 import FacultyView from './pages/FacultyView'
 import StudentView from './pages/StudentView'
 import Login from './pages/Login'
@@ -93,6 +94,14 @@ export default function App() {
               element={
                 <RequireRole roles={['admin']}>
                   <InspectPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/admin/penalties"
+              element={
+                <RequireRole roles={['admin']}>
+                  <PenaltiesPage />
                 </RequireRole>
               }
             />

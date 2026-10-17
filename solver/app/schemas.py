@@ -83,3 +83,44 @@ class GenerateResponse(BaseModel):
     # Populated when status == "infeasible": the constraint groups whose
     # relaxation restores feasibility (see solver.diagnose()).
     causes: list[str] = Field(default_factory=list)
+
+
+# ---------------- substitution (Phase 5) ----------------
+
+
+class RankSubstitutesRequest(BaseModel):
+    requester_faculty_id: str
+    section_faculty_ids: list[str] = Field(default_factory=list)
+    course_faculty_ids: list[str] = Field(default_factory=list)
+    busy_faculty_ids: list[str] = Field(default_factory=list)
+    all_faculty_ids: list[str] = Field(default_factory=list)
+    faculty_loads: dict[str, int] = Field(default_factory=dict)
+
+
+class RankedCandidate(BaseModel):
+    faculty_id: str
+    priority: int
+    weekly_load: int
+
+
+class RankSubstitutesResponse(BaseModel):
+    candidates: list[RankedCandidate] = Field(default_factory=list)
+
+
+class CandidateState(BaseModel):
+    faculty_id: str
+    priority: int
+    response: str = "pending"
+    responded_at: Optional[str] = None
+    weekly_load: int = 0
+
+
+class ResolveSubstitutesRequest(BaseModel):
+    candidates: list[CandidateState] = Field(default_factory=list)
+    deadline_passed: bool = False
+
+
+class ResolveSubstitutesResponse(BaseModel):
+    winner_faculty_id: Optional[str] = None
+    should_resolve: bool = False
+    penalties: list[dict[str, str]] = Field(default_factory=list)
