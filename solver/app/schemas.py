@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 class Section(BaseModel):
     id: str
     strength: int
+    batch_count: int = 1
 
 
 class Course(BaseModel):
@@ -72,6 +73,7 @@ class TimetableEntry(BaseModel):
     room_id: str
     time_slot_id: str
     is_elective: bool = False
+    batch: Optional[int] = None
 
 
 class GenerateResponse(BaseModel):

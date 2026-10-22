@@ -32,12 +32,18 @@ export interface EntityField {
   relation?: RelationSync
 }
 
+export interface OrderRule {
+  column: string
+  ascending?: boolean
+}
+
 export interface EntityDef {
   /** table name */
   name: string
   label: string
   singular: string
   fields: EntityField[]
+  orderBy?: OrderRule[]
 }
 
 const DAYS = [
@@ -73,6 +79,7 @@ export const ENTITIES: EntityDef[] = [
       { name: 'program_id', label: 'Program', type: 'select', reference: 'programs', required: true },
       { name: 'semester', label: 'Semester', type: 'number', required: true },
       { name: 'strength', label: 'Strength', type: 'number', required: true },
+      { name: 'batch_count', label: 'Lab Batches', type: 'number', required: false },
     ],
   },
   {
@@ -146,6 +153,10 @@ export const ENTITIES: EntityDef[] = [
     name: 'time_slots',
     label: 'Time slots',
     singular: 'Time slot',
+    orderBy: [
+      { column: 'day_of_week', ascending: true },
+      { column: 'period', ascending: true },
+    ],
     fields: [
       { name: 'day_of_week', label: 'Day', type: 'select', options: DAYS, required: true },
       { name: 'period', label: 'Period', type: 'number', required: true },
@@ -157,6 +168,7 @@ export const ENTITIES: EntityDef[] = [
     name: 'constraints',
     label: 'Constraints',
     singular: 'Constraint',
+    orderBy: [{ column: 'key', ascending: true }],
     fields: [
       { name: 'key', label: 'Key', type: 'text', required: true },
       {

@@ -34,7 +34,15 @@ from dataclasses import dataclass, field
 
 from ortools.sat.python import cp_model
 
-from .schemas import GenerateRequest, GenerateResponse, TimetableEntry, Weights
+from .schemas import (
+    Course,
+    GenerateRequest,
+    GenerateResponse,
+    Section,
+    TimeSlot,
+    TimetableEntry,
+    Weights,
+)
 
 # Relaxation groups understood by _build_model / diagnose.
 _RELAX_LOADS = "loads"
@@ -54,6 +62,7 @@ class _Session:
     strength: int
     lab_required: bool
     is_elective: bool
+    batch: Optional[int] = None
 
 
 @dataclass
@@ -94,16 +103,33 @@ def _build_model(req: GenerateRequest, relax: frozenset[str]) -> _BuiltModel:
                 f"section_courses references unknown section/course: {sc}"
             )
         n = sc.sessions_per_week or crs.sessions_per_week
-        for _ in range(n):
-            sessions.append(
-                _Session(
-                    section_id=sec.id,
-                    course_id=crs.id,
-                    strength=sec.strength,
-                    lab_required=crs.lab_required,
-                    is_elective=crs.is_elective,
+        b_count = max(1, getattr(sec, "batch_count", 1) or 1)
+        if crs.lab_required and b_count > 1:
+            batch_strength = (sec.strength + b_count - 1) // b_count
+            for b in range(1, b_count + 1):
+                for _ in range(n):
+                    sessions.append(
+                        _Session(
+                            section_id=sec.id,
+                            course_id=crs.id,
+                            strength=batch_strength,
+                            lab_required=True,
+                            is_elective=crs.is_elective,
+                            batch=b,
+                        )
+                    )
+        else:
+            for _ in range(n):
+                sessions.append(
+                    _Session(
+                        section_id=sec.id,
+                        course_id=crs.id,
+                        strength=sec.strength,
+                        lab_required=crs.lab_required,
+                        is_elective=crs.is_elective,
+                        batch=None,
+                    )
                 )
-            )
 
     model = cp_model.CpModel()
     built = _BuiltModel(model=model, sessions=sessions)
@@ -173,7 +199,7 @@ def _build_model(req: GenerateRequest, relax: frozenset[str]) -> _BuiltModel:
         model.Add(sum(built.fac_of[(si, fi)] for fi in s_fac) == 1)
 
     # ---- no double booking (section / room / faculty per slot) -----------
-    _add_clash_constraints(model, built, slots, rooms, faculty)
+    _add_clash_constraints(model, built, slots, rooms, faculty, sections)
 
     # Faculty load
     for fi, f in enumerate(faculty):
@@ -186,27 +212,102 @@ def _build_model(req: GenerateRequest, relax: frozenset[str]) -> _BuiltModel:
         limit = 10**9 if _RELAX_LOADS in relax else f.max_weekly_load
         model.Add(load <= limit)
 
+    # ---- single faculty per course per section (consistent instructor) ----
+    _add_faculty_consistency_constraints(model, built, n_fac)
+
+    # ---- daily course limits, no consecutive theory, and day spread ------
+    _add_daily_distribution_constraints(model, built, slots, courses, sections)
+
     _add_soft_constraints(model, built, req, slots)
 
     return built
 
 
-def _add_clash_constraints(model, built: _BuiltModel, slots, rooms, faculty) -> None:
+def _add_clash_constraints(
+    model: cp_model.CpModel,
+    built: _BuiltModel,
+    slots,
+    rooms,
+    faculty,
+    sections: dict[str, Section],
+) -> None:
     """No section / room / faculty is in two places in one slot.
 
-    Uses AND variables: use[si,r,t] == room_of[si,r] AND slot_of[si,t].
+    Supports multi-batch laboratory scheduling:
+      - Theory is section-wide; no batch can be in lab during theory.
+      - If a section has >= b_count lab courses, batches are in lab simultaneously.
+      - Different batches cannot take the same lab course in the same slot.
     """
     sessions = built.sessions
     n_slots = len(slots)
+
+    # Pre-group sessions by section and batch
+    sec_theory_sessions: dict[str, list[int]] = {}
+    sec_batch_lab_sessions: dict[tuple[str, int], list[int]] = {}
+    sec_course_lab_sessions: dict[tuple[str, str], list[int]] = {}
+    sec_lab_courses: dict[str, set[str]] = {}
+
+    for si, s in enumerate(sessions):
+        if s.batch is None:
+            sec_theory_sessions.setdefault(s.section_id, []).append(si)
+        else:
+            sec_batch_lab_sessions.setdefault((s.section_id, s.batch), []).append(si)
+            sec_course_lab_sessions.setdefault((s.section_id, s.course_id), []).append(si)
+            sec_lab_courses.setdefault(s.section_id, set()).add(s.course_id)
+
     for t in range(n_slots):
-        # section clash
-        by_section: dict[str, list] = {}
-        for si, s in enumerate(sessions):
-            v = built.slot_of.get((si, t))
-            if v is not None:
-                by_section.setdefault(s.section_id, []).append(v)
-        for vars_ in by_section.values():
-            model.Add(sum(vars_) <= 1)
+        # Section & batch clash
+        for sec_id, sec in sections.items():
+            b_count = max(1, getattr(sec, "batch_count", 1) or 1)
+            theory_vars = [
+                built.slot_of[(si, t)]
+                for si in sec_theory_sessions.get(sec_id, [])
+                if (si, t) in built.slot_of
+            ]
+            if theory_vars:
+                model.Add(sum(theory_vars) <= 1)
+
+            if b_count <= 1:
+                # Single-batch section: standard clash
+                lab_vars = [
+                    built.slot_of[(si, t)]
+                    for si in sec_batch_lab_sessions.get((sec_id, 1), [])
+                    if (si, t) in built.slot_of
+                ]
+                all_sec_vars = theory_vars + lab_vars
+                if all_sec_vars:
+                    model.Add(sum(all_sec_vars) <= 1)
+            else:
+                batch_lab_vars: dict[int, list] = {}
+                for b in range(1, b_count + 1):
+                    b_vars = [
+                        built.slot_of[(si, t)]
+                        for si in sec_batch_lab_sessions.get((sec_id, b), [])
+                        if (si, t) in built.slot_of
+                    ]
+                    batch_lab_vars[b] = b_vars
+                    # 1. No batch double booking: batch cannot do both theory and lab, or 2 labs
+                    if theory_vars or b_vars:
+                        model.Add(sum(theory_vars) + sum(b_vars) <= 1)
+
+                # 2. Parallel Lab Synchronization:
+                # When section has >= b_count lab courses, all batches do lab together
+                lab_courses = sec_lab_courses.get(sec_id, set())
+                if len(lab_courses) >= b_count:
+                    for b in range(2, b_count + 1):
+                        model.Add(sum(batch_lab_vars[1]) == sum(batch_lab_vars[b]))
+
+                # 3. Different lab courses per slot:
+                # Batches cannot attend the same lab course in the same slot
+                for cid in lab_courses:
+                    c_vars = [
+                        built.slot_of[(si, t)]
+                        for si in sec_course_lab_sessions.get((sec_id, cid), [])
+                        if (si, t) in built.slot_of
+                    ]
+                    if c_vars:
+                        model.Add(sum(c_vars) <= 1)
+
         # room clash
         for r in range(len(rooms)):
             uses = []
@@ -219,6 +320,7 @@ def _add_clash_constraints(model, built: _BuiltModel, slots, rooms, faculty) -> 
                     uses.append(use)
             if uses:
                 model.Add(sum(uses) <= 1)
+
         # faculty clash
         for fi in range(len(faculty)):
             uses = []
@@ -231,6 +333,124 @@ def _add_clash_constraints(model, built: _BuiltModel, slots, rooms, faculty) -> 
                     uses.append(use)
             if uses:
                 model.Add(sum(uses) <= 1)
+
+
+def _add_faculty_consistency_constraints(
+    model: cp_model.CpModel,
+    built: _BuiltModel,
+    n_fac: int,
+) -> None:
+    """Ensure the same faculty member is assigned to all sessions of a course for a section.
+
+    In the real world, a section is assigned a faculty member for a course, and that
+    same faculty member conducts every lecture and practical session of that course.
+    """
+    sessions = built.sessions
+    sec_course_sessions: dict[tuple[str, str], list[int]] = {}
+    for si, s in enumerate(sessions):
+        sec_course_sessions.setdefault((s.section_id, s.course_id), []).append(si)
+
+    for (sec_id, crs_id), sis in sec_course_sessions.items():
+        if len(sis) <= 1:
+            continue
+        si_0 = sis[0]
+        for si_j in sis[1:]:
+            for fi in range(n_fac):
+                v0 = built.fac_of.get((si_0, fi))
+                vj = built.fac_of.get((si_j, fi))
+                if v0 is not None and vj is not None:
+                    model.Add(v0 == vj)
+
+
+def _add_daily_distribution_constraints(
+    model: cp_model.CpModel,
+    built: _BuiltModel,
+    slots: list[TimeSlot],
+    courses: dict[str, Course],
+    sections: dict[str, Section],
+) -> None:
+    """Enforce pedagogical daily distribution and workload limits.
+
+    1. Max daily sessions per course:
+       - Theory courses: at most 1 session per day (if sessions <= days).
+       - Theory courses: no consecutive periods of the same course on the same day.
+       - Lab courses: at most 2 periods per day for any batch (standard lab block).
+    2. Section daily student load cap:
+       - Prevent dumping all periods on one or two days while leaving other weekdays empty.
+    """
+    sessions = built.sessions
+    days = sorted({t.day_of_week for t in slots})
+    n_days = len(days)
+    if n_days <= 0:
+        return
+
+    slot_at = {(t.day_of_week, t.period): i for i, t in enumerate(slots)}
+    p_max = max((len([t for t in slots if t.day_of_week == d]) for d in days), default=1)
+
+    # 1. Course daily session limits and no consecutive theory sessions
+    course_batch_sessions: dict[tuple[str, str, Optional[int]], list[int]] = {}
+    for si, s in enumerate(sessions):
+        course_batch_sessions.setdefault((s.section_id, s.course_id, s.batch), []).append(si)
+
+    for (sec_id, crs_id, batch), sis in course_batch_sessions.items():
+        crs = courses.get(crs_id)
+        if crs is None:
+            continue
+
+        if not crs.lab_required:
+            max_daily = max(1, (len(sis) + n_days - 1) // n_days)
+        else:
+            max_daily = min(2, len(sis))
+
+        for d in days:
+            day_vars = [
+                built.slot_of[(si, t)]
+                for si in sis
+                for t, sl in enumerate(slots)
+                if sl.day_of_week == d and (si, t) in built.slot_of
+            ]
+            if day_vars:
+                model.Add(sum(day_vars) <= max_daily)
+
+            # Theory courses cannot have consecutive periods of the same course on the same day
+            if not crs.lab_required:
+                periods = sorted({t.period for t in slots if t.day_of_week == d})
+                for idx in range(len(periods) - 1):
+                    p1, p2 = periods[idx], periods[idx + 1]
+                    if p2 == p1 + 1:
+                        t1 = slot_at.get((d, p1))
+                        t2 = slot_at.get((d, p2))
+                        if t1 is not None and t2 is not None:
+                            p1_vars = [built.slot_of[(si, t1)] for si in sis if (si, t1) in built.slot_of]
+                            p2_vars = [built.slot_of[(si, t2)] for si in sis if (si, t2) in built.slot_of]
+                            if p1_vars and p2_vars:
+                                model.Add(sum(p1_vars) + sum(p2_vars) <= 1)
+
+    # 2. Section daily period cap to prevent overloading one day and leaving weekdays empty
+    if n_days > 1:
+        for sec_id, sec in sections.items():
+            b_count = max(1, getattr(sec, "batch_count", 1) or 1)
+            if b_count <= 1:
+                sec_student_sis = [si for si, s in enumerate(sessions) if s.section_id == sec_id]
+            else:
+                sec_student_sis = [
+                    si for si, s in enumerate(sessions)
+                    if s.section_id == sec_id and (s.batch is None or s.batch == 1)
+                ]
+            s_sec = len(sec_student_sis)
+            avg_ceil = (s_sec + n_days - 1) // n_days
+            max_daily_cap = max(avg_ceil, min(p_max, max(4, avg_ceil + 1)))
+
+            for d in days:
+                periods = sorted({t.period for t in slots if t.day_of_week == d})
+                d_vars = []
+                for p in periods:
+                    t = slot_at.get((d, p))
+                    if t is not None:
+                        p_vars = [built.slot_of[(si, t)] for si in sec_student_sis if (si, t) in built.slot_of]
+                        d_vars.extend(p_vars)
+                if d_vars:
+                    model.Add(sum(d_vars) <= max_daily_cap)
 
 
 def _add_soft_constraints(model, built: _BuiltModel, req: GenerateRequest, slots) -> None:
@@ -247,7 +467,7 @@ def _add_soft_constraints(model, built: _BuiltModel, req: GenerateRequest, slots
     slot_at = {(t.day_of_week, t.period): i for i, t in enumerate(slots)}
     days = sorted({t.day_of_week for t in slots})
 
-    # occupied[section_id][day][period] as bool == any session there
+    # occupied[section_id][day][period] as bool == any session active there
     sections = sorted({s.section_id for s in sessions})
     occupied: dict[tuple[str, int, int], object] = {}
     for sec in sections:
@@ -262,11 +482,20 @@ def _add_soft_constraints(model, built: _BuiltModel, req: GenerateRequest, slots
                 ]
                 occ = model.NewBoolVar(f"occ_{sec}_{d}_{p}")
                 if vars_:
-                    # at most one session per section/slot is already enforced
-                    model.Add(occ == sum(vars_))
+                    model.AddMaxEquality(occ, vars_)
                 else:
                     model.Add(occ == 0)
                 occupied[(sec, d, p)] = occ
+
+    # Reward section active days: encourage spreading classes across all available weekdays
+    for sec in sections:
+        for d in days:
+            periods = sorted({t.period for t in slots if t.day_of_week == d})
+            day_occ = [occupied[(sec, d, p)] for p in periods if (sec, d, p) in occupied]
+            if day_occ:
+                sec_day_used = model.NewBoolVar(f"sec_day_used_{sec}_{d}")
+                model.AddMaxEquality(sec_day_used, day_occ)
+                built.used_days.append(sec_day_used)
 
     # gaps: single empty period with occupied neighbours
     for sec in sections:
@@ -286,17 +515,22 @@ def _add_soft_constraints(model, built: _BuiltModel, req: GenerateRequest, slots
                 )
                 built.gaps.append(gap)
 
-    # day spread: used_day[si, d] >= slot_of[si, t] for t on day d
+    # day spread: spread each course's sessions across distinct days
+    course_sessions: dict[tuple[str, str, Optional[int]], list[int]] = {}
     for si, s in enumerate(sessions):
+        course_sessions.setdefault((s.section_id, s.course_id, s.batch), []).append(si)
+
+    for key, sis in course_sessions.items():
         for d in days:
             on_day = [
                 built.slot_of[(si, t)]
+                for si in sis
                 for t, sl in enumerate(slots)
                 if sl.day_of_week == d and (si, t) in built.slot_of
             ]
             if not on_day:
                 continue
-            used = model.NewBoolVar(f"used_{si}_{d}")
+            used = model.NewBoolVar(f"used_{key[0]}_{key[1]}_{key[2]}_{d}")
             for v in on_day:
                 model.Add(used >= v)
             built.used_days.append(used)
@@ -367,6 +601,7 @@ def _response_from_solver(req, built: _BuiltModel, solver) -> GenerateResponse:
                 room_id=rooms[r].id,
                 time_slot_id=slots[t].id,
                 is_elective=s.is_elective,
+                batch=s.batch,
             )
         )
 

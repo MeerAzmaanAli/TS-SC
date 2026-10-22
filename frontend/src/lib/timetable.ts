@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 /** Shape expected by the solver's POST /generate (see solver/app/schemas.py). */
 export interface GenerateRequest {
   institution_id: string
-  sections: { id: string; strength: number }[]
+  sections: { id: string; strength: number; batch_count?: number }[]
   courses: { id: string; sessions_per_week: number; lab_required: boolean; is_elective: boolean }[]
   section_courses: { section_id: string; course_id: string; sessions_per_week: number | null }[]
   faculty: { id: string; max_weekly_load: number }[]
@@ -24,6 +24,16 @@ async function must<T>(
   return (data ?? []) as T
 }
 
+async function fetchSections(): Promise<{ id: string; strength: number; batch_count?: number }[]> {
+  const res = await supabase.from('sections').select('id, strength, batch_count')
+  if (res.error) {
+    const fb = await supabase.from('sections').select('id, strength')
+    if (fb.error) throw new Error(`Failed to load sections: ${fb.error.message}`)
+    return (fb.data ?? []).map((s) => ({ ...s, batch_count: 1 }))
+  }
+  return (res.data ?? []).map((s) => ({ ...s, batch_count: s.batch_count ?? 1 }))
+}
+
 /** Assemble the solver snapshot from current Supabase data (admin only). */
 export async function buildSnapshot(): Promise<GenerateRequest> {
   const institutions = await must<{ id: string }[]>(
@@ -35,7 +45,7 @@ export async function buildSnapshot(): Promise<GenerateRequest> {
 
   const [sections, courses, section_courses, faculty, rooms, time_slots, qualifications, blocks, constraints] =
     await Promise.all([
-      must<{ id: string; strength: number }[]>(supabase.from('sections').select('id, strength'), 'sections'),
+      fetchSections(),
       must<{ id: string; sessions_per_week: number; lab_required: boolean; is_elective: boolean }[]>(
         supabase.from('courses').select('id, sessions_per_week, lab_required, is_elective'),
         'courses',
