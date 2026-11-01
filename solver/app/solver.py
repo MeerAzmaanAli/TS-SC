@@ -173,8 +173,12 @@ def _build_model(req: GenerateRequest, relax: frozenset[str]) -> _BuiltModel:
         for i, r in enumerate(rooms):
             if r.capacity < s.strength:
                 continue
-            if s.lab_required and r.room_type != "lab":
-                continue
+            if s.lab_required:
+                if r.room_type != "lab":
+                    continue
+            else:
+                if r.room_type != "classroom":
+                    continue
             out.append(i)
         if not out:
             raise _InfeasibleNow(
@@ -214,6 +218,9 @@ def _build_model(req: GenerateRequest, relax: frozenset[str]) -> _BuiltModel:
 
     # ---- single faculty per course per section (consistent instructor) ----
     _add_faculty_consistency_constraints(model, built, n_fac)
+
+    # ---- fixed assigned classroom per section for all theory sessions ----
+    _add_theory_room_consistency_constraints(model, built, n_rooms, relax)
 
     # ---- daily course limits, no consecutive theory, and day spread ------
     _add_daily_distribution_constraints(model, built, slots, courses, sections)
@@ -360,6 +367,58 @@ def _add_faculty_consistency_constraints(
                 vj = built.fac_of.get((si_j, fi))
                 if v0 is not None and vj is not None:
                     model.Add(v0 == vj)
+
+
+
+def _add_theory_room_consistency_constraints(
+    model: cp_model.CpModel,
+    built: _BuiltModel,
+    n_rooms: int,
+    relax: frozenset[str],
+) -> None:
+    """Ensure all theory sessions of a section are held in the exact same classroom.
+
+    In colleges and universities, each section is assigned a fixed home classroom
+    for all its theory lectures. Only lab sessions move to specialized laboratories.
+    """
+    if _RELAX_ROOMS in relax:
+        return
+
+    sessions = built.sessions
+    sec_theory_sessions: dict[str, list[int]] = {}
+    for si, s in enumerate(sessions):
+        if not s.lab_required:
+            sec_theory_sessions.setdefault(s.section_id, []).append(si)
+
+    # 1. Intra-section consistency: every theory session of a section uses the same room
+    for sec_id, sis in sec_theory_sessions.items():
+        if len(sis) <= 1:
+            continue
+        si_0 = sis[0]
+        for si_j in sis[1:]:
+            for ri in range(n_rooms):
+                v0 = built.room_of.get((si_0, ri))
+                vj = built.room_of.get((si_j, ri))
+                if v0 is not None and vj is not None:
+                    model.Add(v0 == vj)
+
+    # 2. Dedicated classroom per section when enough classrooms exist
+    first_theory_sis = [sis[0] for sis in sec_theory_sessions.values() if sis]
+    available_classrooms = set()
+    for si in first_theory_sis:
+        for ri in range(n_rooms):
+            if (si, ri) in built.room_of:
+                available_classrooms.add(ri)
+
+    if len(available_classrooms) >= len(first_theory_sis):
+        for ri in available_classrooms:
+            room_uses_by_sections = [
+                built.room_of[(si, ri)]
+                for si in first_theory_sis
+                if (si, ri) in built.room_of
+            ]
+            if len(room_uses_by_sections) > 1:
+                model.Add(sum(room_uses_by_sections) <= 1)
 
 
 def _add_daily_distribution_constraints(

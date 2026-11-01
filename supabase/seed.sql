@@ -135,8 +135,8 @@ begin
   -- ----------------------------------------------------
   -- 3. Classrooms (cap 70) and Labs (cap 35)
   -- ----------------------------------------------------
-  -- 10 Theory Classrooms (Rooms 101 to 110)
-  for i in 1..10 loop
+  -- 15 Theory Classrooms (Rooms 101 to 115, fixed per section)
+  for i in 1..15 loop
     insert into rooms (institution_id, name, room_type, capacity)
     values (v_inst, 'CR-' || (100 + i), 'classroom', 70);
   end loop;

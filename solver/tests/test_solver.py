@@ -81,6 +81,16 @@ def _assert_no_clashes(resp):
         if e.course_id == "cs502":
             assert e.room_id == "lab1", "lab course not in lab room"
 
+    # All theory sessions of each section must be in the exact same classroom
+    for sec_id in {"sec-a", "sec-b"}:
+        theory_rooms = {
+            e.room_id for e in resp.entries
+            if e.section_id == sec_id and e.course_id in ("cs501", "cs503")
+        }
+        assert len(theory_rooms) == 1, f"Section {sec_id} theory sessions spread across rooms: {theory_rooms}"
+        room_id = next(iter(theory_rooms))
+        assert room_id in ("r1", "r2"), f"Theory session assigned to non-classroom {room_id}" 
+
 
 def test_feasible_timetable():
     resp = solve(_demo_request())
