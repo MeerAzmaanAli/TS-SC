@@ -9,6 +9,7 @@ import TimetablePage from './pages/admin/TimetablePage'
 import FacultyView from './pages/FacultyView'
 import StudentView from './pages/StudentView'
 import Login from './pages/Login'
+import { isSupabaseConfigured } from './lib/supabase'
 import {
   CalendarIcon,
   LayersIcon,
@@ -181,6 +182,28 @@ function Home() {
 export default function App() {
   const location = useLocation()
   const isLoginPage = location.pathname === '/login'
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div style={{ maxWidth: 540, margin: '5rem auto', padding: '0 1rem' }}>
+        <div className="card" style={{ padding: '2rem', textAlign: 'center', borderTop: '4px solid #ef4444' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>
+            Database Environment Variables Required
+          </h2>
+          <p className="text-muted" style={{ fontSize: '0.875rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+            Vite needs your Supabase project keys during build time. Please configure them in your Vercel project:
+          </p>
+          <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: 8, textAlign: 'left', fontSize: '0.8rem', fontFamily: 'monospace', marginBottom: '1.25rem' }}>
+            <div><strong>VITE_SUPABASE_URL</strong> = https://...supabase.co</div>
+            <div style={{ marginTop: 4 }}><strong>VITE_SUPABASE_ANON_KEY</strong> = sb_publishable_...</div>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+            After adding them in <strong>Vercel &rarr; Settings &rarr; Environment Variables</strong>, go to <strong>Deployments &rarr; Redeploy</strong>.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <AuthProvider>

@@ -3,8 +3,17 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-if (!url || !anonKey) {
-  console.warn('Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY — check frontend/.env')
+export const isSupabaseConfigured = Boolean(url && anonKey && !url.includes('placeholder'))
+
+if (!isSupabaseConfigured) {
+  console.error(
+    'Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY! ' +
+    'Please add them in your Vercel Project Settings -> Environment Variables, and Redeploy.',
+  )
 }
 
-export const supabase = createClient(url ?? '', anonKey ?? '')
+// Fallback to placeholder to prevent immediate bundle crash if env vars are missing during build
+export const supabase = createClient(
+  url || 'https://placeholder.supabase.co',
+  anonKey || 'placeholder-anon-key',
+)

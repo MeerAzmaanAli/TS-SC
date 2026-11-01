@@ -263,7 +263,7 @@ export async function createSubstitutionRequest(
             </ul>
             <p>Please log in to your TS-SC portal to review and accept/decline this request.</p>
             <p style="margin-top: 24px;">
-              <a href="http://localhost:5173/faculty" style="background-color: #4f46e5; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+              <a href="${typeof window !== 'undefined' ? window.location.origin : ''}/faculty" style="background-color: #4f46e5; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold;">
                 Open Faculty Inbox
               </a>
             </p>
