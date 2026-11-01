@@ -398,8 +398,17 @@ def _add_daily_distribution_constraints(
             continue
 
         if not crs.lab_required:
-            max_daily = max(1, (len(sis) + n_days - 1) // n_days)
+            # User requirement:
+            # - For a course on a day, at most 2 lectures are acceptable as soft/standard,
+            #   hard ceiling is strictly not more than 3.
+            # - When weekly sessions <= n_days, spread across distinct days (<= 1/day).
+            # - When weekly sessions > n_days, allow up to 2, capped at 3 max.
+            if len(sis) <= n_days:
+                max_daily = 1
+            else:
+                max_daily = min(3, max(2, (len(sis) + n_days - 1) // n_days))
         else:
+            # Lab courses: standard 2-period lab block
             max_daily = min(2, len(sis))
 
         for d in days:
@@ -451,6 +460,11 @@ def _add_daily_distribution_constraints(
                         d_vars.extend(p_vars)
                 if d_vars:
                     model.Add(sum(d_vars) <= max_daily_cap)
+                    # Issue 2: Prevent completely blank days.
+                    # If the section has at least as many sessions as available days,
+                    # guarantee at least 1 session on each scheduled day.
+                    if s_sec >= n_days:
+                        model.Add(sum(d_vars) >= 1)
 
 
 def _add_soft_constraints(model, built: _BuiltModel, req: GenerateRequest, slots) -> None:

@@ -3,7 +3,12 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import WeeklyGrid, { GridEntry } from '../components/WeeklyGrid'
 import SubstitutionInbox from '../components/SubstitutionInbox'
-import { createSubstitutionRequest, SessionInfo } from '../lib/substitution'
+import {
+  createSubstitutionRequest,
+  getLectureTemporalStatus,
+  SessionInfo,
+  sweepAllExpiredRequests,
+} from '../lib/substitution'
 import {
   CalendarIcon,
   UsersIcon,
@@ -39,6 +44,11 @@ export default function FacultyView() {
   const [activeTab, setActiveTab] = useState<'schedule' | 'request' | 'inbox'>('schedule')
   const [requestModalSession, setRequestModalSession] = useState<Row | null>(null)
   const [requestReason, setRequestReason] = useState('')
+
+  useEffect(() => {
+    // Automatically sweep and finalize any expired requests across the campus
+    sweepAllExpiredRequests().catch((err) => console.warn('Automatic sweep error:', err))
+  }, [])
 
   useEffect(() => {
     if (!profile?.faculty_id) return
@@ -158,107 +168,186 @@ export default function FacultyView() {
       </div>
 
       {error && rows.length === 0 && (
-        <div className="alert alert-warning">
-          <AlertCircleIcon size={18} style={{ flexShrink: 0 }} />
-          <div>{error}</div>
+        <div className="alert alert-danger" style={{ marginBottom: '1.5rem' }}>
+          <AlertCircleIcon size={18} />
+          <span>{error}</span>
         </div>
       )}
 
       {notice && (
-        <div className="alert alert-success">
-          <CheckCircleIcon size={18} style={{ flexShrink: 0 }} />
-          <div>{notice}</div>
+        <div className="alert alert-success" style={{ marginBottom: '1.5rem' }}>
+          <CheckCircleIcon size={18} />
+          <span>{notice}</span>
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="tabs-nav">
+      {/* Tabs */}
+      <div className="tabs" style={{ marginBottom: '1.5rem' }}>
         <button
-          onClick={() => setActiveTab('schedule')}
           className={`tab-btn ${activeTab === 'schedule' ? 'active' : ''}`}
+          onClick={() => setActiveTab('schedule')}
         >
           <CalendarIcon size={16} />
-          <span>My Teaching Schedule ({rows.length} sessions)</span>
+          <span>My Teaching Timetable</span>
         </button>
-
         <button
-          onClick={() => setActiveTab('request')}
           className={`tab-btn ${activeTab === 'request' ? 'active' : ''}`}
+          onClick={() => setActiveTab('request')}
         >
           <UsersIcon size={16} />
           <span>Request Substitution</span>
         </button>
-
         <button
-          onClick={() => setActiveTab('inbox')}
           className={`tab-btn ${activeTab === 'inbox' ? 'active' : ''}`}
+          onClick={() => setActiveTab('inbox')}
         >
           <InboxIcon size={16} />
-          <span>Incoming Coverage Requests</span>
+          <span>Coverage Inbox</span>
         </button>
       </div>
 
-      {/* Tab 1: Weekly Grid */}
+      {/* Tab 1: Schedule */}
       {activeTab === 'schedule' && (
         <div>
-          <WeeklyGrid entries={gridEntries} viewMode="faculty" />
+          <div className="card" style={{ marginBottom: '1.5rem' }}>
+            <div className="card-header">
+              <h2 className="card-title">
+                <CalendarIcon size={18} style={{ color: 'var(--primary-600)' }} />
+                <span>Weekly Lecture Distribution</span>
+              </h2>
+              <span className="badge badge-primary">{rows.length} Total Sessions</span>
+            </div>
+            <WeeklyGrid entries={gridEntries} />
+          </div>
         </div>
       )}
 
-      {/* Tab 2: Substitution Request Cards */}
+      {/* Tab 2: Request Substitution */}
       {activeTab === 'request' && (
         <div>
           <div style={{ marginBottom: '1.25rem' }}>
             <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--slate-900)' }}>
               Select a Scheduled Lecture for Substitution
             </h2>
-            <p className="text-muted" style={{ fontSize: '0.85rem' }}>
-              The system uses multi-tier priority matching to dispatch your request to qualified faculty who teach the same section or course and are free during this period.
-            </p>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '0.65rem 0.9rem',
+                backgroundColor: 'var(--sky-50)',
+                color: 'var(--sky-900)',
+                border: '1px solid var(--sky-200)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.84rem',
+                marginTop: '0.5rem',
+              }}
+            >
+              <AlertCircleIcon size={17} style={{ color: 'var(--sky-600)', flexShrink: 0 }} />
+              <span>
+                <strong>Day-of Policy:</strong> Per institutional regulations, substitution requests can{' '}
+                <strong>only be dispatched on the exact day of the lecture</strong> before it commences. Lectures
+                occurring on subsequent days or past periods cannot be requested.
+              </span>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '1rem' }}>
-            {rows.map((r) => (
-              <div key={r.id} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span className="badge badge-primary">
-                      {DAYS[r.time_slots?.day_of_week ?? 0]} · Period {r.time_slots?.period}
-                    </span>
-                    {r.is_elective && <span className="badge badge-purple">Elective</span>}
+            {rows.map((r) => {
+              const status = r.time_slots
+                ? getLectureTemporalStatus(r.time_slots.day_of_week, r.time_slots.starts_at)
+                : { isToday: false, isPast: true, reasonMessage: 'No slot data' }
+
+              const canRequest = status.isToday && !status.isPast
+
+              return (
+                <div
+                  key={r.id}
+                  className="card"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    opacity: canRequest ? 1 : 0.72,
+                    borderColor: canRequest ? 'var(--primary-300)' : undefined,
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span className={`badge ${status.isToday ? 'badge-primary' : 'badge-neutral'}`}>
+                        {DAYS[r.time_slots?.day_of_week ?? 0]} · Period {r.time_slots?.period}
+                      </span>
+                      {status.isToday && !status.isPast && (
+                        <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>
+                          Today's Lecture
+                        </span>
+                      )}
+                      {status.isPast && status.isToday && (
+                        <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>
+                          Already Passed
+                        </span>
+                      )}
+                      {!status.isToday && (
+                        <span className="badge badge-neutral" style={{ fontSize: '0.7rem' }}>
+                          Future / Other Day
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--slate-900)' }}>
+                      {r.courses?.code}
+                    </h3>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--slate-700)', marginBottom: '0.75rem' }}>
+                      {r.courses?.name}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', fontSize: '0.75rem', marginBottom: '1.25rem' }}>
+                      <span className="meta-chip room">
+                        <MapPinIcon size={12} />
+                        <span>{r.rooms?.name}</span>
+                      </span>
+                      <span className="meta-chip">
+                        <span>Section {r.sections?.name}</span>
+                      </span>
+                      <span className="meta-chip">
+                        <ClockIcon size={12} />
+                        <span>{r.time_slots?.starts_at ? r.time_slots.starts_at.slice(0, 5) : ''}</span>
+                      </span>
+                    </div>
                   </div>
 
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--slate-900)' }}>
-                    {r.courses?.code}
-                  </h3>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--slate-700)', marginBottom: '0.75rem' }}>
-                    {r.courses?.name}
-                  </div>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', fontSize: '0.75rem', marginBottom: '1.25rem' }}>
-                    <span className="meta-chip room">
-                      <MapPinIcon size={12} />
-                      <span>{r.rooms?.name}</span>
-                    </span>
-                    <span className="meta-chip">
-                      <span>Section {r.sections?.name}</span>
-                    </span>
+                  <div>
+                    {!canRequest && status.reasonMessage && (
+                      <div
+                        style={{
+                          fontSize: '0.74rem',
+                          color: 'var(--text-muted)',
+                          marginBottom: '0.5rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <ClockIcon size={12} />
+                        <span>{status.reasonMessage}</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        setRequestModalSession(r)
+                        setRequestReason('')
+                      }}
+                      disabled={!canRequest}
+                      className={`btn ${canRequest ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                      style={{ width: '100%' }}
+                    >
+                      <UsersIcon size={14} />
+                      <span>{canRequest ? 'Request Substitute' : 'Unavailable (Day-Of Only)'}</span>
+                    </button>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => {
-                    setRequestModalSession(r)
-                    setRequestReason('')
-                  }}
-                  className="btn btn-secondary btn-sm"
-                  style={{ width: '100%' }}
-                >
-                  <UsersIcon size={14} />
-                  <span>Request Substitute</span>
-                </button>
-              </div>
-            ))}
+              )
+            })}
 
             {rows.length === 0 && (
               <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem 1rem' }}>
@@ -302,7 +391,7 @@ export default function FacultyView() {
               <div style={{ fontWeight: 600, color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <ClockIcon size={15} style={{ color: 'var(--primary-600)' }} />
                 <span>
-                  {DAYS[requestModalSession.time_slots?.day_of_week ?? 0]} · Period {requestModalSession.time_slots?.period}
+                  Today ({DAYS[requestModalSession.time_slots?.day_of_week ?? 0]}) · Period {requestModalSession.time_slots?.period} ({requestModalSession.time_slots?.starts_at.slice(0, 5)})
                 </span>
               </div>
               <div className="text-muted" style={{ fontSize: '0.78rem', marginTop: '0.2rem' }}>

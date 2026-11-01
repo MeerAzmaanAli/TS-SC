@@ -126,3 +126,19 @@ class ResolveSubstitutesResponse(BaseModel):
     winner_faculty_id: Optional[str] = None
     should_resolve: bool = False
     penalties: list[dict[str, str]] = Field(default_factory=list)
+
+
+# ---------------- notifications (Email) ----------------
+
+
+class SendEmailRequest(BaseModel):
+    to_email: str
+    to_name: str
+    subject: str
+    body_html: str
+    body_text: Optional[str] = None
+
+
+class SendEmailResponse(BaseModel):
+    success: bool
+    message: str

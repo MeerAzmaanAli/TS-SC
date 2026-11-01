@@ -76,6 +76,8 @@ export const ENTITIES: EntityDef[] = [
     singular: 'Section',
     fields: [
       { name: 'name', label: 'Name', type: 'text', required: true },
+      { name: 'code', label: 'Section Code (e.g. BTCS27H)', type: 'text', required: false },
+      { name: 'passkey', label: 'Passkey', type: 'text', required: false },
       { name: 'program_id', label: 'Program', type: 'select', reference: 'programs', required: true },
       { name: 'semester', label: 'Semester', type: 'number', required: true },
       { name: 'strength', label: 'Strength', type: 'number', required: true },

@@ -215,3 +215,12 @@ export function BellIcon({ size = 18, ...props }: IconProps) {
     </svg>
   )
 }
+
+export function KeyIcon({ size = 18, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5L13 7l-2-2-7 7a5 5 0 1 0 7 7l7-7 1.5 1.5L21 11l-1.5-1.5L21 8l-1.5-1.5L21 5l-2-2z" />
+      <circle cx="7.5" cy="16.5" r="1.5" />
+    </svg>
+  )
+}

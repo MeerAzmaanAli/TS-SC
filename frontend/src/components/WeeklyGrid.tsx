@@ -12,6 +12,11 @@ export interface GridEntry {
   section_name?: string
   is_elective: boolean
   batch?: number | null
+  substitution?: {
+    status: 'open' | 'assigned' | 'unfilled' | 'expired'
+    substitute_name?: string | null
+    requester_name?: string | null
+  } | null
 }
 
 export interface SlotTimeInfo {
@@ -145,102 +150,228 @@ export default function WeeklyGrid({
                   <td key={p} className={`timetable-cell ${slotEntries.length > 0 ? 'has-session' : ''}`}>
                     {slotEntries.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', height: '100%' }}>
-                        {slotEntries.map((e) => (
-                          <div
-                            key={e.id}
-                            className={`session-badge ${e.is_elective ? 'elective' : ''} ${
-                              e.batch != null ? (e.batch % 2 === 1 ? 'batch-1' : 'batch-2') : ''
-                            }`}
-                            style={{ flex: 1 }}
-                          >
-                            <div className="session-code">
-                              <span style={{ fontWeight: 800, color: 'var(--slate-900)', fontSize: '0.85rem' }}>
-                                {e.course_code}
-                              </span>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                {e.batch != null && (
+                        {slotEntries.map((e) => {
+                          const isSubPending = e.substitution?.status === 'open'
+                          const isSubAssigned = e.substitution?.status === 'assigned'
+                          const isSubExpired =
+                            e.substitution?.status === 'unfilled' || e.substitution?.status === 'expired'
+
+                          let subClass = ''
+                          if (isSubPending) subClass = 'sub-pending'
+                          else if (isSubAssigned) subClass = 'sub-assigned'
+                          else if (isSubExpired) subClass = 'sub-expired'
+
+                          return (
+                            <div
+                              key={e.id}
+                              className={`session-badge ${subClass} ${e.is_elective ? 'elective' : ''} ${
+                                e.batch != null ? (e.batch % 2 === 1 ? 'batch-1' : 'batch-2') : ''
+                              }`}
+                              style={{ flex: 1 }}
+                            >
+                              <div className="session-code">
+                                <span style={{ fontWeight: 800, color: 'var(--slate-900)', fontSize: '0.85rem' }}>
+                                  {e.course_code}
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                  {isSubPending && (
+                                    <span
+                                      className="badge"
+                                      style={{
+                                        fontSize: '0.625rem',
+                                        padding: '0.1rem 0.35rem',
+                                        background: '#fef08a',
+                                        color: '#854d0e',
+                                        fontWeight: 700,
+                                      }}
+                                      title="Substitution dispatched - Pending confirmation"
+                                    >
+                                      Sub Pending
+                                    </span>
+                                  )}
+                                  {isSubAssigned && (
+                                    <span
+                                      className="badge"
+                                      style={{
+                                        fontSize: '0.625rem',
+                                        padding: '0.1rem 0.35rem',
+                                        background: '#bbf7d0',
+                                        color: '#166534',
+                                        fontWeight: 700,
+                                      }}
+                                      title="Substitute faculty confirmed"
+                                    >
+                                      Sub Assigned
+                                    </span>
+                                  )}
+                                  {isSubExpired && (
+                                    <span
+                                      className="badge"
+                                      style={{
+                                        fontSize: '0.625rem',
+                                        padding: '0.1rem 0.35rem',
+                                        background: '#fecaca',
+                                        color: '#991b1b',
+                                        fontWeight: 700,
+                                      }}
+                                      title="No substitute faculty found - Lecture is free"
+                                    >
+                                      Period Free
+                                    </span>
+                                  )}
+                                  {e.batch != null && (
+                                    <span
+                                      className={`badge ${
+                                        e.batch === 1 ? 'badge-primary' : e.batch === 2 ? 'badge-info' : 'badge-purple'
+                                      }`}
+                                      style={{ fontSize: '0.625rem', padding: '0.1rem 0.4rem', fontWeight: 700 }}
+                                      title={`Lab Batch ${e.batch}`}
+                                    >
+                                      Batch B{e.batch}
+                                    </span>
+                                  )}
+                                  {e.is_elective && (
+                                    <span
+                                      className="badge badge-purple"
+                                      style={{ fontSize: '0.625rem', padding: '0.1rem 0.35rem' }}
+                                    >
+                                      Elective
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="session-name" title={e.course_name}>
+                                {e.course_name}
+                              </div>
+
+                              <div className="session-meta">
+                                {/* If viewing by Section: highlight Assigned Faculty or Substitute */}
+                                {viewMode === 'section' && (
+                                  <>
+                                    {isSubAssigned ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                                        <span
+                                          className="meta-chip faculty"
+                                          style={{
+                                            fontWeight: 700,
+                                            color: '#15803d',
+                                            backgroundColor: '#dcfce7',
+                                            border: '1px solid #86efac',
+                                          }}
+                                          title={`Covering Faculty: ${e.substitution?.substitute_name}`}
+                                        >
+                                          <UsersIcon size={11} />
+                                          <span>Sub: {e.substitution?.substitute_name}</span>
+                                        </span>
+                                        {e.faculty_name && (
+                                          <span
+                                            style={{
+                                              fontSize: '0.65rem',
+                                              color: '#64748b',
+                                              textDecoration: 'line-through',
+                                              paddingLeft: '0.2rem',
+                                            }}
+                                          >
+                                            Orig: {e.faculty_name}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ) : isSubExpired ? (
+                                      <span
+                                        className="meta-chip"
+                                        style={{
+                                          fontWeight: 700,
+                                          color: '#b91c1c',
+                                          backgroundColor: '#fee2e2',
+                                          border: '1px solid #fca5a5',
+                                        }}
+                                        title="No faculty available - period is free"
+                                      >
+                                        <UsersIcon size={11} />
+                                        <span>Self Study / Free</span>
+                                      </span>
+                                    ) : isSubPending ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                                        <span
+                                          className="meta-chip faculty"
+                                          style={{
+                                            fontWeight: 700,
+                                            color: '#854d0e',
+                                            backgroundColor: '#fef9c3',
+                                            border: '1px solid #fde047',
+                                          }}
+                                          title={`Substitute request pending for ${e.faculty_name}`}
+                                        >
+                                          <UsersIcon size={11} />
+                                          <span>Sub Pending…</span>
+                                        </span>
+                                        {e.faculty_name && (
+                                          <span style={{ fontSize: '0.65rem', color: '#64748b', paddingLeft: '0.2rem' }}>
+                                            Orig: {e.faculty_name}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      e.faculty_name && (
+                                        <span
+                                          className="meta-chip faculty"
+                                          style={{
+                                            fontWeight: 600,
+                                            color: 'var(--primary-700)',
+                                            backgroundColor: 'var(--primary-50)',
+                                            border: '1px solid var(--primary-200)',
+                                          }}
+                                          title={`Assigned Faculty: ${e.faculty_name}`}
+                                        >
+                                          <UsersIcon size={11} />
+                                          <span>{e.faculty_name}</span>
+                                        </span>
+                                      )
+                                    )}
+                                  </>
+                                )}
+
+                                {/* If viewing by Faculty: highlight Student Section */}
+                                {viewMode === 'faculty' && e.section_name && (
                                   <span
-                                    className={`badge ${
-                                      e.batch === 1 ? 'badge-primary' : e.batch === 2 ? 'badge-info' : 'badge-purple'
-                                    }`}
-                                    style={{ fontSize: '0.625rem', padding: '0.1rem 0.4rem', fontWeight: 700 }}
-                                    title={`Lab Batch ${e.batch}`}
+                                    className="meta-chip section"
+                                    style={{
+                                      fontWeight: 600,
+                                      color: 'var(--emerald-800)',
+                                      backgroundColor: 'var(--emerald-50)',
+                                      border: '1px solid var(--emerald-200)',
+                                    }}
+                                    title={`Student Section: ${e.section_name}`}
                                   >
-                                    Batch B{e.batch}
+                                    <LayersIcon size={11} />
+                                    <span>{e.section_name}</span>
                                   </span>
                                 )}
-                                {e.is_elective && (
-                                  <span
-                                    className="badge badge-purple"
-                                    style={{ fontSize: '0.625rem', padding: '0.1rem 0.35rem' }}
-                                  >
-                                    Elective
+
+                                {/* If no specific viewMode: show both if available */}
+                                {!viewMode && e.faculty_name && (
+                                  <span className="meta-chip" title="Faculty Instructor">
+                                    <UsersIcon size={11} />
+                                    <span>{e.faculty_name}</span>
                                   </span>
                                 )}
+                                {!viewMode && e.section_name && (
+                                  <span className="meta-chip" title="Student Section">
+                                    <LayersIcon size={11} />
+                                    <span>Sec {e.section_name}</span>
+                                  </span>
+                                )}
+
+                                {/* Room Location Chip */}
+                                <span className="meta-chip room" title={`Room Location: ${e.room_name}`}>
+                                  <MapPinIcon size={11} />
+                                  <span>{e.room_name}</span>
+                                </span>
                               </div>
                             </div>
-
-                            <div className="session-name" title={e.course_name}>
-                              {e.course_name}
-                            </div>
-
-                            <div className="session-meta">
-                              {/* If viewing by Section: highlight Assigned Faculty */}
-                              {viewMode === 'section' && e.faculty_name && (
-                                <span
-                                  className="meta-chip faculty"
-                                  style={{
-                                    fontWeight: 600,
-                                    color: 'var(--primary-700)',
-                                    backgroundColor: 'var(--primary-50)',
-                                    border: '1px solid var(--primary-200)',
-                                  }}
-                                  title={`Assigned Faculty: ${e.faculty_name}`}
-                                >
-                                  <UsersIcon size={11} />
-                                  <span>{e.faculty_name}</span>
-                                </span>
-                              )}
-
-                              {/* If viewing by Faculty: highlight Student Section */}
-                              {viewMode === 'faculty' && e.section_name && (
-                                <span
-                                  className="meta-chip section"
-                                  style={{
-                                    fontWeight: 600,
-                                    color: 'var(--emerald-800)',
-                                    backgroundColor: 'var(--emerald-50)',
-                                    border: '1px solid var(--emerald-200)',
-                                  }}
-                                  title={`Student Section: ${e.section_name}`}
-                                >
-                                  <LayersIcon size={11} />
-                                  <span>{e.section_name}</span>
-                                </span>
-                              )}
-
-                              {/* If no specific viewMode: show both if available */}
-                              {!viewMode && e.faculty_name && (
-                                <span className="meta-chip" title="Faculty Instructor">
-                                  <UsersIcon size={11} />
-                                  <span>{e.faculty_name}</span>
-                                </span>
-                              )}
-                              {!viewMode && e.section_name && (
-                                <span className="meta-chip" title="Student Section">
-                                  <LayersIcon size={11} />
-                                  <span>Sec {e.section_name}</span>
-                                </span>
-                              )}
-
-                              {/* Room Location Chip */}
-                              <span className="meta-chip room" title={`Room Location: ${e.room_name}`}>
-                                <MapPinIcon size={11} />
-                                <span>{e.room_name}</span>
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     ) : (
                       <div

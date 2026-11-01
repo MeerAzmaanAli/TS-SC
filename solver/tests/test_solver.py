@@ -320,3 +320,68 @@ def test_faculty_consistency_and_daily_spread():
         )
 
 
+
+
+def test_course_consecutive_and_daily_cap_and_instructor_consistency():
+    sections = [Section(id='sec-test', strength=50, batch_count=1)]
+    courses = [
+        Course(id='os', sessions_per_week=6, lab_required=False),
+        Course(id='dbms', sessions_per_week=4, lab_required=False),
+    ]
+    faculty = [
+        Faculty(id='f-rohit', max_weekly_load=15),
+        Faculty(id='f-asha', max_weekly_load=15),
+    ]
+    rooms = [Room(id='r101', room_type='classroom', capacity=60)]
+    slots = [
+        TimeSlot(id=f'd{d}p{p}', day_of_week=d, period=p)
+        for d in range(1, 6)
+        for p in range(1, 6)
+    ]
+    qualifications = [
+        Qualification(faculty_id='f-rohit', course_id='os'),
+        Qualification(faculty_id='f-rohit', course_id='dbms'),
+        Qualification(faculty_id='f-asha', course_id='os'),
+        Qualification(faculty_id='f-asha', course_id='dbms'),
+    ]
+    section_courses = [
+        SectionCourse(section_id='sec-test', course_id='os'),
+        SectionCourse(section_id='sec-test', course_id='dbms'),
+    ]
+    req = GenerateRequest(
+        institution_id='inst-t',
+        sections=sections,
+        courses=courses,
+        section_courses=section_courses,
+        faculty=faculty,
+        rooms=rooms,
+        time_slots=slots,
+        qualifications=qualifications,
+        time_limit_seconds=15,
+    )
+    resp = solve(req)
+    assert resp.status == 'ok', resp.message
+    assert len(resp.entries) == 10
+
+    slot_map = {t.id: t for t in slots}
+    
+    os_faculties = {e.faculty_id for e in resp.entries if e.course_id == 'os'}
+    dbms_faculties = {e.faculty_id for e in resp.entries if e.course_id == 'dbms'}
+    assert len(os_faculties) == 1, f'OS taught by multiple faculty: {os_faculties}'
+    assert len(dbms_faculties) == 1, f'DBMS taught by multiple faculty: {dbms_faculties}'
+
+    active_days = {slot_map[e.time_slot_id].day_of_week for e in resp.entries}
+    assert active_days == {1, 2, 3, 4, 5}, f'Some weekdays were left empty: {active_days}'
+
+    day_course_periods = {}
+    for e in resp.entries:
+        sl = slot_map[e.time_slot_id]
+        day_course_periods.setdefault((sl.day_of_week, e.course_id), []).append(sl.period)
+
+    for (d, cid), periods in day_course_periods.items():
+        assert len(periods) <= 3, f'Course {cid} has {len(periods)} sessions on day {d}'
+        periods.sort()
+        for i in range(len(periods) - 1):
+            assert periods[i+1] > periods[i] + 1, (
+                f'Course {cid} assigned in consecutive periods on day {d}: {periods}'
+            )

@@ -19,10 +19,13 @@ SVVV Indore (Jul–Dec 2026).
 
 ```bash
 # 1. Frontend
-cd frontend && npm install && npm run dev
+cd frontend 
+npm install
+npm run dev
 
 # 2. Solver
-cd solver && python -m venv .venv && source .venv/bin/activate
+cd solver 
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 

@@ -94,3 +94,15 @@ def test_penalise():
     assert {"faculty_id": "a", "reason": "rejected"} in pens
     assert {"faculty_id": "b", "reason": "timed_out"} in pens
     assert all(p["faculty_id"] != "c" for p in pens)
+
+
+def test_email_mailer_dev_and_format():
+    from solver.app.mailer import send_email
+    # Test that dev dispatch without SMTP credentials outputs to console and returns True
+    res = send_email(
+        to_email='prof.test@iet.edu',
+        to_name='Prof. Test',
+        subject='[TS-SC] Test Substitution',
+        body_html='<p>Please review substitution</p>',
+    )
+    assert res is True

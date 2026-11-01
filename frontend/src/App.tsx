@@ -44,6 +44,18 @@ function Nav() {
           </div>
         </Link>
 
+        <nav>
+            <ul className="nav-links">
+              {!profile && (
+                <li>
+                  <Link to="/student" className={`nav-link ${path === '/student' ? 'active' : ''}`}>
+                    <CalendarIcon size={16} />
+                    Student View
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </nav>
         {profile && (
           <nav>
             <ul className="nav-links">
@@ -242,14 +254,7 @@ export default function App() {
                 </RequireRole>
               }
             />
-            <Route
-              path="/student"
-              element={
-                <RequireRole roles={['student']}>
-                  <StudentView />
-                </RequireRole>
-              }
-            />
+            <Route path="/student" element={<StudentView />} />
           </Routes>
         </main>
       </div>

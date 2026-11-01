@@ -77,9 +77,16 @@ a student login sees only its section.
 **Done when:** end-to-end demo: data in → generate → inspect → publish →
 faculty/student see their schedules.
 
-## Phase 5 — Substitution engine (Weeks 11–13)
+## Phase 5 — Substitution engine with Faculty Email Notifications (Weeks 11–13)
 
-- [ ] Tables: `substitution_requests`, `substitution_candidates`,
+- [x] Tables: substitution_requests, substitution_candidates, substitution_penalties
+- [x] Candidate computation: P1 (section faculty, free) -> P2 (same course, free) -> P3 (other faculty, free)
+- [x] Fan-out + email notification dispatch to candidates; deadline = lecture start + 10 min
+- [x] Resolution: highest priority wins; tie-break = lowest weekly load, then earliest response
+- [x] Winner and requester email delivery on assignment confirmation
+- [x] No-acceptance path: lecture marked unfilled, requester notified via email (student push on hold)
+- [x] Penalty recording on reject/timeout + Admin repeat-offender report
+- [x] Faculty Request substitute UI + candidate inbox (accept/reject)
       `substitution_penalties`
 - [ ] Candidate computation: P1 (section's faculty, free) → P2 (same course,
       free) → P3 (other faculty, free)
@@ -105,7 +112,7 @@ enrolled test devices.
 
 ## Phase 7 — Hardening & submission (Weeks 15–16)
 
-- [ ] Load test with a larger synthetic dataset; record timings
+- [x] Load test with a larger synthetic dataset; record timings
 - [ ] RLS penetration check (attempt cross-role reads via API)
 - [ ] Admin User Guide PDF; in-app tooltips pass
 - [ ] README, demo video script, final report figures

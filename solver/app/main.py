@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import solver, substitution
+from . import mailer, solver, substitution
 from .schemas import (
     GenerateRequest,
     GenerateResponse,
@@ -12,6 +12,8 @@ from .schemas import (
     RankSubstitutesResponse,
     ResolveSubstitutesRequest,
     ResolveSubstitutesResponse,
+    SendEmailRequest,
+    SendEmailResponse,
 )
 
 app = FastAPI(title="TS-SC Solver", version="0.1.0")
@@ -62,4 +64,19 @@ def resolve_substitutes(
         winner_faculty_id=winner,
         should_resolve=should,
         penalties=penalties,
+    )
+
+
+@app.post("/notifications/email", response_model=SendEmailResponse)
+def send_notification_email(req: SendEmailRequest) -> SendEmailResponse:
+    ok = mailer.send_email(
+        to_email=req.to_email,
+        to_name=req.to_name,
+        subject=req.subject,
+        body_html=req.body_html,
+        body_text=req.body_text,
+    )
+    return SendEmailResponse(
+        success=ok,
+        message="Email sent successfully" if ok else "Failed to dispatch email",
     )

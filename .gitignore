@@ -24,3 +24,6 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# graphify
+graphify-out/

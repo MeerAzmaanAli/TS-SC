@@ -1,114 +1,444 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { CalendarIcon, ShieldIcon, AlertCircleIcon } from '../components/Icons'
+import {
+  CalendarIcon,
+  ShieldIcon,
+  AlertCircleIcon,
+  UsersIcon,
+  KeyIcon,
+  RefreshIcon,
+} from '../components/Icons'
+
+type LoginMode = 'student' | 'faculty' | 'admin'
+
+const STORAGE_KEY = 'ts_sc_student_access'
 
 export default function Login() {
+  const [mode, setMode] = useState<LoginMode>('student')
+
+  // Faculty & Admin Auth State
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  // Student Passkey State
+  const [sectionCode, setSectionCode] = useState('')
+  const [passkey, setPasskey] = useState('')
+
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const navigate = useNavigate()
 
-  async function handleSubmit(e: React.FormEvent) {
+  // Handle Faculty or Admin Supabase Authentication
+  async function handleUserAuth(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setBusy(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setBusy(false)
-    if (error) {
-      setError(error.message)
+
+    try {
+      const { data, error: authErr } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      })
+
+      if (authErr) {
+        setError(authErr.message)
+        return
+      }
+
+      // Fetch user profile role to route accordingly
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .single()
+
+      if (profile?.role === 'admin') {
+        navigate('/admin')
+      } else if (profile?.role === 'faculty') {
+        navigate('/faculty')
+      } else {
+        navigate('/')
+      }
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed. Please verify credentials.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Handle Direct Student Passkey Access
+  async function handleStudentAccess(e: React.FormEvent) {
+    e.preventDefault()
+    if (!sectionCode.trim() || !passkey.trim()) {
+      setError('Please provide both your Section Code and Passkey.')
       return
     }
-    navigate('/')
+
+    setError(null)
+    setBusy(true)
+
+    try {
+      const { data, error: rpcErr } = await supabase.rpc('get_section_timetable', {
+        p_code: sectionCode.trim(),
+        p_passkey: passkey.trim(),
+      })
+
+      if (rpcErr) {
+        setError(rpcErr.message)
+        return
+      }
+
+      if (!data || !data.success) {
+        setError(data?.error || 'Invalid section code or passkey.')
+        return
+      }
+
+      // Store verified credentials for the session
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ code: sectionCode.trim().toUpperCase(), key: passkey.trim() }),
+      )
+
+      navigate('/student')
+    } catch (err: any) {
+      setError(err.message || 'Failed to authenticate section credentials.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-logo">
-            <CalendarIcon size={28} />
+    <div className="auth-wrapper" style={{ padding: '2rem 1rem' }}>
+      <div className="auth-card" style={{ maxWidth: '440px', width: '100%', borderRadius: '16px' }}>
+        {/* Portal Header */}
+        <div className="auth-header" style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+          <div
+            className="auth-logo"
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: '12px',
+              background: mode === 'admin' ? '#0f172a' : 'var(--primary-600, #2563eb)',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 0.75rem',
+            }}
+          >
+            {mode === 'admin' ? <ShieldIcon size={26} /> : <CalendarIcon size={26} />}
           </div>
-          <h2 className="auth-title">TS-SC Portal</h2>
-          <p className="auth-subtitle">
-            Smart Classroom &amp; Timetable Scheduler
-            <br />
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-subtle)' }}>
-              SVVV Indore
-            </span>
+          <h2 className="auth-title" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.35rem' }}>
+            {mode === 'admin' ? 'Institutional Console' : 'TS-SC Campus Portal'}
+          </h2>
+          <p className="auth-subtitle" style={{ fontSize: '0.875rem', margin: 0, color: 'var(--text-muted)' }}>
+            {mode === 'admin'
+              ? 'Authorized Administrator Authentication'
+              : 'Class Timetable & Faculty Substitution Engine'}
           </p>
         </div>
 
-        {error && (
-          <div className="alert alert-danger">
-            <AlertCircleIcon size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-            <div>
-              <strong>Sign in failed</strong>
-              <div style={{ marginTop: 2 }}>{error}</div>
-            </div>
+        {/* Tab Switcher: Student vs Faculty (only shown when not in admin mode) */}
+        {mode !== 'admin' && (
+          <div
+            style={{
+              display: 'flex',
+              background: '#f1f5f9',
+              padding: '4px',
+              borderRadius: '10px',
+              marginBottom: '1.5rem',
+              gap: '4px',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setMode('student')
+                setError(null)
+              }}
+              style={{
+                flex: 1,
+                padding: '0.55rem 0.75rem',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem',
+                transition: 'all 0.15s ease',
+                background: mode === 'student' ? '#ffffff' : 'transparent',
+                color: mode === 'student' ? 'var(--primary-700, #1d4ed8)' : '#64748b',
+                boxShadow: mode === 'student' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+              }}
+            >
+              <KeyIcon size={15} />
+              <span>Student Access</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMode('faculty')
+                setError(null)
+              }}
+              style={{
+                flex: 1,
+                padding: '0.55rem 0.75rem',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem',
+                transition: 'all 0.15s ease',
+                background: mode === 'faculty' ? '#ffffff' : 'transparent',
+                color: mode === 'faculty' ? 'var(--primary-700, #1d4ed8)' : '#64748b',
+                boxShadow: mode === 'faculty' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+              }}
+            >
+              <UsersIcon size={15} />
+              <span>Faculty Sign In</span>
+            </button>
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="email">
-              Email Address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              className="input"
-              placeholder="e.g. admin@svvv.edu.in"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-            />
+        {/* Error Notification */}
+        {error && (
+          <div className="alert alert-danger" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <AlertCircleIcon size={18} style={{ flexShrink: 0 }} />
+            <div style={{ fontSize: '0.85rem' }}>{error}</div>
           </div>
+        )}
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              className="input"
-              placeholder="••••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </div>
+        {/* ------------------------------------------ */}
+        {/* FORM 1: STUDENT PASSKEY ACCESS             */}
+        {/* ------------------------------------------ */}
+        {mode === 'student' && (
+          <form onSubmit={handleStudentAccess} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+            <div>
+              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                Section Code
+              </label>
+              <input
+                type="text"
+                required
+                className="input"
+                placeholder="e.g. BTCS27H, BTCS27A"
+                value={sectionCode}
+                onChange={(e) => setSectionCode(e.target.value.toUpperCase())}
+                style={{ width: '100%', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}
+                autoFocus
+              />
+              <span className="text-muted" style={{ fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
+                Assigned batch section code
+              </span>
+            </div>
 
-          <div style={{ marginTop: '1.5rem' }}>
+            <div>
+              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                Section Passkey
+              </label>
+              <input
+                type="text"
+                required
+                className="input"
+                placeholder="e.g. H-9382"
+                value={passkey}
+                onChange={(e) => setPasskey(e.target.value)}
+                style={{ width: '100%', letterSpacing: '0.05em', fontWeight: 600 }}
+              />
+              <span className="text-muted" style={{ fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
+                Offline security passkey provided by Class Coordinator
+              </span>
+            </div>
+
             <button
               type="submit"
               disabled={busy}
               className="btn btn-primary"
-              style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '0.95rem' }}
+              style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: 600, justifyContent: 'center', marginTop: '0.25rem' }}
             >
               {busy ? (
                 <>
-                  <span>Authenticating…</span>
+                  <RefreshIcon size={16} className="spin" />
+                  <span>Verifying Section…</span>
                 </>
               ) : (
-                <>
-                  <ShieldIcon size={18} />
-                  <span>Sign In</span>
-                </>
+                <span>View Timetable &rarr;</span>
               )}
             </button>
-          </div>
-        </form>
+          </form>
+        )}
 
-        <div style={{ marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-light)' }}>
-          <div className="text-muted" style={{ fontSize: '0.78rem', textAlign: 'center', lineHeight: 1.5 }}>
-            <strong>Institutional Roles:</strong> Admin (Curriculum &amp; Solver), Faculty (Schedule &amp; Live Substitutions), Student (Section Grid).
+        {/* ------------------------------------------ */}
+        {/* FORM 2: FACULTY SIGN IN                    */}
+        {/* ------------------------------------------ */}
+        {mode === 'faculty' && (
+          <form onSubmit={handleUserAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+            <div>
+              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                Faculty Email Address
+              </label>
+              <input
+                type="email"
+                required
+                className="input"
+                placeholder="e.g. faculty@college.edu"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                className="input"
+                placeholder="••••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={busy}
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: 600, justifyContent: 'center', marginTop: '0.25rem' }}
+            >
+              {busy ? <span>Authenticating…</span> : <span>Sign In as Faculty</span>}
+            </button>
+          </form>
+        )}
+
+        {/* ------------------------------------------ */}
+        {/* FORM 3: DISCREET ADMIN LOGIN               */}
+        {/* ------------------------------------------ */}
+        {mode === 'admin' && (
+          <div>
+            <div
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '0.6rem 0.85rem',
+                fontSize: '0.78rem',
+                color: '#475569',
+                marginBottom: '1rem',
+                lineHeight: 1.4,
+              }}
+            >
+              🔒 Restricted access for campus timetable administrators &amp; curriculum coordinators only.
+            </div>
+
+            <form onSubmit={handleUserAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              <div>
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                  Administrator ID / Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  className="input"
+                  placeholder="admin-identifier"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                  Master Key / Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  className="input"
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={busy}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: 600, justifyContent: 'center' }}
+              >
+                {busy ? <span>Authenticating…</span> : <span>Authorize Admin Access</span>}
+              </button>
+            </form>
+
+            <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('student')
+                  setError(null)
+                }}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.8rem' }}
+              >
+                &larr; Return to Campus Portal
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* ------------------------------------------ */}
+        {/* MUTED FOOTER: DISCREET ADMIN LINK          */}
+        {/* ------------------------------------------ */}
+        {mode !== 'admin' && (
+          <div
+            style={{
+              marginTop: '1.75rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid var(--border-light, #f1f5f9)',
+              textAlign: 'center',
+            }}
+          >
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              Institutional staff?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('admin')
+                  setError(null)
+                  setEmail('')
+                  setPassword('')
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  fontSize: '0.75rem',
+                  color: '#64748b',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                }}
+              >
+                Administrative access
+              </button>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -101,8 +101,10 @@ export async function buildSnapshot(): Promise<GenerateRequest> {
     qualifications,
     elective_blocks: blocks.map((b) => b.time_slot_id),
     weights,
-    time_limit_seconds: 120,
+    time_limit_seconds: !import.meta.env.VITE_SOLVER_URL || import.meta.env.VITE_SOLVER_URL === '/api' ? 10 : 60,
   }
 }
 
-export const SOLVER_URL = (import.meta.env.VITE_SOLVER_URL as string | undefined) ?? 'http://localhost:8000'
+export const SOLVER_URL =
+  (import.meta.env.VITE_SOLVER_URL as string | undefined) ||
+  (import.meta.env.PROD ? '/api' : 'http://localhost:8000')

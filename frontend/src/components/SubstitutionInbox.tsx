@@ -70,7 +70,7 @@ export default function SubstitutionInbox({ facultyId }: { facultyId: string }) 
       const { data: req } = await supabase
         .from('substitution_requests')
         .select(
-          'id, requester_id, timetable_entries(' +
+          'id, requester_faculty_id, timetable_entries(' +
             'section_id, course_id, time_slot_id, ' +
             'courses(code, name), sections(name), ' +
             'time_slots(day_of_week, period)' +
@@ -81,7 +81,7 @@ export default function SubstitutionInbox({ facultyId }: { facultyId: string }) 
       if (!req) continue
 
       const reqTyped = req as unknown as {
-        requester_id: string
+        requester_faculty_id: string
         timetable_entries: {
           courses: { code: string; name: string } | null
           sections: { name: string } | null
@@ -92,7 +92,7 @@ export default function SubstitutionInbox({ facultyId }: { facultyId: string }) 
       const { data: fac } = await supabase
         .from('faculty')
         .select('name')
-        .eq('id', reqTyped.requester_id)
+        .eq('id', reqTyped.requester_faculty_id)
         .single()
 
       const entry = reqTyped.timetable_entries
@@ -119,7 +119,15 @@ export default function SubstitutionInbox({ facultyId }: { facultyId: string }) 
     load()
   }, [facultyId])
 
-  async function handleResponse(candId: string, requestId: string, accept: boolean) {
+  async function handleResponse(candId: string, requestId: string, deadline: string, accept: boolean) {
+    // Boundary check: Candidate responding after deadline
+    if (new Date() > new Date(deadline)) {
+      setError('This substitution request has already passed its deadline and is expired.')
+      await tryFinaliseRequest(requestId)
+      await load()
+      return
+    }
+
     setBusy(candId)
     setError(null)
     try {
@@ -211,7 +219,7 @@ export default function SubstitutionInbox({ facultyId }: { facultyId: string }) 
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                   <button
                     disabled={busy === r.candidate_id || isDeadlinePassed}
-                    onClick={() => handleResponse(r.candidate_id, r.request_id, true)}
+                    onClick={() => handleResponse(r.candidate_id, r.request_id, r.deadline, true)}
                     className="btn btn-primary btn-sm"
                     style={{ flex: 1 }}
                   >
@@ -221,7 +229,7 @@ export default function SubstitutionInbox({ facultyId }: { facultyId: string }) 
 
                   <button
                     disabled={busy === r.candidate_id || isDeadlinePassed}
-                    onClick={() => handleResponse(r.candidate_id, r.request_id, false)}
+                    onClick={() => handleResponse(r.candidate_id, r.request_id, r.deadline, false)}
                     className="btn btn-secondary btn-sm"
                   >
                     <XIcon size={14} />
