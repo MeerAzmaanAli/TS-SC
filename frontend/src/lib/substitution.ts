@@ -96,7 +96,14 @@ async function rank(input: {
     body: JSON.stringify(input),
   })
   if (!res.ok) throw new Error(`Ranking failed (HTTP ${res.status})`)
-  return (await res.json()).candidates as RankedCandidate[]
+  const text = await res.text()
+  try {
+    return (JSON.parse(text) as { candidates: RankedCandidate[] }).candidates
+  } catch {
+    throw new Error(
+      `Ranking failed: solver returned non-JSON (HTTP ${res.status}): ${text.slice(0, 300)}`,
+    )
+  }
 }
 
 async function resolveRemote(
