@@ -1,24 +1,16 @@
 import os
 import sys
 
-# Add the solver root directory to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "solver")))
+# NOTE (2026-11-02 fix): the api service must NOT import the solver app.
+# solver/app/main.py imports OR-Tools at module load, but OR-Tools is not
+# installed for this service (api/requirements.txt has no ortools), so the
+# import crashed every /api request with FUNCTION_INVOCATION_FAILED and
+# broke faculty substitution dispatch (which calls /api/substitutions/rank).
+# Instead, re-export the gateway app from main.py: it proxies /api/* to the
+# solver service over the SOLVER_URL service binding injected by Vercel,
+# and the solver service installs ortools from solver/requirements.txt.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.main import app as solver_app
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from main import app
 
-# Create wrapper application
-app = FastAPI(title="TS-SC Unified API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Support both /api/* and direct routes seamlessly on Vercel
-app.mount("/api", solver_app)
-app.mount("", solver_app)
+__all__ = ["app"]
