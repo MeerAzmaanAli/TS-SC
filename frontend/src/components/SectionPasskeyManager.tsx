@@ -102,14 +102,14 @@ export default function SectionPasskeyManager() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="section-manager-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <input
             type="text"
             placeholder="Search section or code…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input"
-            style={{ width: '220px', padding: '0.4rem 0.75rem', fontSize: '0.875rem' }}
+            style={{ width: '220px', minWidth: '160px', padding: '0.4rem 0.75rem', fontSize: '0.875rem' }}
           />
           <button
             onClick={loadSections}

@@ -77,15 +77,12 @@ def resolve(candidates: list[dict]) -> str | None:
 def should_resolve_now(candidates: list[dict], deadline_passed: bool) -> bool:
     """Decide whether the request can be finalised right now.
 
-    Resolve when the deadline has passed, or as soon as a P1 candidate
-    accepts (no later acceptance can beat P1 compatibility).
+    Resolve when the deadline has passed, or as soon as any candidate
+    accepts the substitution request.
     """
     if deadline_passed:
         return True
-    return any(
-        c.get("response") == "accepted" and c.get("priority") == 1
-        for c in candidates
-    )
+    return any(c.get("response") == "accepted" for c in candidates)
 
 
 def penalise(candidates: list[dict]) -> list[dict]:

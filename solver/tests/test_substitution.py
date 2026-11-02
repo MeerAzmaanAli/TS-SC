@@ -76,12 +76,20 @@ def test_should_resolve_now():
     ]
     assert should_resolve_now(p1_accept, deadline_passed=False) is True
 
+    # Any tier acceptance resolves immediately to ensure lecture coverage
     p3_accept = [
         {"faculty_id": "o1", "priority": 3, "response": "accepted",
          "responded_at": "2026-10-17T09:00:00", "weekly_load": 5},
     ]
-    assert should_resolve_now(p3_accept, deadline_passed=False) is False
+    assert should_resolve_now(p3_accept, deadline_passed=False) is True
     assert should_resolve_now(p3_accept, deadline_passed=True) is True
+
+    no_accept = [
+        {"faculty_id": "o1", "priority": 3, "response": "pending",
+         "responded_at": None, "weekly_load": 5},
+    ]
+    assert should_resolve_now(no_accept, deadline_passed=False) is False
+    assert should_resolve_now(no_accept, deadline_passed=True) is True
 
 
 def test_penalise():

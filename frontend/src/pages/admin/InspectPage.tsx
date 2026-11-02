@@ -216,7 +216,7 @@ export default function InspectPage() {
                   </h2>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="page-header-actions">
                   {selected.status === 'draft' && (
                     <button
                       disabled={busy}

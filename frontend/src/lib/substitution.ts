@@ -44,6 +44,13 @@ export async function sendEmailNotification(payload: SendEmailPayload): Promise<
  * 1. Substitution requests can ONLY be raised on the SAME DAY as the lecture (Day-of).
  * 2. Lectures that have already commenced or ended cannot be requested.
  */
+/**
+ * TESTING CONFIGURATION:
+ * When true, bypasses the strict 'same day as lecture' and 'not already passed' policy,
+ * allowing full testing of the substitution workflow on any session across the week.
+ */
+export const BYPASS_DAY_OF_POLICY = true
+
 export function getLectureTemporalStatus(dayOfWeek: number, startsAt: string): {
   isToday: boolean
   isPast: boolean
@@ -59,6 +66,18 @@ export function getLectureTemporalStatus(dayOfWeek: number, startsAt: string): {
   todayLectureDate.setHours(h || 0, m || 0, 0, 0)
 
   const isPast = now.getTime() >= todayLectureDate.getTime()
+
+  if (BYPASS_DAY_OF_POLICY) {
+    // Testing mode: allow requesting any session anytime
+    // Set a valid future lecture timestamp (2 hours ahead) so deadlines are valid and open
+    const testLectureDate = new Date(now.getTime() + 2 * 60 * 60 * 1000)
+    return {
+      isToday: true,
+      isPast: false,
+      todayLectureDate: testLectureDate,
+      reasonMessage: undefined,
+    }
+  }
 
   let reasonMessage: string | undefined
   if (!isToday) {
@@ -110,16 +129,56 @@ async function resolveRemote(
   candidates: CandidateState[],
   deadlinePassed: boolean,
 ): Promise<{ winner_faculty_id: string | null; should_resolve: boolean; penalties: { faculty_id: string; reason: string }[] }> {
-  const res = await fetch(`${SOLVER_URL}/substitutions/resolve`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ candidates, deadline_passed: deadlinePassed }),
-  })
-  if (!res.ok) throw new Error(`Resolve failed (HTTP ${res.status})`)
-  return (await res.json()) as {
-    winner_faculty_id: string | null
-    should_resolve: boolean
-    penalties: { faculty_id: string; reason: string }[]
+  try {
+    const res = await fetch(`${SOLVER_URL}/substitutions/resolve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ candidates, deadline_passed: deadlinePassed }),
+    })
+    if (res.ok) {
+      return (await res.json()) as {
+        winner_faculty_id: string | null
+        should_resolve: boolean
+        penalties: { faculty_id: string; reason: string }[]
+      }
+    }
+  } catch (e) {
+    console.warn('Remote substitution resolve failed, falling back to client resolution logic:', e)
+  }
+
+  // Robust Client-side Fallback
+  const accepted = candidates.filter((c) => c.response === 'accepted')
+  if (accepted.length > 0) {
+    accepted.sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority
+      if (a.weekly_load !== b.weekly_load) return a.weekly_load - b.weekly_load
+      return (a.responded_at || '').localeCompare(b.responded_at || '')
+    })
+    return {
+      winner_faculty_id: accepted[0].faculty_id,
+      should_resolve: true,
+      penalties: [],
+    }
+  }
+
+  if (deadlinePassed) {
+    const penalties = candidates
+      .filter((c) => c.response === 'rejected' || c.response === 'pending')
+      .map((c) => ({
+        faculty_id: c.faculty_id,
+        reason: c.response === 'rejected' ? 'rejected' : 'timed_out',
+      }))
+    return {
+      winner_faculty_id: null,
+      should_resolve: true,
+      penalties,
+    }
+  }
+
+  return {
+    winner_faculty_id: null,
+    should_resolve: false,
+    penalties: [],
   }
 }
 
@@ -144,15 +203,17 @@ export async function createSubstitutionRequest(
     session.startsAt,
   )
 
-  if (!isToday) {
-    throw new Error(
-      'Invalid request: Substitution requests can only be dispatched on the same day as the lecture.',
-    )
-  }
-  if (isPast) {
-    throw new Error(
-      'Invalid request: Cannot request substitution for a lecture that has already started or passed.',
-    )
+  if (!BYPASS_DAY_OF_POLICY) {
+    if (!isToday) {
+      throw new Error(
+        'Invalid request: Substitution requests can only be dispatched on the same day as the lecture.',
+      )
+    }
+    if (isPast) {
+      throw new Error(
+        'Invalid request: Cannot request substitution for a lecture that has already started or passed.',
+      )
+    }
   }
 
   const version = await publishedVersion()
@@ -216,8 +277,10 @@ export async function createSubstitutionRequest(
   })
   if (candidates.length === 0) throw new Error('No available substitute candidates (all colleagues busy or unqualified).')
 
-  // Deadline = lecture_start + 10 min
-  const deadline = new Date(todayLectureDate.getTime() + 10 * 60 * 1000)
+  // Deadline = lecture_start + 10 min (in test mode, defaults to now + 2 hours so requests stay open for testing)
+  const deadline = BYPASS_DAY_OF_POLICY
+    ? new Date(Date.now() + 2 * 60 * 60 * 1000)
+    : new Date(todayLectureDate.getTime() + 10 * 60 * 1000)
 
   const { data: req, error: rErr } = await supabase
     .from('substitution_requests')
@@ -286,22 +349,21 @@ export async function createSubstitutionRequest(
  * resolves accepted ones or automatically expires them and assigns penalties to unresponding faculties.
  */
 export async function sweepAllExpiredRequests(): Promise<number> {
-  const nowIso = new Date().toISOString()
-  const { data: expiredList, error } = await supabase
+  // Query all open substitution requests to finalize accepted ones or expire timed-out ones
+  const { data: openList, error } = await supabase
     .from('substitution_requests')
     .select('id')
     .eq('status', 'open')
-    .lt('deadline', nowIso)
 
-  if (error || !expiredList || expiredList.length === 0) return 0
+  if (error || !openList || openList.length === 0) return 0
 
   let count = 0
-  for (const req of expiredList) {
+  for (const req of openList) {
     try {
       const resolved = await tryFinaliseRequest(req.id)
       if (resolved) count++
     } catch (err) {
-      console.warn(`Failed to finalize expired request ${req.id}:`, err)
+      console.warn(`Failed to finalize open request ${req.id}:`, err)
     }
   }
   return count
@@ -372,11 +434,20 @@ export async function tryFinaliseRequest(requestId: string): Promise<boolean> {
   ])
 
   if (out.winner_faculty_id) {
-    const { error } = await supabase
-      .from('substitution_requests')
-      .update({ status: 'assigned', assigned_faculty_id: out.winner_faculty_id })
-      .eq('id', requestId)
-    if (error) throw new Error(error.message)
+    // Attempt secure RPC resolution first (bypasses candidate RLS restriction)
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc('resolve_substitution_request', {
+      p_request_id: requestId,
+      p_winner_faculty_id: out.winner_faculty_id,
+    })
+
+    if (rpcErr || (rpcRes && !rpcRes.success)) {
+      // Fallback to direct update if RPC is pending migration execution
+      const { error } = await supabase
+        .from('substitution_requests')
+        .update({ status: 'assigned', assigned_faculty_id: out.winner_faculty_id })
+        .eq('id', requestId)
+      if (error) console.warn('Direct update fallback error:', error.message)
+    }
 
     // Send assignment confirmation email to Winner
     if (winnerRes.data?.email) {

@@ -16,7 +16,7 @@ export default function TimetablePage() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="page-header-actions">
           <Link to="/admin/generate" className="btn btn-primary btn-sm">
             <SparklesIcon size={14} />
             <span>Generate New Schedule</span>

@@ -1,4 +1,12 @@
-import { MapPinIcon, UsersIcon, BookOpenIcon, LayersIcon } from './Icons'
+import {
+  MapPinIcon,
+  UsersIcon,
+  BookOpenIcon,
+  LayersIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  AlertCircleIcon,
+} from './Icons'
 
 export interface GridEntry {
   id: string
@@ -16,7 +24,24 @@ export interface GridEntry {
     status: 'open' | 'assigned' | 'unfilled' | 'expired'
     substitute_name?: string | null
     requester_name?: string | null
+    role?: 'requester' | 'covering'
   } | null
+}
+
+export interface IncomingRequestInfo {
+  candidate_id: string
+  request_id: string
+  priority: number
+  deadline: string
+  course_code: string
+  course_name: string
+  requester_name: string
+  section_name: string
+  room_name: string
+  day_of_week: number
+  period: number
+  starts_at?: string
+  ends_at?: string
 }
 
 export interface SlotTimeInfo {
@@ -31,6 +56,11 @@ export interface WeeklyGridProps {
   allPeriods?: number[]
   slotTimes?: Record<number, SlotTimeInfo>
   emptyMessage?: string
+  onRequestSubstitution?: (entry: GridEntry) => void
+  incomingRequests?: IncomingRequestInfo[]
+  onAcceptRequest?: (candId: string, requestId: string, deadline: string) => void
+  onRejectRequest?: (candId: string, requestId: string, deadline: string) => void
+  actionBusyId?: string | null
 }
 
 const DAY_NAMES = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -56,6 +86,11 @@ export default function WeeklyGrid({
   allPeriods,
   slotTimes,
   emptyMessage,
+  onRequestSubstitution,
+  incomingRequests,
+  onAcceptRequest,
+  onRejectRequest,
+  actionBusyId,
 }: WeeklyGridProps) {
   // Ensure the full standard school week (Monday to Friday, Periods 1 to 6) is shown by default
   const defaultDays = [1, 2, 3, 4, 5]
@@ -79,7 +114,15 @@ export default function WeeklyGrid({
     else cellMap.set(key, [e])
   }
 
-  if (entries.length === 0 && !allDays && !allPeriods) {
+  const incomingMap = new Map<string, IncomingRequestInfo[]>()
+  for (const inc of incomingRequests ?? []) {
+    const key = `${inc.day_of_week}-${inc.period}`
+    const list = incomingMap.get(key)
+    if (list) list.push(inc)
+    else incomingMap.set(key, [inc])
+  }
+
+  if (entries.length === 0 && (!incomingRequests || incomingRequests.length === 0) && !allDays && !allPeriods) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: '3.5rem 1rem' }}>
         <div className="stat-icon indigo" style={{ margin: '0 auto 1rem', width: 56, height: 56 }}>
@@ -88,46 +131,32 @@ export default function WeeklyGrid({
         <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--slate-800)' }}>
           {emptyMessage ?? 'No scheduled sessions found'}
         </h3>
-        <p className="text-muted" style={{ maxWidth: 440, margin: '0.5rem auto 0' }}>
-          This schedule has no active sessions mapped in this timetable version. Select another section or faculty member, or generate a fresh schedule version.
-        </p>
       </div>
     )
   }
 
   return (
-    <div className="timetable-grid-container">
-      <table className="timetable-grid">
+    <div className="timetable-container">
+      <table className="timetable-table">
         <thead>
           <tr>
-            <th className="grid-corner-cell">
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--slate-700)' }}>DAY / TIME</span>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>WEEKDAY</span>
-              </div>
+            <th className="timetable-header-cell day-col" style={{ width: 110 }}>
+              <span className="th-title">DAY / TIME</span>
+              <span className="th-sub">WEEKDAY</span>
             </th>
             {periods.map((p) => {
-              const timeInfo = slotTimes?.[p]
-              const timeRange =
-                timeInfo?.starts_at && timeInfo?.ends_at
-                  ? `${formatTime(timeInfo.starts_at)} - ${formatTime(timeInfo.ends_at)}`
-                  : null
-
+              const time = slotTimes?.[p]
               return (
-                <th key={p} className="grid-period-header">
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
-                    <span style={{ fontWeight: 800, color: 'var(--slate-900)' }}>Period {p}</span>
-                    <span
-                      style={{
-                        fontSize: '0.7rem',
-                        color: timeRange ? 'var(--primary-700)' : 'var(--text-muted)',
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: timeRange ? 600 : 400,
-                      }}
-                    >
-                      {timeRange ?? `Slot ${p}`}
+                <th key={p} className="timetable-header-cell">
+                  <span className="th-title">Period {p}</span>
+                  {time?.starts_at ? (
+                    <span className="th-time">
+                      {formatTime(time.starts_at)}
+                      {time.ends_at && ` - ${formatTime(time.ends_at)}`}
                     </span>
-                  </div>
+                  ) : (
+                    <span className="th-sub">Slot {p}</span>
+                  )}
                 </th>
               )
             })}
@@ -136,28 +165,30 @@ export default function WeeklyGrid({
         <tbody>
           {days.map((d) => (
             <tr key={d}>
-              <th className="grid-day-header">
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem' }}>
-                  <span style={{ fontWeight: 800, color: 'var(--slate-900)', fontSize: '0.9rem' }}>
-                    {DAY_SHORT[d] ?? `Day ${d}`}
-                  </span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{DAY_NAMES[d]}</span>
-                </div>
+              <th className="timetable-day-header">
+                <div className="day-name">{DAY_SHORT[d] || `Day ${d}`}</div>
+                <div className="day-sub">{DAY_NAMES[d] || ''}</div>
               </th>
               {periods.map((p) => {
                 const slotEntries = cellMap.get(`${d}-${p}`) ?? []
+                const incomingForSlot = incomingMap.get(`${d}-${p}`) ?? []
+                const hasContent = slotEntries.length > 0 || incomingForSlot.length > 0
+
                 return (
-                  <td key={p} className={`timetable-cell ${slotEntries.length > 0 ? 'has-session' : ''}`}>
-                    {slotEntries.length > 0 ? (
+                  <td key={p} className={`timetable-cell ${hasContent ? 'has-session' : ''}`}>
+                    {hasContent ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', height: '100%' }}>
+                        {/* 1. Regular & Substituted Timetable Entries */}
                         {slotEntries.map((e) => {
+                          const isCovering = e.substitution?.role === 'covering'
                           const isSubPending = e.substitution?.status === 'open'
                           const isSubAssigned = e.substitution?.status === 'assigned'
                           const isSubExpired =
                             e.substitution?.status === 'unfilled' || e.substitution?.status === 'expired'
 
                           let subClass = ''
-                          if (isSubPending) subClass = 'sub-pending'
+                          if (isCovering) subClass = 'sub-covering'
+                          else if (isSubPending) subClass = 'sub-pending'
                           else if (isSubAssigned) subClass = 'sub-assigned'
                           else if (isSubExpired) subClass = 'sub-expired'
 
@@ -174,7 +205,23 @@ export default function WeeklyGrid({
                                   {e.course_code}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                  {isSubPending && (
+                                  {isCovering && (
+                                    <span
+                                      className="badge"
+                                      style={{
+                                        fontSize: '0.625rem',
+                                        padding: '0.1rem 0.4rem',
+                                        background: '#e0f2fe',
+                                        color: '#0369a1',
+                                        fontWeight: 800,
+                                        border: '1px solid #bae6fd',
+                                      }}
+                                      title="You are the confirmed substitute instructor covering this class"
+                                    >
+                                      Subbing
+                                    </span>
+                                  )}
+                                  {!isCovering && isSubPending && (
                                     <span
                                       className="badge"
                                       style={{
@@ -184,12 +231,12 @@ export default function WeeklyGrid({
                                         color: '#854d0e',
                                         fontWeight: 700,
                                       }}
-                                      title="Substitution dispatched - Pending confirmation"
+                                      title="Substitution dispatched - Pending peer confirmation"
                                     >
                                       Sub Pending
                                     </span>
                                   )}
-                                  {isSubAssigned && (
+                                  {!isCovering && isSubAssigned && (
                                     <span
                                       className="badge"
                                       style={{
@@ -199,12 +246,12 @@ export default function WeeklyGrid({
                                         color: '#166534',
                                         fontWeight: 700,
                                       }}
-                                      title="Substitute faculty confirmed"
+                                      title="Substitute colleague confirmed"
                                     >
                                       Sub Assigned
                                     </span>
                                   )}
-                                  {isSubExpired && (
+                                  {!isCovering && isSubExpired && (
                                     <span
                                       className="badge"
                                       style={{
@@ -214,7 +261,7 @@ export default function WeeklyGrid({
                                         color: '#991b1b',
                                         fontWeight: 700,
                                       }}
-                                      title="No substitute faculty found - Lecture is free"
+                                      title="No substitute found - Lecture marked free"
                                     >
                                       Period Free
                                     </span>
@@ -227,7 +274,7 @@ export default function WeeklyGrid({
                                       style={{ fontSize: '0.625rem', padding: '0.1rem 0.4rem', fontWeight: 700 }}
                                       title={`Lab Batch ${e.batch}`}
                                     >
-                                      Batch B{e.batch}
+                                      B{e.batch}
                                     </span>
                                   )}
                                   {e.is_elective && (
@@ -246,7 +293,7 @@ export default function WeeklyGrid({
                               </div>
 
                               <div className="session-meta">
-                                {/* If viewing by Section: highlight Assigned Faculty or Substitute */}
+                                {/* If viewing by Section */}
                                 {viewMode === 'section' && (
                                   <>
                                     {isSubAssigned ? (
@@ -286,7 +333,6 @@ export default function WeeklyGrid({
                                           backgroundColor: '#fee2e2',
                                           border: '1px solid #fca5a5',
                                         }}
-                                        title="No faculty available - period is free"
                                       >
                                         <UsersIcon size={11} />
                                         <span>Self Study / Free</span>
@@ -322,7 +368,6 @@ export default function WeeklyGrid({
                                             backgroundColor: 'var(--primary-50)',
                                             border: '1px solid var(--primary-200)',
                                           }}
-                                          title={`Assigned Faculty: ${e.faculty_name}`}
                                         >
                                           <UsersIcon size={11} />
                                           <span>{e.faculty_name}</span>
@@ -332,35 +377,81 @@ export default function WeeklyGrid({
                                   </>
                                 )}
 
-                                {/* If viewing by Faculty: highlight Student Section */}
-                                {viewMode === 'faculty' && e.section_name && (
-                                  <span
-                                    className="meta-chip section"
-                                    style={{
-                                      fontWeight: 600,
-                                      color: 'var(--emerald-800)',
-                                      backgroundColor: 'var(--emerald-50)',
-                                      border: '1px solid var(--emerald-200)',
-                                    }}
-                                    title={`Student Section: ${e.section_name}`}
-                                  >
-                                    <LayersIcon size={11} />
-                                    <span>{e.section_name}</span>
-                                  </span>
-                                )}
+                                {/* If viewing by Faculty */}
+                                {viewMode === 'faculty' && (
+                                  <>
+                                    {isCovering ? (
+                                      <span
+                                        className="meta-chip faculty"
+                                        style={{
+                                          fontWeight: 700,
+                                          color: '#0369a1',
+                                          backgroundColor: '#e0f2fe',
+                                          border: '1px solid #7dd3fc',
+                                        }}
+                                        title={`You are covering for ${e.substitution?.requester_name}`}
+                                      >
+                                        <UsersIcon size={11} />
+                                        <span>Covering for: {e.substitution?.requester_name}</span>
+                                      </span>
+                                    ) : isSubAssigned ? (
+                                      <span
+                                        className="meta-chip faculty"
+                                        style={{
+                                          fontWeight: 700,
+                                          color: '#15803d',
+                                          backgroundColor: '#dcfce7',
+                                          border: '1px solid #86efac',
+                                        }}
+                                        title={`Assigned substitute: ${e.substitution?.substitute_name}`}
+                                      >
+                                        <CheckCircleIcon size={11} />
+                                        <span>Covered by: {e.substitution?.substitute_name}</span>
+                                      </span>
+                                    ) : isSubPending ? (
+                                      <span
+                                        className="meta-chip faculty"
+                                        style={{
+                                          fontWeight: 700,
+                                          color: '#854d0e',
+                                          backgroundColor: '#fef9c3',
+                                          border: '1px solid #fde047',
+                                        }}
+                                      >
+                                        <ClockIcon size={11} />
+                                        <span>Seeking Substitute</span>
+                                      </span>
+                                    ) : isSubExpired ? (
+                                      <span
+                                        className="meta-chip"
+                                        style={{
+                                          fontWeight: 700,
+                                          color: '#b91c1c',
+                                          backgroundColor: '#fee2e2',
+                                          border: '1px solid #fca5a5',
+                                        }}
+                                      >
+                                        <AlertCircleIcon size={11} />
+                                        <span>No Sub / Free</span>
+                                      </span>
+                                    ) : null}
 
-                                {/* If no specific viewMode: show both if available */}
-                                {!viewMode && e.faculty_name && (
-                                  <span className="meta-chip" title="Faculty Instructor">
-                                    <UsersIcon size={11} />
-                                    <span>{e.faculty_name}</span>
-                                  </span>
-                                )}
-                                {!viewMode && e.section_name && (
-                                  <span className="meta-chip" title="Student Section">
-                                    <LayersIcon size={11} />
-                                    <span>Sec {e.section_name}</span>
-                                  </span>
+                                    {e.section_name && (
+                                      <span
+                                        className="meta-chip section"
+                                        style={{
+                                          fontWeight: 600,
+                                          color: 'var(--emerald-800)',
+                                          backgroundColor: 'var(--emerald-50)',
+                                          border: '1px solid var(--emerald-200)',
+                                        }}
+                                        title={`Student Section: ${e.section_name}`}
+                                      >
+                                        <LayersIcon size={11} />
+                                        <span>Sec {e.section_name}</span>
+                                      </span>
+                                    )}
+                                  </>
                                 )}
 
                                 {/* Room Location Chip */}
@@ -369,9 +460,93 @@ export default function WeeklyGrid({
                                   <span>{e.room_name}</span>
                                 </span>
                               </div>
+
+                              {/* Direct in-timetable Action Menu for Faculty */}
+                              {viewMode === 'faculty' && onRequestSubstitution && !isCovering && !e.substitution && (
+                                <button
+                                  type="button"
+                                  onClick={(ev) => {
+                                    ev.stopPropagation()
+                                    onRequestSubstitution(e)
+                                  }}
+                                  className="btn btn-sm btn-secondary"
+                                  style={{
+                                    marginTop: '0.4rem',
+                                    width: '100%',
+                                    fontSize: '0.72rem',
+                                    padding: '0.25rem 0.5rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '5px',
+                                    backgroundColor: '#ffffff',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '5px',
+                                    fontWeight: 600,
+                                  }}
+                                  title="Dispatch peer substitution request for this session"
+                                >
+                                  <UsersIcon size={12} style={{ color: 'var(--primary-600)' }} />
+                                  <span>Request Sub</span>
+                                </button>
+                              )}
                             </div>
                           )
                         })}
+
+                        {/* 2. Incoming Substitution Requests Alert on this specific Slot */}
+                        {incomingForSlot.map((inc) => (
+                          <div
+                            key={inc.candidate_id}
+                            style={{
+                              padding: '0.55rem 0.65rem',
+                              borderRadius: '7px',
+                              background: '#fffbeb',
+                              border: '1.5px dashed #f59e0b',
+                              borderLeft: '4px solid #d97706',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.35rem',
+                              boxShadow: '0 2px 8px rgba(217, 119, 6, 0.12)',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <span style={{ fontWeight: 800, color: '#92400e', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <ClockIcon size={12} />
+                                <span>Coverage Request</span>
+                              </span>
+                              <span className="badge badge-warning" style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
+                                P{inc.priority}
+                              </span>
+                            </div>
+                            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.8rem' }}>
+                              {inc.course_code} · {inc.section_name}
+                            </div>
+                            <div style={{ color: '#475569', fontSize: '0.72rem' }}>
+                              From: <strong>{inc.requester_name}</strong> · {inc.room_name}
+                            </div>
+                            <div style={{ display: 'flex', gap: '5px', marginTop: '3px' }}>
+                              <button
+                                type="button"
+                                onClick={() => onAcceptRequest?.(inc.candidate_id, inc.request_id, inc.deadline)}
+                                disabled={actionBusyId === inc.candidate_id}
+                                className="btn btn-sm btn-primary"
+                                style={{ flex: 1, padding: '3px 6px', fontSize: '0.72rem', height: '24px' }}
+                              >
+                                {actionBusyId === inc.candidate_id ? 'Accepting…' : 'Accept'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onRejectRequest?.(inc.candidate_id, inc.request_id, inc.deadline)}
+                                disabled={actionBusyId === inc.candidate_id}
+                                className="btn btn-sm btn-secondary"
+                                style={{ flex: 1, padding: '3px 6px', fontSize: '0.72rem', height: '24px', color: '#b91c1c' }}
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       <div

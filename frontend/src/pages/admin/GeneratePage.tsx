@@ -140,7 +140,7 @@ export default function GeneratePage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="page-header-actions">
           <div
             className={`badge ${
               solverOnline === true

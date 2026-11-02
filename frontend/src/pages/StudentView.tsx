@@ -87,6 +87,15 @@ export default function StudentView() {
     }
   }, [])
 
+  // Auto-refresh schedule periodically (every 15s) when a section is active
+  useEffect(() => {
+    if (!sectionCode || !passkey) return
+    const interval = setInterval(() => {
+      fetchSchedule(sectionCode, passkey, true)
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [sectionCode, passkey])
+
   async function fetchSchedule(code: string, key: string, isSilent = false) {
     if (!isSilent) setAuthLoading(true)
     setLoadingSchedule(true)
@@ -136,11 +145,10 @@ export default function StudentView() {
       const currentIsoDow = jsDay === 0 ? 7 : jsDay
 
       const gridEntries: GridEntry[] = (data.entries || []).map((e: RawEntry) => {
-        // Only apply today's substitution to lectures scheduled for today's day of week
+        // Apply substitution by exact entry match, or fallback to current day period
         const sub =
-          e.day_of_week === currentIsoDow
-            ? subByEntryId.get(e.id) || subByPeriod.get(e.period)
-            : null
+          subByEntryId.get(e.id) ||
+          (e.day_of_week === currentIsoDow ? subByPeriod.get(e.period) : null)
 
         return {
           id: e.id,

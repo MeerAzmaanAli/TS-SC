@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { AuthProvider, RequireRole, useAuth } from './lib/auth'
 import AdminDashboard from './pages/AdminDashboard'
@@ -18,12 +19,20 @@ import {
   UsersIcon,
   LogOutIcon,
   BookOpenIcon,
+  MenuIcon,
+  XIcon,
 } from './components/Icons'
 
 function Nav() {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Automatically close mobile menu when navigating to another route
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   async function handleSignOut() {
     await signOut()
@@ -45,102 +54,98 @@ function Nav() {
           </div>
         </Link>
 
-        <nav>
-            <ul className="nav-links">
-              {!profile && (
+        {/* Desktop Navigation Links */}
+        <nav className="desktop-nav">
+          <ul className="nav-links">
+            {!profile && (
+              <li>
+                <Link to="/student" className={`nav-link ${path === '/student' ? 'active' : ''}`}>
+                  <CalendarIcon size={16} />
+                  Student View
+                </Link>
+              </li>
+            )}
+            {profile && profile.role === 'admin' && (
+              <>
                 <li>
-                  <Link to="/student" className={`nav-link ${path === '/student' ? 'active' : ''}`}>
-                    <CalendarIcon size={16} />
-                    Student View
+                  <Link
+                    to="/admin"
+                    className={`nav-link ${path === '/admin' || path === '/' ? 'active' : ''}`}
+                  >
+                    <LayersIcon size={16} />
+                    Dashboard
                   </Link>
                 </li>
-              )}
-            </ul>
-          </nav>
-        {profile && (
-          <nav>
-            <ul className="nav-links">
-              {profile.role === 'admin' && (
-                <>
-                  <li>
-                    <Link
-                      to="/admin"
-                      className={`nav-link ${path === '/admin' || path === '/' ? 'active' : ''}`}
-                    >
-                      <LayersIcon size={16} />
-                      Dashboard
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/admin/data"
-                      className={`nav-link ${path.startsWith('/admin/data') ? 'active' : ''}`}
-                    >
-                      <BookOpenIcon size={16} />
-                      Entities &amp; Data
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/admin/generate"
-                      className={`nav-link ${path === '/admin/generate' ? 'active' : ''}`}
-                    >
-                      <SparklesIcon size={16} />
-                      Generator
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/admin/versions"
-                      className={`nav-link ${path === '/admin/versions' ? 'active' : ''}`}
-                    >
-                      <AlertTriangleIcon size={16} />
-                      Inspector
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/admin/timetable"
-                      className={`nav-link ${path === '/admin/timetable' ? 'active' : ''}`}
-                    >
-                      <CalendarIcon size={16} />
-                      Timetables
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/admin/penalties"
-                      className={`nav-link ${path === '/admin/penalties' ? 'active' : ''}`}
-                    >
-                      <UsersIcon size={16} />
-                      Penalties
-                    </Link>
-                  </li>
-                </>
-              )}
-
-              {profile.role === 'faculty' && (
                 <li>
-                  <Link to="/faculty" className={`nav-link ${path === '/faculty' || path === '/' ? 'active' : ''}`}>
-                    <CalendarIcon size={16} />
-                    Faculty Portal
+                  <Link
+                    to="/admin/data"
+                    className={`nav-link ${path.startsWith('/admin/data') ? 'active' : ''}`}
+                  >
+                    <BookOpenIcon size={16} />
+                    Entities &amp; Data
                   </Link>
                 </li>
-              )}
-
-              {profile.role === 'student' && (
                 <li>
-                  <Link to="/student" className={`nav-link ${path === '/student' || path === '/' ? 'active' : ''}`}>
-                    <CalendarIcon size={16} />
-                    My Schedule
+                  <Link
+                    to="/admin/generate"
+                    className={`nav-link ${path === '/admin/generate' ? 'active' : ''}`}
+                  >
+                    <SparklesIcon size={16} />
+                    Generator
                   </Link>
                 </li>
-              )}
-            </ul>
-          </nav>
-        )}
+                <li>
+                  <Link
+                    to="/admin/versions"
+                    className={`nav-link ${path === '/admin/versions' ? 'active' : ''}`}
+                  >
+                    <AlertTriangleIcon size={16} />
+                    Inspector
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/admin/timetable"
+                    className={`nav-link ${path === '/admin/timetable' ? 'active' : ''}`}
+                  >
+                    <CalendarIcon size={16} />
+                    Timetables
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/admin/penalties"
+                    className={`nav-link ${path === '/admin/penalties' ? 'active' : ''}`}
+                  >
+                    <UsersIcon size={16} />
+                    Penalties
+                  </Link>
+                </li>
+              </>
+            )}
 
-        <div className="user-profile-section">
+            {profile && profile.role === 'faculty' && (
+              <li>
+                <Link to="/faculty" className={`nav-link ${path === '/faculty' || path === '/' ? 'active' : ''}`}>
+                  <CalendarIcon size={16} />
+                  Faculty Portal
+                </Link>
+              </li>
+            )}
+
+            {profile && profile.role === 'student' && (
+              <li>
+                <Link to="/student" className={`nav-link ${path === '/student' || path === '/' ? 'active' : ''}`}>
+                  <CalendarIcon size={16} />
+                  My Schedule
+                </Link>
+              </li>
+            )}
+          </ul>
+        </nav>
+
+        {/* Desktop User Section */}
+        <div className="user-profile-section desktop-only">
           {profile ? (
             <>
               <div className="user-chip">
@@ -159,7 +164,117 @@ function Nav() {
             )
           )}
         </div>
+
+        {/* Mobile Hamburger / Close Button */}
+        <button
+          className="mobile-toggle-btn"
+          onClick={() => setMobileOpen((o) => !o)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+        >
+          {mobileOpen ? <XIcon size={20} /> : <MenuIcon size={20} />}
+        </button>
       </div>
+
+      {/* Mobile Collapsible Navigation Drawer */}
+      {mobileOpen && (
+        <div className="mobile-nav-drawer">
+          {profile && (
+            <div className="mobile-user-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span className={`role-badge ${profile.role}`}>{profile.role}</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  {profile.faculty_id ? 'Faculty Account' : 'System Administrator'}
+                </span>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="btn btn-secondary btn-sm"
+                style={{ width: '100%', justifyContent: 'center', marginTop: '0.35rem' }}
+              >
+                <LogOutIcon size={15} />
+                <span>Sign out</span>
+              </button>
+            </div>
+          )}
+
+          <ul className="mobile-nav-links">
+            {!profile && (
+              <li>
+                <Link to="/student" className={`mobile-nav-link ${path === '/student' ? 'active' : ''}`}>
+                  <CalendarIcon size={18} />
+                  <span>Student View</span>
+                </Link>
+              </li>
+            )}
+            {profile && profile.role === 'admin' && (
+              <>
+                <li>
+                  <Link to="/admin" className={`mobile-nav-link ${path === '/admin' || path === '/' ? 'active' : ''}`}>
+                    <LayersIcon size={18} />
+                    <span>Admin Dashboard</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/admin/data" className={`mobile-nav-link ${path.startsWith('/admin/data') ? 'active' : ''}`}>
+                    <BookOpenIcon size={18} />
+                    <span>Entities &amp; Master Data</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/admin/generate" className={`mobile-nav-link ${path === '/admin/generate' ? 'active' : ''}`}>
+                    <SparklesIcon size={18} />
+                    <span>Timetable Generator</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/admin/versions" className={`mobile-nav-link ${path === '/admin/versions' ? 'active' : ''}`}>
+                    <AlertTriangleIcon size={18} />
+                    <span>Version Inspector</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/admin/timetable" className={`mobile-nav-link ${path === '/admin/timetable' ? 'active' : ''}`}>
+                    <CalendarIcon size={18} />
+                    <span>Timetable Matrix</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/admin/penalties" className={`mobile-nav-link ${path === '/admin/penalties' ? 'active' : ''}`}>
+                    <UsersIcon size={18} />
+                    <span>Penalty Audits</span>
+                  </Link>
+                </li>
+              </>
+            )}
+
+            {profile && profile.role === 'faculty' && (
+              <li>
+                <Link to="/faculty" className={`mobile-nav-link ${path === '/faculty' || path === '/' ? 'active' : ''}`}>
+                  <CalendarIcon size={18} />
+                  <span>Faculty Academic Portal</span>
+                </Link>
+              </li>
+            )}
+
+            {profile && profile.role === 'student' && (
+              <li>
+                <Link to="/student" className={`mobile-nav-link ${path === '/student' || path === '/' ? 'active' : ''}`}>
+                  <CalendarIcon size={18} />
+                  <span>Student Timetable</span>
+                </Link>
+              </li>
+            )}
+
+            {!profile && path !== '/login' && (
+              <li style={{ marginTop: '0.5rem' }}>
+                <Link to="/login" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                  Sign in
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
     </header>
   )
 }

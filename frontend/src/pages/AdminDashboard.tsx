@@ -187,7 +187,7 @@ export default function AdminDashboard() {
             Configure institutional entities, trigger conflict-free CP-SAT timetable generation, and oversee real-time faculty substitutions.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="page-header-actions">
           <button
             onClick={() => {
               loadStats()

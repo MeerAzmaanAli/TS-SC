@@ -138,6 +138,14 @@ export default function SubstitutionInbox({ facultyId }: { facultyId: string }) 
         .eq('id', candId)
       if (uErr) throw uErr
 
+      if (accept && facultyId) {
+        // Direct atomic RPC assignment to guarantee immediate resolution
+        await supabase.rpc('resolve_substitution_request', {
+          p_request_id: requestId,
+          p_winner_faculty_id: facultyId,
+        })
+      }
+
       await tryFinaliseRequest(requestId)
       await load()
     } catch (err) {
