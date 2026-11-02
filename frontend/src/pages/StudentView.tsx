@@ -349,7 +349,7 @@ export default function StudentView() {
           </p>
         </div>
 
-        <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+        <div className="page-header-actions">
           <button
             onClick={() => fetchSchedule(section.code, passkey, false)}
             className="btn btn-secondary btn-sm"

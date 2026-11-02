@@ -1370,3 +1370,174 @@ a:hover {
     font-size: 0.875rem;
   }
 }
+
+
+/* Timetable Container & Table Responsive Base */
+.timetable-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.timetable-table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.timetable-header-cell {
+  background-color: var(--slate-50);
+  border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  padding: 0.65rem 0.75rem;
+  text-align: center;
+}
+
+.timetable-header-cell:last-child {
+  border-right: none;
+}
+
+.th-title {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--slate-800);
+}
+
+.th-time {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.th-sub {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--text-subtle);
+}
+
+.timetable-day-header {
+  background-color: var(--slate-50);
+  border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  padding: 0.75rem 0.6rem;
+  text-align: center;
+  width: 95px;
+  vertical-align: middle;
+}
+
+.day-name {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--slate-900);
+}
+
+.day-sub {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.timetable-table tbody tr:last-child td,
+.timetable-table tbody tr:last-child th {
+  border-bottom: none;
+}
+
+.timetable-table tbody td {
+  border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+}
+
+.timetable-table tbody td:last-child {
+  border-right: none;
+}
+
+/* Mobile Timetable Tweaks */
+
+@media (max-width: 768px) {
+  .timetable-table {
+    min-width: 680px;
+  }
+
+  .timetable-cell {
+    min-width: 130px;
+    height: auto;
+    min-height: 95px;
+    padding: 0.35rem;
+  }
+
+  .session-badge {
+    padding: 0.45rem 0.5rem;
+    gap: 0.2rem;
+  }
+
+  .session-code {
+    font-size: 0.8rem;
+  }
+
+  .session-name {
+    font-size: 0.72rem;
+  }
+
+  .session-meta {
+    font-size: 0.65rem;
+    gap: 0.25rem;
+  }
+
+  .meta-chip {
+    padding: 0.15rem 0.35rem;
+    font-size: 0.65rem;
+  }
+
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.4rem;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    padding: 0.55rem 0.8rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .timetable-table {
+    min-width: 620px;
+  }
+
+  .timetable-cell {
+    min-width: 115px;
+    padding: 0.25rem;
+  }
+
+  .timetable-day-header {
+    width: 75px;
+    padding: 0.5rem 0.3rem;
+  }
+
+  .day-name {
+    font-size: 0.8rem;
+  }
+
+  .day-sub {
+    font-size: 0.625rem;
+  }
+}

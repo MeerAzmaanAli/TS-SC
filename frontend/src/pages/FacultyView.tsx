@@ -377,7 +377,7 @@ export default function FacultyView() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="page-header-actions">
           {incomingRequests.length > 0 && (
             <button
               onClick={() => setActiveTab('inbox')}

@@ -15,6 +15,7 @@ import {
   XIcon,
   RefreshIcon,
   InboxIcon,
+  TrashIcon,
 } from '../components/Icons'
 
 interface Stats {
@@ -88,6 +89,25 @@ export default function AdminDashboard() {
       /* non-fatal */
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleClearAllSubstitutions() {
+    if (!window.confirm('Are you sure you want to delete all substitution requests, candidate logs, and penalties?')) return
+    setSubsLoading(true)
+    try {
+      const { error: rpcErr } = await supabase.rpc('clear_all_substitution_data')
+      if (rpcErr) {
+        // Direct delete fallback
+        await supabase.from('substitution_penalties').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('substitution_candidates').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('substitution_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      }
+      await loadSubstitutions()
+    } catch (err) {
+      console.error('Failed to clear substitutions:', err)
+    } finally {
+      setSubsLoading(false)
     }
   }
 
@@ -266,9 +286,22 @@ export default function AdminDashboard() {
               </p>
             </div>
           </div>
-          <span className="badge badge-neutral">
-            {substitutions.length} Recorded Requests
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="badge badge-neutral">
+              {substitutions.length} Recorded Requests
+            </span>
+            {substitutions.length > 0 && (
+              <button
+                onClick={handleClearAllSubstitutions}
+                className="btn btn-secondary btn-sm"
+                style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                title="Delete all substitution requests from database"
+              >
+                <TrashIcon size={14} />
+                <span>Clear All Requests</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {subsLoading ? (
