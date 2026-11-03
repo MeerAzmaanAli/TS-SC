@@ -131,24 +131,16 @@ export default function StudentView() {
       const todaySubs: TodaySubstitution[] = data.today_substitutions || []
       setTodaySubstitutions(todaySubs)
 
-      // Map today's substitutions by entry_id and period
+      // Map today's substitutions strictly by exact timetable_entry_id
+      // to ensure a substitution ONLY highlights its specific scheduled lecture slot
       const subByEntryId = new Map<string, TodaySubstitution>()
-      const subByPeriod = new Map<number, TodaySubstitution>()
       for (const sub of todaySubs) {
         if (sub.entry_id) subByEntryId.set(sub.entry_id, sub)
-        subByPeriod.set(sub.period, sub)
       }
 
-      // Current Day of Week in ISO (1=Mon ... 7=Sun)
-      const now = new Date()
-      const jsDay = now.getDay()
-      const currentIsoDow = jsDay === 0 ? 7 : jsDay
-
       const gridEntries: GridEntry[] = (data.entries || []).map((e: RawEntry) => {
-        // Apply substitution by exact entry match, or fallback to current day period
-        const sub =
-          subByEntryId.get(e.id) ||
-          (e.day_of_week === currentIsoDow ? subByPeriod.get(e.period) : null)
+        // Strictly match by exact entry ID
+        const sub = subByEntryId.get(e.id) || null
 
         return {
           id: e.id,
