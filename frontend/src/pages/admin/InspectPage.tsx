@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import AdminHeader from '../../components/AdminHeader'
 import {
-  AlertTriangleIcon,
   CheckCircleIcon,
-  ClockIcon,
-  UsersIcon,
-  BookOpenIcon,
   AlertCircleIcon,
-  LayersIcon,
 } from '../../components/Icons'
 import TimetablePreview from '../../components/TimetablePreview'
 
@@ -52,7 +48,6 @@ export default function InspectPage() {
     setSuccessMsg(null)
     try {
       if (status === 'published') {
-        // Exactly one published version at a time (REQ-16).
         await supabase
           .from('timetable_versions')
           .update({ status: 'archived' })
@@ -69,7 +64,7 @@ export default function InspectPage() {
       setSuccessMsg(
         status === 'published'
           ? 'Version is now officially published! Faculty and students can now view their schedules.'
-          : 'Version has been reverted to draft status.',
+          : 'Version has been reverted to draft status.'
       )
       await load()
     } catch (err) {
@@ -83,258 +78,240 @@ export default function InspectPage() {
   const facultyLoads = (v.faculty_loads ?? {}) as Record<string, number>
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">
-            <AlertTriangleIcon size={26} style={{ color: 'var(--amber-600)' }} />
-            <span>Conflict Inspector &amp; Version Management</span>
-          </h1>
-          <p className="page-subtitle">
-            Audit solver output metrics, inspect soft constraint gaps and faculty load balance, and publish official timetables.
-          </p>
-        </div>
-      </div>
+    <div className="admin-cal-wrapper">
+      <AdminHeader />
 
       {error && (
-        <div className="alert alert-danger">
-          <AlertCircleIcon size={18} style={{ flexShrink: 0 }} />
-          <div>{error}</div>
+        <div
+          style={{
+            marginTop: 4,
+            padding: 12,
+            background: '#FFF1F2',
+            border: '1px solid #FECDD3',
+            borderRadius: 8,
+            fontSize: 13,
+            color: '#9F1239',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <AlertCircleIcon size={16} />
+          <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="alert alert-success">
-          <CheckCircleIcon size={18} style={{ flexShrink: 0 }} />
-          <div>{successMsg}</div>
+        <div
+          style={{
+            marginTop: 4,
+            padding: 12,
+            background: '#E3F3DE',
+            border: '1px solid #B8E3B0',
+            borderRadius: 8,
+            fontSize: 13,
+            color: '#0B5446',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <CheckCircleIcon size={16} />
+          <span>{successMsg}</span>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 340px) 1fr', gap: '1.5rem', alignItems: 'start' }}>
-        {/* Left: Versions Sidebar */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div
-            style={{
-              padding: '1rem 1.25rem',
-              borderBottom: '1px solid var(--border-light)',
-              background: 'var(--slate-50)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--slate-900)' }}>
-              Timetable Versions
-            </h2>
-            <span className="badge badge-neutral">{versions.length} versions</span>
-          </div>
-
-          <div style={{ maxHeight: 600, overflowY: 'auto' }}>
-            {versions.map((ver) => {
-              const isSelected = ver.id === selected?.id
-              return (
-                <div
-                  key={ver.id}
-                  onClick={() => setSelected(ver)}
-                  style={{
-                    padding: '1rem 1.25rem',
-                    borderBottom: '1px solid var(--border-subtle)',
-                    cursor: 'pointer',
-                    background: isSelected ? 'var(--primary-50)' : 'transparent',
-                    borderLeft: isSelected ? '4px solid var(--primary-600)' : '4px solid transparent',
-                    transition: 'all var(--transition-fast)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                    <span
-                      className={`badge ${
-                        ver.status === 'published'
-                          ? 'badge-success'
-                          : ver.status === 'draft'
-                          ? 'badge-warning'
-                          : 'badge-neutral'
-                      }`}
-                    >
-                      {ver.status.toUpperCase()}
-                    </span>
-                    <span className="text-muted font-mono" style={{ fontSize: '0.72rem' }}>
-                      {new Date(ver.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--slate-800)' }}>
-                    {new Date(ver.created_at).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </div>
-
-                  {ver.published_at && (
-                    <div className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}>
-                      Published: {new Date(ver.published_at).toLocaleDateString()}
+      <div className="admin-cal-cols" style={{ marginTop: 4 }}>
+        {/* Main Column: Details & Quality Metrics */}
+        <div className="admin-cal-stack">
+          {selected ? (
+            <>
+              {/* Selected Version Audit Banner */}
+              <section className="admin-panel">
+                <div className="admin-panel-hd">
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <h2>Version {selected.id.slice(0, 8)}</h2>
+                      <span
+                        className={`admin-tag ${
+                          selected.status === 'published'
+                            ? 'assigned'
+                            : selected.status === 'draft'
+                            ? 'open'
+                            : ''
+                        }`}
+                      >
+                        {selected.status.toUpperCase()}
+                      </span>
                     </div>
-                  )}
-                </div>
-              )
-            })}
+                    <div className="admin-mu admin-m" style={{ marginTop: 4 }}>
+                      Generated {new Date(selected.created_at).toLocaleString()}
+                      {selected.published_at && ` · Published ${new Date(selected.published_at).toLocaleDateString()}`}
+                    </div>
+                  </div>
 
-            {versions.length === 0 && (
-              <div style={{ padding: '2rem 1rem', textAlign: 'center' }} className="text-muted">
-                No versions generated yet.
-              </div>
-            )}
-          </div>
+                  <div>
+                    {selected.status === 'draft' && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setStatus(selected, 'published')}
+                        className="admin-btn admin-btn-sm"
+                      >
+                        <CheckCircleIcon size={14} />
+                        <span>{busy ? 'Publishing…' : 'Publish schedule'}</span>
+                      </button>
+                    )}
+
+                    {selected.status === 'published' && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setStatus(selected, 'draft')}
+                        className="admin-btn admin-btn-outline admin-btn-sm"
+                      >
+                        <span>{busy ? 'Reverting…' : 'Revert to draft'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Conflict / Soft Quality Metrics */}
+                <div className="admin-conflict-grid" style={{ marginTop: 14 }}>
+                  <div className="admin-conflict-box">
+                    <b>{String(v.total_gaps ?? '0')}</b>
+                    <span>Total student gaps</span>
+                  </div>
+                  <div className="admin-conflict-box">
+                    <b>{String(v.course_days_used ?? '—')}</b>
+                    <span>Course-days spread</span>
+                  </div>
+                  <div className="admin-conflict-box">
+                    <b>{String(v.max_faculty_load ?? '—')}</b>
+                    <span>Max faculty load</span>
+                  </div>
+                  <div className="admin-conflict-box">
+                    <b>{String(v.sessions_scheduled ?? '—')}</b>
+                    <span>Sessions assigned</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Faculty Load Distribution */}
+              {Object.keys(facultyLoads).length > 0 && (
+                <section className="admin-panel">
+                  <div className="admin-panel-hd">
+                    <h2>Faculty Teaching Load Balance</h2>
+                    <span className="admin-mu admin-m">Weekly periods</span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                      gap: 8,
+                    }}
+                  >
+                    {Object.entries(facultyLoads).map(([id, load]) => (
+                      <div
+                        key={id}
+                        style={{
+                          padding: '8px 12px',
+                          background: '#F7F7F8',
+                          borderRadius: 8,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          boxShadow: '0 0 0 1px #E3E4E8',
+                        }}
+                      >
+                        <span className="admin-m" style={{ color: '#1B1D22', fontWeight: 500 }}>
+                          {id.length > 12 ? `${id.slice(0, 8)}…` : id}
+                        </span>
+                        <span className="admin-tag assigned" style={{ fontWeight: 600 }}>
+                          {load} p/wk
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Timetable Grid for Version */}
+              <section className="admin-panel">
+                <div className="admin-panel-hd">
+                  <h2>Schedule Matrix for Version {selected.id.slice(0, 8)}</h2>
+                </div>
+                <TimetablePreview key={selected.id} versionId={selected.id} />
+              </section>
+            </>
+          ) : (
+            <section className="admin-panel" style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div className="admin-mu">Select a timetable version from the sidebar to inspect its schedule and conflict logs.</div>
+            </section>
+          )}
         </div>
 
-        {/* Right: Selected Version Details & Metrics */}
-        {selected ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Version Hero Header Card */}
-            <div className="card">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
-                    <span
-                      className={`badge ${
-                        selected.status === 'published'
-                          ? 'badge-success'
-                          : selected.status === 'draft'
-                          ? 'badge-warning'
-                          : 'badge-neutral'
-                      }`}
-                      style={{ fontSize: '0.8125rem', padding: '0.25rem 0.75rem' }}
-                    >
-                      {selected.status.toUpperCase()}
-                    </span>
-                    <span className="text-muted" style={{ fontSize: '0.85rem' }}>
-                      Generated on {new Date(selected.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--slate-900)' }}>
-                    Quality &amp; Soft Constraint Audit
-                  </h2>
-                </div>
-
-                <div className="page-header-actions">
-                  {selected.status === 'draft' && (
-                    <button
-                      disabled={busy}
-                      onClick={() => setStatus(selected, 'published')}
-                      className="btn btn-primary"
-                    >
-                      <CheckCircleIcon size={16} />
-                      <span>{busy ? 'Publishing…' : 'Publish as Official Schedule'}</span>
-                    </button>
-                  )}
-
-                  {selected.status === 'published' && (
-                    <button
-                      disabled={busy}
-                      onClick={() => setStatus(selected, 'draft')}
-                      className="btn btn-secondary"
-                    >
-                      <span>{busy ? 'Unpublishing…' : 'Revert to Draft'}</span>
-                    </button>
-                  )}
-                </div>
-              </div>
+        {/* Right Sidebar: Versions List */}
+        <div className="admin-cal-stack">
+          <section className="admin-panel">
+            <div className="admin-panel-hd">
+              <h2>All Versions</h2>
+              <span className="admin-mu admin-m">{versions.length} generated</span>
             </div>
 
-            {/* Quality Metrics Grid */}
-            <div className="grid-4">
-              <div className="stat-card">
-                <div className="stat-icon indigo">
-                  <ClockIcon size={22} />
-                </div>
-                <div>
-                  <div className="stat-value">{String(v.total_gaps ?? '0')}</div>
-                  <div className="stat-label">Total Student Gaps</div>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon emerald">
-                  <BookOpenIcon size={22} />
-                </div>
-                <div>
-                  <div className="stat-value">{String(v.course_days_used ?? '—')}</div>
-                  <div className="stat-label">Course-Days Used</div>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon amber">
-                  <UsersIcon size={22} />
-                </div>
-                <div>
-                  <div className="stat-value">{String(v.max_faculty_load ?? '—')}</div>
-                  <div className="stat-label">Max Faculty Load</div>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon sky">
-                  <LayersIcon size={22} />
-                </div>
-                <div>
-                  <div className="stat-value">{String(v.sessions_scheduled ?? '—')}</div>
-                  <div className="stat-label">Sessions Assigned</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Faculty Loads Distribution */}
-            {Object.keys(facultyLoads).length > 0 && (
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">
-                    <UsersIcon size={18} style={{ color: 'var(--primary-600)' }} />
-                    <span>Faculty Teaching Load Distribution</span>
-                  </h3>
-                  <span className="badge badge-neutral">Weekly Periods</span>
-                </div>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                    gap: '0.75rem',
-                  }}
-                >
-                  {Object.entries(facultyLoads).map(([id, load]) => (
-                    <div
-                      key={id}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        background: 'var(--slate-50)',
-                        border: '1px solid var(--border-light)',
-                        borderRadius: 'var(--radius-md)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <span className="font-mono text-sm" style={{ fontWeight: 600, color: 'var(--slate-700)' }}>
-                        {id.length > 12 ? `${id.slice(0, 8)}…` : id}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 680, overflowY: 'auto' }}>
+              {versions.map((ver) => {
+                const isSelected = ver.id === selected?.id
+                return (
+                  <div
+                    key={ver.id}
+                    onClick={() => setSelected(ver)}
+                    style={{
+                      padding: 12,
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      background: isSelected ? '#FFFFFF' : '#F7F7F8',
+                      boxShadow: isSelected ? '0 0 0 2px #1B1D22' : '0 0 0 1px #E3E4E8',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span
+                        className={`admin-tag ${
+                          ver.status === 'published' ? 'assigned' : ver.status === 'draft' ? 'open' : ''
+                        }`}
+                      >
+                        {ver.status.toUpperCase()}
                       </span>
-                      <span className="badge badge-primary" style={{ fontWeight: 700 }}>
-                        {load} periods/wk
+                      <span className="admin-mu admin-m">
+                        {new Date(ver.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Timetable Matrix Preview for Selected Version */}
-            <TimetablePreview key={selected.id} versionId={selected.id} />
-          </div>
-        ) : (
-          <div className="card" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-            <p className="text-muted">Select a timetable version from the left panel to inspect.</p>
-          </div>
-        )}
+                    <b style={{ display: 'block', marginTop: 6, fontSize: 13, color: '#1B1D22' }}>
+                      Version {ver.id.slice(0, 8)}
+                    </b>
+
+                    <div className="admin-mu" style={{ fontSize: 12, marginTop: 2 }}>
+                      {new Date(ver.created_at).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {versions.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: '#555B66', fontSize: 13 }}>
+                  No timetable versions generated yet.
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   )

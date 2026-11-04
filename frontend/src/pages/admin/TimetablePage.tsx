@@ -1,35 +1,23 @@
-import { Link } from 'react-router-dom'
+import AdminHeader from '../../components/AdminHeader'
 import TimetablePreview from '../../components/TimetablePreview'
-import { CalendarIcon, SparklesIcon, AlertTriangleIcon } from '../../components/Icons'
 
 export default function TimetablePage() {
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">
-            <CalendarIcon size={26} style={{ color: 'var(--primary-600)' }} />
-            <span>Institutional Timetable Matrix</span>
-          </h1>
-          <p className="page-subtitle">
-            Comprehensive weekly schedule preview (Rows = Weekday, Columns = Time Slot). Switch seamlessly between Student Sections and Faculty Instructors.
-          </p>
+    <div className="admin-cal-wrapper">
+      <AdminHeader />
+
+      <div className="admin-panel" style={{ marginTop: 4 }}>
+        <div className="admin-panel-hd" style={{ marginBottom: 12 }}>
+          <div>
+            <h2>Institutional Timetable Matrix</h2>
+            <p className="admin-mu" style={{ fontSize: 13, margin: '4px 0 0 0' }}>
+              Full weekly campus schedule matrix. Filter by Student Sections or Faculty Instructors and inspect live assignments.
+            </p>
+          </div>
         </div>
 
-        <div className="page-header-actions">
-          <Link to="/admin/generate" className="btn btn-primary btn-sm">
-            <SparklesIcon size={14} />
-            <span>Generate New Schedule</span>
-          </Link>
-
-          <Link to="/admin/versions" className="btn btn-secondary btn-sm">
-            <AlertTriangleIcon size={14} />
-            <span>Version Inspector</span>
-          </Link>
-        </div>
+        <TimetablePreview showVersionSelector={true} />
       </div>
-
-      <TimetablePreview showVersionSelector={true} />
     </div>
   )
 }

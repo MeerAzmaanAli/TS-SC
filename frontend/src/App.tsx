@@ -41,6 +41,11 @@ function Nav() {
 
   const path = location.pathname
 
+  // The dedicated layouts embed their own topbars
+  if (path.startsWith('/admin') || path === '/' || path === '/faculty' || path === '/student') {
+    return null
+  }
+
   return (
     <header className="top-navbar">
       <div className="navbar-inner">

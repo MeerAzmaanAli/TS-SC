@@ -24,14 +24,57 @@ async function must<T>(
   return (data ?? []) as T
 }
 
-async function fetchSections(): Promise<{ id: string; strength: number; batch_count?: number }[]> {
-  const res = await supabase.from('sections').select('id, strength, batch_count')
+async function fetchSections(): Promise<{ id: string; program_id?: string; strength: number; batch_count?: number }[]> {
+  const res = await supabase.from('sections').select('id, program_id, strength, batch_count')
   if (res.error) {
-    const fb = await supabase.from('sections').select('id, strength')
+    const fb = await supabase.from('sections').select('id, program_id, strength')
     if (fb.error) throw new Error(`Failed to load sections: ${fb.error.message}`)
     return (fb.data ?? []).map((s) => ({ ...s, batch_count: 1 }))
   }
   return (res.data ?? []).map((s) => ({ ...s, batch_count: s.batch_count ?? 1 }))
+}
+
+async function fetchCurriculumMappings(
+  sections: { id: string; program_id?: string }[],
+): Promise<{ section_id: string; course_id: string; sessions_per_week: number | null }[]> {
+  // 1. Try reading program_courses first (new curriculum model)
+  const { data: progCourses, error: pErr } = await supabase
+    .from('program_courses')
+    .select('program_id, course_id, sessions_per_week')
+
+  if (!pErr && progCourses && progCourses.length > 0) {
+    const progMap = new Map<string, { course_id: string; sessions_per_week: number | null }[]>()
+    for (const pc of progCourses) {
+      if (!progMap.has(pc.program_id)) progMap.set(pc.program_id, [])
+      progMap.get(pc.program_id)!.push({
+        course_id: pc.course_id,
+        sessions_per_week: pc.sessions_per_week,
+      })
+    }
+
+    const mapped: { section_id: string; course_id: string; sessions_per_week: number | null }[] = []
+    for (const sec of sections) {
+      if (sec.program_id && progMap.has(sec.program_id)) {
+        for (const c of progMap.get(sec.program_id)!) {
+          mapped.push({
+            section_id: sec.id,
+            course_id: c.course_id,
+            sessions_per_week: c.sessions_per_week,
+          })
+        }
+      }
+    }
+
+    if (mapped.length > 0) return mapped
+  }
+
+  // 2. Fall back to section_courses if program_courses is empty
+  const { data: secCourses, error: sErr } = await supabase
+    .from('section_courses')
+    .select('section_id, course_id, sessions_per_week')
+
+  if (sErr) throw new Error(`Failed to load course curriculum mapping: ${sErr.message}`)
+  return (secCourses ?? []) as { section_id: string; course_id: string; sessions_per_week: number | null }[]
 }
 
 /** Assemble the solver snapshot from current Supabase data (admin only). */
@@ -43,17 +86,14 @@ export async function buildSnapshot(): Promise<GenerateRequest> {
   if (institutions.length === 0) throw new Error('No institution configured.')
   const institution_id = institutions[0].id
 
-  const [sections, courses, section_courses, faculty, rooms, time_slots, qualifications, blocks, constraints] =
+  const rawSections = await fetchSections()
+  const [courses, section_courses, faculty, rooms, time_slots, qualifications, blocks, constraints] =
     await Promise.all([
-      fetchSections(),
       must<{ id: string; sessions_per_week: number; lab_required: boolean; is_elective: boolean }[]>(
         supabase.from('courses').select('id, sessions_per_week, lab_required, is_elective'),
         'courses',
       ),
-      must<{ section_id: string; course_id: string; sessions_per_week: number | null }[]>(
-        supabase.from('section_courses').select('section_id, course_id, sessions_per_week'),
-        'section_courses',
-      ),
+      fetchCurriculumMappings(rawSections),
       must<{ id: string; max_weekly_load: number }[]>(
         supabase.from('faculty').select('id, max_weekly_load'),
         'faculty',
@@ -92,7 +132,7 @@ export async function buildSnapshot(): Promise<GenerateRequest> {
 
   return {
     institution_id,
-    sections,
+    sections: rawSections.map((s) => ({ id: s.id, strength: s.strength, batch_count: s.batch_count })),
     courses,
     section_courses,
     faculty,

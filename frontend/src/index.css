@@ -1541,3 +1541,576 @@ a:hover {
     font-size: 0.625rem;
   }
 }
+
+
+/* ==========================================================================
+   Admin Design System (Calendar Direction Refinement)
+   ========================================================================== */
+
+/* Full viewport edge-to-edge when admin layout is rendered */
+.admin-cal-layout {
+  min-height: 100vh;
+  background: #F7F7F8;
+  width: 100%;
+}
+
+.admin-cal-wrapper {
+  background: #F7F7F8;
+  color: #1B1D22;
+  font-family: 'Figtree', sans-serif;
+  min-height: 100vh;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .admin-cal-wrapper {
+    padding: 16px 14px;
+    gap: 16px;
+  }
+}
+
+.admin-cal-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 6px;
+}
+
+.admin-cal-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #1B1D22;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.02em;
+}
+
+.admin-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: #ffffff;
+  color: #1B1D22;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px #E3E4E8;
+}
+
+.admin-role-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+}
+
+.admin-cal-wrapper {
+  background: #F7F7F8;
+  color: #1B1D22;
+  font-family: 'Figtree', sans-serif;
+  min-height: calc(100vh - 80px);
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-radius: 16px;
+  margin: -1.5rem -1rem 1rem -1rem;
+}
+
+@media (max-width: 768px) {
+  .admin-cal-wrapper {
+    padding: 16px 14px;
+    margin: -1rem -0.75rem 1rem -0.75rem;
+    gap: 16px;
+  }
+}
+
+.admin-cal-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-cal-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-cal-nav a,
+.admin-cal-nav button {
+  color: #555B66;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-cal-nav a:hover,
+.admin-cal-nav button:hover {
+  color: #1B1D22;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.admin-cal-nav a.on,
+.admin-cal-nav button.on {
+  background: #ffffff;
+  color: #1B1D22;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px #E3E4E8, 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.admin-btn {
+  background: #1B1D22;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.admin-btn:hover {
+  background: #2D3039;
+  color: #ffffff;
+}
+
+.admin-btn.admin-btn-outline {
+  background: #ffffff;
+  color: #1B1D22;
+  box-shadow: 0 0 0 1px #CFD1D8;
+}
+
+.admin-btn.admin-btn-outline:hover {
+  background: #F7F7F8;
+  box-shadow: 0 0 0 1px #1B1D22;
+}
+
+.admin-btn.admin-btn-sm {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.admin-btn.admin-btn-danger {
+  background: #FFF1F2;
+  color: #E11D48;
+  box-shadow: 0 0 0 1px #FECDD3;
+}
+
+.admin-btn.admin-btn-danger:hover {
+  background: #FFE4E6;
+  box-shadow: 0 0 0 1px #E11D48;
+}
+
+.admin-cal-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .admin-cal-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-cal-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.admin-panel {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px #E3E4E8;
+  padding: 20px;
+}
+
+.admin-panel-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.admin-panel-hd h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1B1D22;
+  letter-spacing: -0.01em;
+}
+
+.admin-m {
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.admin-mu {
+  color: #555B66;
+}
+
+/* Substitution Card in Calendar Layout */
+.admin-req-card {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 16px;
+  border-bottom: 1px solid #F0F1F3;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-req-card:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .admin-req-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-req-badge-box {
+  border-radius: 10px;
+  padding: 12px;
+  background: #E3F3DE;
+  box-shadow: 0 0 0 2px #1B1D22;
+  color: #1B1D22;
+}
+
+.admin-req-badge-box.open {
+  background: #EEF2FF;
+  box-shadow: 0 0 0 2px #4F46E5;
+}
+
+.admin-req-badge-box.unfilled {
+  background: #FFE4E6;
+  box-shadow: 0 0 0 2px #E11D48;
+}
+
+.admin-req-badge-box b {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.admin-req-badge-box span {
+  font-size: 12px;
+  display: block;
+  margin-top: 2px;
+}
+
+.admin-tag {
+  display: inline-block;
+  background: #DCEFE8;
+  color: #0B5446;
+  border-radius: 99px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-tag.open {
+  background: #EEF2FF;
+  color: #3730A3;
+}
+
+.admin-tag.unfilled {
+  background: #FFE4E6;
+  color: #9F1239;
+}
+
+.admin-cands-wrap {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.admin-cand-pill {
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #F2F2F4;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  color: #1B1D22;
+}
+
+.admin-cand-pill em {
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  font-style: normal;
+  color: #555B66;
+  margin-right: 6px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.admin-cand-pill.winner {
+  background: #E3F3DE;
+  font-weight: 600;
+  color: #0B5446;
+}
+
+.admin-cand-pill.accepted {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
+.admin-cand-pill.rejected {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+/* Conflict Grid */
+.admin-conflict-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .admin-conflict-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.admin-conflict-box {
+  border-radius: 10px;
+  padding: 14px;
+  background: #F7F7F8;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-conflict-box b {
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+  color: #1B1D22;
+}
+
+.admin-conflict-box span {
+  font-size: 13px;
+  color: #555B66;
+  margin-top: 2px;
+}
+
+.admin-conflict-box.highlight {
+  background: #FFE9D6;
+}
+
+.admin-conflict-box.highlight b {
+  color: #6B3A12;
+}
+
+.admin-conflict-box.highlight span {
+  color: #6B3A12;
+}
+
+.admin-conflict-box.success {
+  background: #E3F3DE;
+}
+
+.admin-conflict-box.success b {
+  color: #0B5446;
+}
+
+.admin-conflict-box.success span {
+  color: #0B5446;
+}
+
+/* Timetable Version Card */
+.admin-version-card {
+  background: #EBE2FB;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.admin-version-card.draft {
+  background: #F2F2F4;
+}
+
+.admin-version-card .admin-mu {
+  font-size: 12px;
+}
+
+.admin-version-card b {
+  font-size: 15px;
+  font-weight: 600;
+  display: block;
+  margin-top: 2px;
+  color: #1B1D22;
+}
+
+/* Data Tables Directory */
+.admin-data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-data-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-decoration: none;
+  color: #1B1D22;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #E3E4E8;
+  padding: 0 12px;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.admin-data-link:hover {
+  background: #F7F7F8;
+  box-shadow: 0 0 0 1px #1B1D22;
+}
+
+.admin-data-link .admin-m {
+  color: #555B66;
+  font-weight: 600;
+}
+
+/* Clean content wrapper when admin topbar is active */
+.admin-cal-wrapper {
+  margin: -1.5rem -1rem -2rem -1rem !important;
+  border-radius: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .admin-cal-wrapper {
+    margin: -1rem -0.75rem -1.5rem -0.75rem !important;
+  }
+}
+
+/* ==========================================================================
+   Faculty & Student Portal Extensions (Calendar Direction)
+   ========================================================================== */
+
+.faculty-cal-wrapper,
+.student-cal-wrapper {
+  background: #F7F7F8;
+  color: #1B1D22;
+  font-family: 'Figtree', sans-serif;
+  min-height: 100vh;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .faculty-cal-wrapper,
+  .student-cal-wrapper {
+    padding: 16px 14px;
+    gap: 16px;
+  }
+}
+
+.portal-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: #ffffff;
+  color: #1B1D22;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px #E3E4E8;
+}
+
+.portal-role-dot.faculty {
+  background: #4F46E5;
+}
+
+.portal-role-dot.student {
+  background: #0284C7;
+}
+
+/* Modal styles for substitution requests */
+.cal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.cal-modal-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 0 0 1px #E3E4E8;
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+}
+
+/* Responsive Timetable Grid Display (Desktop = Day/Time, Mobile = Time/Day) */
+.timetable-responsive-desktop {
+  display: block;
+}
+
+.timetable-responsive-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .timetable-responsive-desktop {
+    display: none;
+  }
+  .timetable-responsive-mobile {
+    display: block;
+  }
+}

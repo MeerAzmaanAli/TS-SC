@@ -1,0 +1,67 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>TS-SC Admin</title><script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script></head><body><x-dc><helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.k{background:#F7F7F8;color:#1B1D22;font:14px 'Figtree',sans-serif;min-height:980px;padding:24px 32px;display:flex;flex-direction:column;gap:20px}
+.tb{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.nv{display:flex;gap:4px;flex-wrap:wrap}.nv a{color:#555B66;text-decoration:none;padding:10px 12px;border-radius:8px;min-height:24px}.nv a.on{background:#fff;color:#1B1D22;box-shadow:0 0 0 1px #E3E4E8}
+.go{background:#1B1D22;color:#fff;border:0;border-radius:8px;min-height:44px;padding:0 18px;font:600 14px 'Figtree';cursor:pointer}
+.go.ln{background:#fff;color:#1B1D22;box-shadow:0 0 0 1px #CFD1D8}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+.st{display:flex;flex-direction:column;gap:20px;min-width:0}
+.pn{background:#fff;border-radius:12px;box-shadow:0 0 0 1px #E3E4E8;padding:20px}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px}
+.hd h2{margin:0;font-size:16px;font-weight:600}
+.m{font-family:'Geist Mono',monospace;font-size:12px}
+.mu{color:#555B66}
+.req{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px}
+.e{border-radius:10px;padding:12px;background:#E3F3DE;box-shadow:0 0 0 2px #1B1D22}.e b{display:block;font-weight:600;font-size:15px}.e span{font-size:12px;display:block;margin-top:2px}
+.tg{display:inline-block;background:#DCEFE8;color:#0B5446;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:500}
+.ch{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cd{border-radius:8px;padding:8px 12px;background:#F2F2F4}.cd em{font:500 12px 'Geist Mono';font-style:normal;color:#555B66;margin-right:6px}
+.cd.w{background:#E3F3DE;font-weight:600}
+.cf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cb{border-radius:10px;padding:14px;background:#F7F7F8}.cb b{display:block;font-size:22px;font-weight:600}.cb span{font-size:13px;color:#555B66}
+.cb.h{background:#FFE9D6}.cb.h span{color:#6B3A12}
+.dt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dt a{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:#1B1D22;border-radius:8px;box-shadow:0 0 0 1px #E3E4E8;padding:0 12px;min-height:44px}
+.dt a:hover{background:#F7F7F8}
+.dt .m{color:#555B66}
+.gn{background:#EBE2FB;border-radius:10px;padding:14px;margin-bottom:14px}
+@media (max-width:1000px){.cols{grid-template-columns:1fr}.req{grid-template-columns:1fr}}
+</style></helmet>
+<div class="k">
+<div class="tb"><div class="nv"><a class="on" href="#">Overview</a><a href="#">Timetables</a><a href="#">Generator</a><a href="#">Conflicts</a><a href="#">Substitutions</a><a href="#">Data</a><a href="#">Access</a></div><div style="display:flex;gap:10px"><button class="go ln">Refresh</button><button class="go">Generate timetable</button></div></div>
+<div class="cols">
+<div class="st">
+<section class="pn"><div class="hd"><h2>Active substitution requests</h2><span class="mu m">1 request</span></div>
+<div class="req">
+<div class="e"><b>CS502</b><span>CSE-E · Deep Learning</span><span class="m" style="margin-top:8px">Mon · P3 · 11:00–12:00</span></div>
+<div><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><b>Prof. Fatima Khan</b> <span class="mu">· medical leave</span></div><span class="tg">Assigned · 3 Nov, 13:26</span></div>
+<div class="mu m" style="margin-top:4px">Deadline 15:26</div>
+<div class="ch"><div class="cd"><em>P1</em>Chetan Verma</div><div class="cd"><em>P1</em>Divya Patel</div><div class="cd"><em>P1</em>Priya Sen</div><div class="cd w"><em>P2</em>Kavita Nair, accepted</div><div class="cd"><em>P3</em>Nitin Gadre</div></div></div>
+</div>
+<div style="margin-top:14px;display:flex;gap:10px"><button class="go ln">Open slot in timetable</button><button class="go ln">Clear request</button></div>
+</section>
+<section class="pn"><div class="hd"><h2>Conflicts</h2><a href="#" class="mu" style="min-height:24px">Open inspector</a></div>
+<div class="cf"><div class="cb h"><b>[n]</b><span>Faculty clashes</span></div><div class="cb h"><b>[n]</b><span>Room clashes</span></div><div class="cb h"><b>[n]</b><span>Section clashes</span></div><div class="cb"><b>[n]</b><span>Gaps</span></div><div class="cb"><b>[n]</b><span>Day spread issues</span></div><div class="cb"><b>[n]</b><span>Faculty load imbalance</span></div></div>
+</section>
+</div>
+<div class="st">
+<section class="pn"><div class="hd"><h2>Timetable generation</h2></div>
+<div class="gn"><div class="mu" style="font-size:12px">Active timetable</div><b>[version name]</b><div class="mu m" style="margin-top:4px">Published [date]</div></div>
+<div class="gn" style="background:#F2F2F4"><div class="mu" style="font-size:12px">Latest draft</div><b>[version name]</b><div class="mu m" style="margin-top:4px">[n] conflicts · ready to publish</div></div>
+<div style="display:flex;gap:10px"><button class="go" style="flex:1">Generate</button><button class="go ln" style="flex:1">Publish draft</button></div>
+</section>
+<section class="pn"><div class="hd"><h2>Data</h2><span class="mu m">9 tables</span></div>
+<div class="dt"><a href="#">Departments<span class="m"></span></a><a href="#">Programs<span class="m"></span></a><a href="#">Sections<span class="m">10</span></a><a href="#">Rooms<span class="m"></span></a><a href="#">Courses<span class="m">8</span></a><a href="#">Section courses<span class="m"></span></a><a href="#">Faculty<span class="m">16</span></a><a href="#">Time slots<span class="m"></span></a><a href="#">Constraints<span class="m"></span></a></div>
+<a href="#" style="display:block;margin-top:14px;color:#1B1D22;font-weight:500;min-height:24px">Section codes and passkeys</a>
+</section>
+</div>
+</div>
+</div>
+</x-dc><script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script></body></html>

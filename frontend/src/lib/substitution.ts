@@ -38,55 +38,89 @@ export async function sendEmailNotification(payload: SendEmailPayload): Promise<
 }
 
 /**
- * Checks whether a weekly lecture slot occurs TODAY, and whether it is upcoming or past.
+ * Checks whether a faculty member is eligible to raise a substitution request for a lecture.
  *
- * Boundary Rules:
- * 1. Substitution requests can ONLY be raised on the SAME DAY as the lecture (Day-of).
- * 2. Lectures that have already commenced or ended cannot be requested.
+ * Policy: Requests can be dispatched on the DAY BEFORE the lecture, or on the SAME DAY before
+ * the lecture commences. The deadline is always lecture_start + 10 minutes on the actual lecture date.
  */
-/**
- * TESTING CONFIGURATION:
- * When true, bypasses the strict 'same day as lecture' and 'not already passed' policy,
- * allowing full testing of the substitution workflow on any session across the week.
- */
-export const BYPASS_DAY_OF_POLICY = true
-
 export function getLectureTemporalStatus(dayOfWeek: number, startsAt: string): {
-  isToday: boolean
-  isPast: boolean
-  todayLectureDate: Date
+  isEligible: boolean       // true if request window is open (day-before or same-day, pre-start)
+  isAdvanceRequest: boolean // true if today is the day BEFORE the lecture
+  isToday: boolean          // true if today IS the lecture day
+  isPast: boolean           // true if lecture has already started/passed (same-day only)
+  lectureDate: Date         // actual Date the lecture will occur (may be tomorrow for advance)
   reasonMessage?: string
 } {
   const now = new Date()
-  const todayDayOfWeek = now.getDay() === 0 ? 7 : now.getDay() // 1=Mon .. 7=Sun
+  const todayDayOfWeek = now.getDay() === 0 ? 7 : now.getDay() // 1=Mon..7=Sun (JS Sun=0 → 7)
+
   const isToday = dayOfWeek === todayDayOfWeek
+  // The day before the lecture (wraps: Monday's prev day = Sunday = 7)
+  const prevDay = dayOfWeek === 1 ? 7 : dayOfWeek - 1
+  const isAdvanceRequest = todayDayOfWeek === prevDay
 
   const [h, m] = startsAt.split(':').map(Number)
-  const todayLectureDate = new Date(now)
-  todayLectureDate.setHours(h || 0, m || 0, 0, 0)
 
-  const isPast = now.getTime() >= todayLectureDate.getTime()
+  // Compute the actual calendar date of the lecture
+  const lectureDate = new Date(now)
+  if (isAdvanceRequest) {
+    // Lecture is tomorrow — advance one calendar day
+    lectureDate.setDate(lectureDate.getDate() + 1)
+  }
+  lectureDate.setHours(h || 0, m || 0, 0, 0)
 
-  if (BYPASS_DAY_OF_POLICY) {
-    // Testing mode: allow requesting any session anytime
-    // Set a valid future lecture timestamp (2 hours ahead) so deadlines are valid and open
-    const testLectureDate = new Date(now.getTime() + 2 * 60 * 60 * 1000)
-    return {
-      isToday: true,
-      isPast: false,
-      todayLectureDate: testLectureDate,
-      reasonMessage: undefined,
+  // "Past" only applies if today IS the lecture day and it has already started
+  const isPast = isToday && now.getTime() >= lectureDate.getTime()
+
+  const isEligible = isAdvanceRequest || (isToday && !isPast)
+
+  let reasonMessage: string | undefined
+  if (!isEligible) {
+    if (isToday && isPast) {
+      reasonMessage = 'Lecture has already commenced or passed today.'
+    } else {
+      const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+      reasonMessage = `Requests open the day before or on ${dayNames[dayOfWeek] ?? 'the lecture day'}.`
     }
   }
 
-  let reasonMessage: string | undefined
-  if (!isToday) {
-    reasonMessage = 'Substitution can only be requested on the day of the lecture.'
-  } else if (isPast) {
-    reasonMessage = 'Lecture has already commenced or passed today.'
-  }
+  return { isEligible, isAdvanceRequest, isToday, isPast, lectureDate, reasonMessage }
+}
 
-  return { isToday, isPast, todayLectureDate, reasonMessage }
+/**
+ * Calculates the exact calendar date on which a weekly lecture slot will be held
+ * based on when the substitution request was dispatched (or reference date).
+ *
+ * For example:
+ * - If request was created on Wednesday, and the lecture slot is Thursday (day 4),
+ *   the lecture is held on Thursday (tomorrow).
+ * - If request was created on Wednesday, and the slot is Wednesday (day 3),
+ *   the lecture is held on Wednesday (today).
+ */
+export function getHeldLectureDate(slotDayOfWeek: number, referenceCreatedAt?: string | Date | null): Date {
+  const ref = referenceCreatedAt ? new Date(referenceCreatedAt) : new Date()
+  const refDayOfWeek = ref.getDay() === 0 ? 7 : ref.getDay() // 1=Mon .. 7=Sun
+
+  // Number of days between reference and target slot (0 if same day, 1 if next day, etc.)
+  const diffDays = (slotDayOfWeek - refDayOfWeek + 7) % 7
+
+  const heldDate = new Date(ref)
+  heldDate.setDate(heldDate.getDate() + diffDays)
+  heldDate.setHours(12, 0, 0, 0) // noon prevents any UTC timezone rollover when formatted
+  return heldDate
+}
+
+/** Formats a Date object to YYYY-MM-DD using local calendar year, month, day */
+export function toLocalDateString(d: Date): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+export function formatHeldDate(slotDayOfWeek: number, referenceCreatedAt?: string | Date | null): string {
+  const d = getHeldLectureDate(slotDayOfWeek, referenceCreatedAt)
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
 async function publishedVersion(): Promise<{ id: string; institution_id: string }> {
@@ -197,23 +231,21 @@ export async function createSubstitutionRequest(
   requesterFacultyId: string,
   reason?: string,
 ): Promise<void> {
-  // Boundary 1: Day-of & Not-Past Enforcement
-  const { isToday, isPast, todayLectureDate } = getLectureTemporalStatus(
+  // Boundary 1: Eligibility — must be day-before or same-day, lecture not yet started
+  const { isEligible, isPast, isAdvanceRequest, lectureDate } = getLectureTemporalStatus(
     session.dayOfWeek,
     session.startsAt,
   )
 
-  if (!BYPASS_DAY_OF_POLICY) {
-    if (!isToday) {
-      throw new Error(
-        'Invalid request: Substitution requests can only be dispatched on the same day as the lecture.',
-      )
-    }
+  if (!isEligible) {
     if (isPast) {
       throw new Error(
         'Invalid request: Cannot request substitution for a lecture that has already started or passed.',
       )
     }
+    throw new Error(
+      'Invalid request: Substitution requests can only be dispatched the day before or on the same day as the lecture.',
+    )
   }
 
   const version = await publishedVersion()
@@ -277,10 +309,9 @@ export async function createSubstitutionRequest(
   })
   if (candidates.length === 0) throw new Error('No available substitute candidates (all colleagues busy or unqualified).')
 
-  // Deadline = lecture_start + 10 min (in test mode, defaults to now + 2 hours so requests stay open for testing)
-  const deadline = BYPASS_DAY_OF_POLICY
-    ? new Date(Date.now() + 2 * 60 * 60 * 1000)
-    : new Date(todayLectureDate.getTime() + 10 * 60 * 1000)
+  // Deadline = lecture_start + 10 min on the actual lecture date
+  // For advance requests (day-before), lectureDate is tomorrow — deadline is still lecture_start + 10min
+  const deadline = new Date(lectureDate.getTime() + 10 * 60 * 1000)
 
   const { data: req, error: rErr } = await supabase
     .from('substitution_requests')
@@ -310,7 +341,11 @@ export async function createSubstitutionRequest(
   // Dispatch Email Notification to candidate faculty members
   const courseName = courseRes.data ? `${courseRes.data.code} - ${courseRes.data.name}` : 'Course'
   const requesterName = requesterRes.data?.name ?? 'Faculty Colleague'
-  const dateFormatted = todayLectureDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
+  const dateFormatted = lectureDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
+  const isAdvance = isAdvanceRequest
+  const emailSubject = isAdvance
+    ? `[TS-SC] Advance Request: Substitute needed for ${courseName} on ${dateFormatted}`
+    : `[TS-SC] Urgent Today: Substitution Request for ${courseName}`
 
   for (const cand of candidates) {
     const fac = facultyMap.get(cand.faculty_id)
@@ -318,18 +353,19 @@ export async function createSubstitutionRequest(
       sendEmailNotification({
         to_email: fac.email,
         to_name: fac.name,
-        subject: `[TS-SC] Urgent Today: Substitution Request for ${courseName}`,
+        subject: emailSubject,
         body_html: `
           <div style="font-family: sans-serif; line-height: 1.6; color: #1f2937;">
-            <h2 style="color: #4f46e5;">Urgent Day-Of Substitution Request</h2>
+            <h2 style="color: #4f46e5;">${isAdvance ? 'Advance Substitution Request' : 'Same-Day Substitution Request'}</h2>
             <p>Dear <strong>${fac.name}</strong>,</p>
-            <p><strong>${requesterName}</strong> has requested a substitute for their upcoming lecture today:</p>
+            <p><strong>${requesterName}</strong> has requested a substitute for their ${isAdvance ? 'upcoming' : 'today\'s'} lecture:</p>
             <ul>
               <li><strong>Course:</strong> ${courseName}</li>
-              <li><strong>Time:</strong> Today (${dateFormatted}) at ${session.startsAt}</li>
+              <li><strong>Date:</strong> ${dateFormatted}</li>
+              <li><strong>Time:</strong> ${session.startsAt.slice(0, 5)}</li>
               <li><strong>Priority Level:</strong> P${cand.priority}</li>
               ${reason ? `<li><strong>Reason:</strong> ${reason}</li>` : ''}
-              <li><strong>Response Deadline:</strong> ${deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</li>
+              <li><strong>Response Deadline:</strong> ${deadline.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</li>
             </ul>
             <p>Please log in to your TS-SC portal to review and accept/decline this request.</p>
             <p style="margin-top: 24px;">

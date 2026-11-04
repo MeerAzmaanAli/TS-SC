@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import WeeklyGrid, { GridEntry } from '../components/WeeklyGrid'
+import { getHeldLectureDate, toLocalDateString } from '../lib/substitution'
 import {
-  CalendarIcon,
-  BookOpenIcon,
-  LayersIcon,
   AlertCircleIcon,
-  KeyIcon,
   RefreshIcon,
   UsersIcon,
   ClockIcon,
@@ -141,6 +138,8 @@ export default function StudentView() {
       const gridEntries: GridEntry[] = (data.entries || []).map((e: RawEntry) => {
         // Strictly match by exact entry ID
         const sub = subByEntryId.get(e.id) || null
+        const heldDate = sub ? getHeldLectureDate(e.day_of_week, sub.date) : null
+        const heldDateStr = heldDate ? toLocalDateString(heldDate) : sub?.date ?? null
 
         return {
           id: e.id,
@@ -157,6 +156,7 @@ export default function StudentView() {
                 status: sub.status,
                 substitute_name: sub.substitute_name,
                 requester_name: sub.requester_name,
+                date: heldDateStr,
               }
             : null,
         }
@@ -197,7 +197,6 @@ export default function StudentView() {
       ? entries
       : entries.filter((e) => e.batch === null || e.batch === selectedBatch)
 
-  const electiveCount = displayedEntries.filter((e) => e.is_elective).length
 
   // ==========================================
   // VIEW A: Passkey Access Gate
@@ -209,19 +208,20 @@ export default function StudentView() {
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <div
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                width: 48,
+                height: 48,
+                borderRadius: '10px',
+                background: '#1B1D22',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1.25rem',
-                boxShadow: '0 8px 16px rgba(59, 130, 246, 0.25)',
+                fontWeight: 700,
+                fontSize: 18,
               }}
             >
-              <KeyIcon size={28} />
+              TS
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem', color: '#0f172a' }}>
               Student Section View
@@ -279,14 +279,12 @@ export default function StudentView() {
             <button
               type="submit"
               disabled={authLoading}
-              className="btn btn-primary"
+              className="admin-btn"
               style={{
                 width: '100%',
-                padding: '0.75rem 1rem',
-                fontSize: '1rem',
-                fontWeight: 600,
+                minHeight: 44,
+                fontSize: 14,
                 marginTop: '0.5rem',
-                justifyContent: 'center',
               }}
             >
               {authLoading ? (
@@ -321,47 +319,50 @@ export default function StudentView() {
   // VIEW B: Authenticated Section Timetable View
   // ==========================================
   return (
-    <div>
-      {/* Top Header */}
-      <div className="page-header" style={{ alignItems: 'flex-start' }}>
-        <div>
-          <div className="flex items-center gap-2" style={{ marginBottom: '0.4rem' }}>
-            <span className="badge badge-success">Official Campus Schedule</span>
-            <span className="badge badge-primary">{section.code}</span>
-            <span className="badge" style={{ background: '#f1f5f9', color: '#334155' }}>
-              {section.program_name} (Sem {section.semester})
+    <div className="student-cal-wrapper">
+      {/* Top Navigation & Fast Actions Bar */}
+      <div className="admin-cal-topbar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="admin-cal-logo" title="Timetable Scheduler">
+              TS
+            </div>
+            <div className="portal-role-badge">
+              <span className="portal-role-dot student"></span>
+              <span>Student · {section.code}</span>
+            </div>
+          </div>
+
+          <div className="admin-cal-nav">
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#1B1D22', padding: '6px 12px', background: '#ffffff', borderRadius: 8, boxShadow: '0 0 0 1px #E3E4E8' }}>
+              Section {section.name} · {section.program_name} (Sem {section.semester})
             </span>
           </div>
-          <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <CalendarIcon size={26} style={{ color: 'var(--primary-600, #2563eb)' }} />
-            <span>Section {section.name} Timetable</span>
-          </h1>
-          <p className="page-subtitle">
-            Live schedule for Section <strong>{section.name}</strong> ({section.code}). Real-time substitutions and classroom assignments update automatically.
-          </p>
         </div>
 
-        <div className="page-header-actions">
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <button
+            type="button"
+            className="admin-btn admin-btn-outline"
             onClick={() => fetchSchedule(section.code, passkey, false)}
-            className="btn btn-secondary btn-sm"
             disabled={loadingSchedule}
-            title="Refresh schedule"
+            title="Refresh timetable"
           >
-            <RefreshIcon size={14} className={loadingSchedule ? 'spin' : ''} />
+            <RefreshIcon size={15} className={loadingSchedule ? 'spin' : ''} />
             <span>Refresh</span>
           </button>
           <button
+            type="button"
+            className="admin-btn admin-btn-outline"
             onClick={() => window.print()}
-            className="btn btn-secondary btn-sm"
-            title="Print or save PDF of schedule"
+            title="Print or save schedule PDF"
           >
-            <span>Print Timetable</span>
+            <span>Print</span>
           </button>
           <button
+            type="button"
+            className="admin-btn admin-btn-danger admin-btn-sm"
             onClick={handleSwitchSection}
-            className="btn btn-secondary btn-sm"
-            style={{ color: '#dc2626' }}
             title="Switch Section"
           >
             <span>Switch Section</span>
@@ -517,45 +518,6 @@ export default function StudentView() {
                 </div>
               )
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Summary KPI Badges */}
-      {displayedEntries.length > 0 && (
-        <div className="grid-3" style={{ marginBottom: '1.5rem' }}>
-          <div className="stat-card" style={{ padding: '0.85rem 1.25rem' }}>
-            <div className="stat-icon indigo" style={{ width: 38, height: 38 }}>
-              <BookOpenIcon size={18} />
-            </div>
-            <div>
-              <div className="stat-value" style={{ fontSize: '1.25rem' }}>
-                {displayedEntries.length}
-              </div>
-              <div className="stat-label">Scheduled Lectures</div>
-            </div>
-          </div>
-
-          <div className="stat-card" style={{ padding: '0.85rem 1.25rem' }}>
-            <div className="stat-icon purple" style={{ width: 38, height: 38 }}>
-              <LayersIcon size={18} />
-            </div>
-            <div>
-              <div className="stat-value" style={{ fontSize: '1.25rem' }}>
-                {electiveCount}
-              </div>
-              <div className="stat-label">Elective Sessions</div>
-            </div>
-          </div>
-
-          <div className="stat-card" style={{ padding: '0.85rem 1.25rem' }}>
-            <div className="stat-icon emerald" style={{ width: 38, height: 38 }}>
-              <CalendarIcon size={18} />
-            </div>
-            <div>
-              <div className="stat-value" style={{ fontSize: '1.25rem' }}>5 Days</div>
-              <div className="stat-label">Monday – Friday</div>
-            </div>
           </div>
         </div>
       )}

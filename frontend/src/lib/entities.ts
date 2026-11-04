@@ -120,11 +120,11 @@ export const ENTITIES: EntityDef[] = [
     ],
   },
   {
-    name: 'section_courses',
-    label: 'Section courses',
-    singular: 'Section course',
+    name: 'program_courses',
+    label: 'Program courses',
+    singular: 'Program course',
     fields: [
-      { name: 'section_id', label: 'Section', type: 'select', reference: 'sections', required: true },
+      { name: 'program_id', label: 'Program', type: 'select', reference: 'programs', required: true },
       { name: 'course_id', label: 'Course', type: 'select', reference: 'courses', required: true },
       { name: 'sessions_per_week', label: 'Sessions / week (blank = course default)', type: 'number' },
     ],

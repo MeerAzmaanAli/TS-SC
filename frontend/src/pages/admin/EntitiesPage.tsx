@@ -3,7 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import { ENTITIES, getEntity } from '../../lib/entities'
 import EntityTable from '../../components/EntityTable'
 import EntityForm from '../../components/EntityForm'
-import { PlusIcon, BookOpenIcon, ArrowLeftIcon, ArrowRightIcon } from '../../components/Icons'
+import AdminHeader from '../../components/AdminHeader'
+import { PlusIcon } from '../../components/Icons'
 
 export default function EntitiesPage() {
   const { entity } = useParams<{ entity: string }>()
@@ -19,89 +20,85 @@ export default function EntitiesPage() {
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <div className="flex items-center gap-2" style={{ marginBottom: '0.35rem' }}>
-            <Link to="/admin" className="text-muted" style={{ fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              <ArrowLeftIcon size={14} />
-              <span>Admin Dashboard</span>
-            </Link>
-            {def && (
-              <>
-                <span className="text-muted">/</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--slate-700)' }}>
-                  {def.label}
-                </span>
-              </>
-            )}
+    <div className="admin-cal-wrapper">
+      <AdminHeader />
+
+      <section className="admin-panel" style={{ marginTop: 4 }}>
+        <div className="admin-panel-hd">
+          <div>
+            <h2>{def ? def.label : 'Curriculum & Institutional Master Data'}</h2>
+            <p className="admin-mu" style={{ fontSize: 13, margin: '4px 0 0 0' }}>
+              {def
+                ? `Manage institutional ${def.label.toLowerCase()} entries, constraints, and relationships for the scheduling engine.`
+                : 'Select an institutional data table below to view, add, modify, or delete master database records.'}
+            </p>
           </div>
-          <h1 className="page-title">
-            <BookOpenIcon size={26} style={{ color: 'var(--primary-600)' }} />
-            <span>{def ? def.label : 'Curriculum & Institutional Data'}</span>
-          </h1>
-          <p className="page-subtitle">
-            {def
-              ? `Manage institutional ${def.label.toLowerCase()} entries, constraints, and relationships for the scheduling engine.`
-              : 'Select a data table below to view, add, modify, or delete institutional master records.'}
-          </p>
-        </div>
 
-        {def && !adding && !editing && (
-          <button onClick={() => setAdding(true)} className="btn btn-primary">
-            <PlusIcon size={16} />
-            <span>Add {def.singular}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Horizontal Entity Quick-Switch Tabs */}
-      <div className="tabs-nav">
-        {ENTITIES.map((e) => {
-          const isActive = e.name === entity
-          return (
-            <Link
-              key={e.name}
-              to={`/admin/data/${e.name}`}
-              className={`tab-btn ${isActive ? 'active' : ''}`}
-            >
-              <span>{e.label}</span>
-            </Link>
-          )
-        })}
-      </div>
-
-      {!def ? (
-        <div className="grid-3">
-          {ENTITIES.map((e) => (
-            <Link key={e.name} to={`/admin/data/${e.name}`} className="action-card">
-              <div>
-                <h3 className="action-card-title">{e.label}</h3>
-                <p className="action-card-desc">
-                  Maintain {e.singular.toLowerCase()} records, fields, and constraints.
-                </p>
-              </div>
-              <div className="action-card-arrow">
-                <span>View {e.label}</span>
-                <ArrowRightIcon size={14} />
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <>
-          {(adding || editing) && (
-            <EntityForm
-              def={def}
-              initial={editing ?? undefined}
-              onSaved={closeForm}
-              onCancel={closeForm}
-            />
+          {def && !adding && !editing && (
+            <button type="button" onClick={() => setAdding(true)} className="admin-btn admin-btn-sm">
+              <PlusIcon size={14} />
+              <span>Add {def.singular}</span>
+            </button>
           )}
+        </div>
 
-          <EntityTable def={def} refreshKey={refreshKey} onEdit={(row) => setEditing(row)} />
-        </>
-      )}
+        {/* Horizontal Table Switcher Tabs */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 6,
+            overflowX: 'auto',
+            paddingBottom: 10,
+            marginBottom: 16,
+            borderBottom: '1px solid #E3E4E8',
+          }}
+        >
+          {ENTITIES.map((e) => {
+            const isActive = e.name === entity
+            return (
+              <Link
+                key={e.name}
+                to={`/admin/data/${e.name}`}
+                className={`admin-btn admin-btn-sm ${isActive ? '' : 'admin-btn-outline'}`}
+                style={{ whiteSpace: 'nowrap', textDecoration: 'none' }}
+              >
+                <span>{e.label}</span>
+              </Link>
+            )
+          })}
+        </div>
+
+        {!def ? (
+          <div className="admin-data-grid">
+            {ENTITIES.map((e) => (
+              <Link key={e.name} to={`/admin/data/${e.name}`} className="admin-data-link">
+                <span style={{ fontWeight: 600 }}>{e.label}</span>
+                <span className="admin-m admin-mu">Manage →</span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div>
+            {(adding || editing) && (
+              <div style={{ marginBottom: 20 }}>
+                <EntityForm
+                  def={def}
+                  initial={editing ?? undefined}
+                  onSaved={closeForm}
+                  onCancel={closeForm}
+                />
+              </div>
+            )}
+
+            <EntityTable
+              key={`${entity}-${refreshKey}`}
+              refreshKey={refreshKey}
+              def={def}
+              onEdit={(row) => setEditing(row)}
+            />
+          </div>
+        )}
+      </section>
     </div>
   )
 }

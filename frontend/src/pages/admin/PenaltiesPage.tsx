@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import AdminHeader from '../../components/AdminHeader'
 import {
-  UsersIcon,
-  AlertTriangleIcon,
-  BookOpenIcon,
   ClockIcon,
 } from '../../components/Icons'
 
@@ -25,7 +23,7 @@ export default function PenaltiesPage() {
       .from('substitution_penalties')
       .select(
         'id, created_at, reason, faculty!inner(name), ' +
-          'substitution_requests(timetable_entries(courses(code)))',
+          'substitution_requests(timetable_entries(courses(code)))'
       )
       .order('created_at', { ascending: false })
       .limit(200)
@@ -50,7 +48,7 @@ export default function PenaltiesPage() {
             reason: p.reason,
             faculty_name: p.faculty.name,
             course_code: p.substitution_requests?.timetable_entries?.courses?.code ?? '—',
-          })),
+          }))
         )
       })
   }, [])
@@ -63,114 +61,95 @@ export default function PenaltiesPage() {
   const sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1])
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">
-            <UsersIcon size={26} style={{ color: 'var(--rose-600)' }} />
-            <span>Faculty Substitution Penalty Audit</span>
-          </h1>
-          <p className="page-subtitle">
-            Departmental accountability tracking for unresponded substitution requests, repeated rejections, and deadline timeouts.
-          </p>
-        </div>
-      </div>
+    <div className="admin-cal-wrapper">
+      <AdminHeader />
 
       {error && (
-        <div className="alert alert-danger">
-          <strong>Error loading penalties:</strong> {error}
+        <div
+          style={{
+            marginTop: 4,
+            padding: 12,
+            background: '#FFF1F2',
+            border: '1px solid #FECDD3',
+            borderRadius: 8,
+            fontSize: 13,
+            color: '#9F1239',
+          }}
+        >
+          <b>Error loading penalties:</b> {error}
         </div>
       )}
 
-      {/* Leaderboard Summary Cards */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--slate-900)', marginBottom: '1rem' }}>
-          Penalty Summary by Faculty Member
-        </h2>
+      {/* Summary Cards by Faculty */}
+      <section className="admin-panel" style={{ marginTop: 4 }}>
+        <div className="admin-panel-hd">
+          <h2>Faculty Substitution Accountability &amp; Infractions</h2>
+          <span className="admin-mu admin-m">{sortedCounts.length} flagged faculty</span>
+        </div>
 
         {sortedCounts.length > 0 ? (
-          <div className="grid-3">
+          <div className="admin-conflict-grid">
             {sortedCounts.map(([name, count]) => (
-              <div key={name} className="stat-card">
-                <div className="stat-icon" style={{ background: count >= 3 ? 'var(--rose-50)' : 'var(--amber-50)', color: count >= 3 ? 'var(--rose-600)' : 'var(--amber-600)' }}>
-                  <AlertTriangleIcon size={22} />
-                </div>
-                <div>
-                  <div className="stat-value">{count}</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.925rem', color: 'var(--slate-800)' }}>
-                    {name}
-                  </div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>
-                    {count >= 3 ? 'Department Review Flagged' : 'Minor infractions'}
-                  </div>
-                </div>
+              <div
+                key={name}
+                className={`admin-conflict-box ${count >= 3 ? 'highlight' : ''}`}
+              >
+                <b>{count}</b>
+                <span style={{ fontWeight: 600, color: '#1B1D22', fontSize: 14 }}>{name}</span>
+                <span style={{ fontSize: 12, marginTop: 4 }}>
+                  {count >= 3 ? 'Flagged for departmental review' : 'Minor refusal infraction'}
+                </span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-            <p className="text-muted">
-              {loading ? 'Analyzing penalty records…' : 'No penalties recorded yet. High faculty responsiveness!'}
-            </p>
+          <div style={{ textAlign: 'center', padding: '24px 0', color: '#555B66', fontSize: 13 }}>
+            {loading ? 'Analyzing penalty records…' : 'No penalties recorded yet. High faculty responsiveness!'}
           </div>
         )}
-      </div>
+      </section>
 
       {/* Detailed Penalty Audit Trail */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div
-          style={{
-            padding: '1rem 1.25rem',
-            borderBottom: '1px solid var(--border-light)',
-            background: 'var(--slate-50)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--slate-900)' }}>
-            Recent Penalty Log ({rows.length})
-          </h3>
-          <span className="badge badge-neutral">Audit Trail</span>
+      <section className="admin-panel" style={{ marginTop: 20 }}>
+        <div className="admin-panel-hd">
+          <h2>Recent Infraction Trail</h2>
+          <span className="admin-mu admin-m">{rows.length} total logged</span>
         </div>
 
-        <div className="table-responsive" style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
-          <table className="data-table">
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
             <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Faculty Member</th>
-                <th>Course</th>
-                <th>Infraction Reason</th>
+              <tr style={{ borderBottom: '1px solid #E3E4E8', color: '#555B66' }}>
+                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Timestamp</th>
+                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Faculty Member</th>
+                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Course</th>
+                <th style={{ padding: '10px 12px', fontWeight: 600 }}>Infraction Reason</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id}>
-                  <td style={{ whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--slate-700)' }}>
-                      <ClockIcon size={14} style={{ color: 'var(--slate-400)' }} />
-                      <span className="font-mono text-sm">{new Date(r.created_at).toLocaleString()}</span>
-                    </div>
+                <tr key={r.id} style={{ borderBottom: '1px solid #F0F1F3' }}>
+                  <td style={{ padding: '12px', whiteSpace: 'nowrap' }} className="admin-m admin-mu">
+                    <ClockIcon size={13} style={{ marginRight: 4, display: 'inline' }} />
+                    {new Date(r.created_at).toLocaleString()}
                   </td>
-                  <td>
-                    <span style={{ fontWeight: 600, color: 'var(--slate-900)' }}>{r.faculty_name}</span>
+                  <td style={{ padding: '12px', fontWeight: 600, color: '#1B1D22' }}>
+                    {r.faculty_name}
                   </td>
-                  <td>
-                    <span className="badge badge-primary">
-                      <BookOpenIcon size={12} />
-                      <span>{r.course_code}</span>
+                  <td style={{ padding: '12px' }}>
+                    <span className="admin-cand-pill">
+                      <em>{r.course_code}</em>
                     </span>
                   </td>
-                  <td>
-                    <span className="badge badge-danger">{r.reason}</span>
+                  <td style={{ padding: '12px' }}>
+                    <span className="admin-tag unfilled">{r.reason}</span>
                   </td>
                 </tr>
               ))}
 
               {rows.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', padding: '3rem 1rem' }} className="text-muted">
+                  <td colSpan={4} style={{ textAlign: 'center', padding: '36px 12px', color: '#555B66' }}>
                     No individual penalty incidents logged.
                   </td>
                 </tr>
@@ -178,7 +157,7 @@ export default function PenaltiesPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
     </div>
   )
 }

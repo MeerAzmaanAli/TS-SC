@@ -49,9 +49,10 @@ export default function EntityForm({ def, initial, onSaved, onCancel }: Props) {
       const next: Record<string, { value: string; label: string }[]> = {}
       for (const f of def.fields) {
         if ((f.type === 'select' || f.type === 'multiselect') && f.reference) {
-          const { data, error } = await supabase.from(f.reference).select('id, name, code')
+          const selectCols = f.reference === 'courses' ? 'id, name, code' : 'id, name'
+          const { data, error } = await supabase.from(f.reference).select(selectCols as any)
           if (!cancelled && !error && data) {
-            next[f.name] = (data as Record<string, unknown>[]).map((r) => ({
+            next[f.name] = ((data ?? []) as unknown as Record<string, unknown>[]).map((r) => ({
               value: String(r.id),
               label: refLabel(r),
             }))

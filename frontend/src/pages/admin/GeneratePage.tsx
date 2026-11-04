@@ -2,13 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { buildSnapshot, SOLVER_URL } from '../../lib/timetable'
+import AdminHeader from '../../components/AdminHeader'
 import {
   SparklesIcon,
   CheckCircleIcon,
-  AlertTriangleIcon,
   AlertCircleIcon,
   ArrowRightIcon,
-  ShieldIcon,
   RefreshIcon,
 } from '../../components/Icons'
 import TimetablePreview from '../../components/TimetablePreview'
@@ -99,147 +98,144 @@ export default function GeneratePage() {
       const { data: version, error: vErr } = await supabase
         .from('timetable_versions')
         .insert({
-          institution_id: snapshot.institution_id,
           status: 'draft',
           violations: data.violations ?? {},
         })
         .select('id')
         .single()
-      if (vErr) throw vErr
 
-      const rows = entries.map((e) => ({ ...e, version_id: version.id as string }))
-      let { error: eErr } = await supabase.from('timetable_entries').insert(rows)
-      if (eErr && eErr.message?.includes('batch')) {
-        const rowsWithoutBatch = rows.map(({ batch, ...rest }) => rest)
-        const fallbackRes = await supabase.from('timetable_entries').insert(rowsWithoutBatch)
-        eErr = fallbackRes.error
-      }
-      if (eErr) throw eErr
+      if (vErr || !version) throw new Error(vErr?.message ?? 'Failed to create timetable version row.')
 
-      setGeneratedVersionId(version.id as string)
+      const rows = entries.map((e) => ({
+        version_id: version.id,
+        section_id: e.section_id,
+        course_id: e.course_id,
+        faculty_id: e.faculty_id,
+        room_id: e.room_id,
+        time_slot_id: e.time_slot_id,
+        is_elective: e.is_elective ?? false,
+        batch: e.batch ?? null,
+      }))
+
+      const { error: insErr } = await supabase.from('timetable_entries').insert(rows)
+      if (insErr) throw insErr
+
+      setGeneratedVersionId(version.id)
       setResult(
-        `Optimized draft generated successfully with ${entries.length} clash-free session assignments.`,
+        `Generated timetable with ${rows.length} entries successfully in ${(data.wall_time_seconds ?? 0).toFixed(2)}s.`
       )
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown generation failure'
+      setError(msg)
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">
-            <SparklesIcon size={26} style={{ color: 'var(--primary-600)' }} />
-            <span>Automated Timetable Generator</span>
-          </h1>
-          <p className="page-subtitle">
-            Snapshots active institutional entities and triggers the Google OR-Tools CP-SAT constraint programming microservice.
-          </p>
-        </div>
+    <div className="admin-cal-wrapper">
+      <AdminHeader />
 
-        <div className="page-header-actions">
-          <div
-            className={`badge ${
-              solverOnline === true
-                ? 'badge-success'
-                : solverOnline === false
-                ? 'badge-danger'
-                : 'badge-neutral'
-            }`}
-          >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor:
-                  solverOnline === true
-                    ? 'var(--emerald-500)'
-                    : solverOnline === false
-                    ? 'var(--rose-500)'
-                    : 'var(--slate-400)',
-              }}
-            />
-            <span>
-              {solverOnline === true
-                ? 'Solver Online (:8000)'
-                : solverOnline === false
-                ? 'Solver Offline'
-                : 'Checking Solver…'}
-            </span>
-          </div>
-          <button onClick={checkHealth} className="btn btn-secondary btn-sm" title="Recheck solver status">
-            <RefreshIcon size={14} />
-          </button>
-        </div>
-      </div>
-
-      <div className="grid-2" style={{ alignItems: 'start', marginBottom: '2rem' }}>
-        {/* Left: Execution Card */}
-        <div className="card">
-          <div className="card-header">
-            <h2 className="card-title">
-              <SparklesIcon size={18} style={{ color: 'var(--primary-600)' }} />
-              <span>Generation Control</span>
-            </h2>
-            <span className="badge badge-primary">CP-SAT Engine</span>
-          </div>
-
-          <p className="text-muted" style={{ fontSize: '0.875rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-            When you run generation, the solver assembles all active courses, student sections, room capacities, faculty qualification matrices, and time slot grids into a unified constraint satisfaction problem.
-          </p>
-
-          <button
-            onClick={handleGenerate}
-            disabled={busy || solverOnline === false}
-            className="btn btn-primary btn-lg"
-            style={{ width: '100%' }}
-          >
-            {busy ? (
-              <>
-                <RefreshIcon size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                <span>Running CP-SAT Solver Microservice…</span>
-              </>
-            ) : (
-              <>
-                <SparklesIcon size={18} />
-                <span>Generate Conflict-Free Timetable</span>
-              </>
-            )}
-          </button>
-
-          {solverOnline === false && (
-            <div className="alert alert-warning" style={{ marginTop: '1rem', marginBottom: 0 }}>
-              <AlertTriangleIcon size={18} style={{ flexShrink: 0 }} />
+      <div className="admin-cal-cols" style={{ marginTop: 4 }}>
+        {/* Left Column: Generator Controls */}
+        <div className="admin-cal-stack">
+          <section className="admin-panel">
+            <div className="admin-panel-hd">
               <div>
-                <strong>Solver service not reachable</strong>
-                <div style={{ marginTop: 2, fontSize: '0.8125rem' }}>
-                  Make sure the FastAPI solver is running on port 8000:
-                  <br />
-                  <code className="font-mono">uvicorn app.main:app --reload --port 8000</code>
-                </div>
+                <h2>Timetable Generator Control</h2>
+                <span className="admin-mu" style={{ fontSize: 13 }}>
+                  Run Google OR-Tools CP-SAT solver microservice
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span
+                  className={`admin-tag ${solverOnline === true ? 'assigned' : solverOnline === false ? 'unfilled' : ''}`}
+                >
+                  {solverOnline === true
+                    ? '● Solver online (:8000)'
+                    : solverOnline === false
+                    ? '● Solver offline'
+                    : 'Checking solver…'}
+                </span>
+                <button
+                  type="button"
+                  onClick={checkHealth}
+                  className="admin-btn admin-btn-outline admin-btn-sm"
+                  title="Recheck solver status"
+                >
+                  <RefreshIcon size={13} />
+                </button>
               </div>
             </div>
-          )}
 
-          {error && (
-            <div className="alert alert-danger" style={{ marginTop: '1.25rem', marginBottom: 0 }}>
-              <AlertCircleIcon size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-              <div>
-                <strong>Generation Error</strong>
-                <div style={{ marginTop: 2 }}>{error}</div>
+            <p className="admin-mu" style={{ fontSize: 13, lineHeight: 1.6, margin: '0 0 16px 0' }}>
+              When you initiate generation, all institutional courses, sections, room configurations, faculty qualifications, and time slot grids are assembled into an exact constraint satisfaction problem.
+            </p>
+
+            <button
+              onClick={handleGenerate}
+              disabled={busy || solverOnline === false}
+              className="admin-btn"
+              style={{ width: '100%', minHeight: 46 }}
+            >
+              {busy ? (
+                <>
+                  <RefreshIcon size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>Running CP-SAT Solver Microservice…</span>
+                </>
+              ) : (
+                <>
+                  <SparklesIcon size={18} />
+                  <span>Generate Conflict-Free Timetable</span>
+                </>
+              )}
+            </button>
+
+            {solverOnline === false && (
+              <div
+                style={{
+                  marginTop: 14,
+                  padding: 12,
+                  background: '#FFF1F2',
+                  border: '1px solid #FECDD3',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  color: '#9F1239',
+                }}
+              >
+                <b>Solver service not reachable.</b> Ensure the FastAPI solver microservice is running:
+                <div className="admin-m" style={{ marginTop: 6, background: '#ffffff', padding: '6px 10px', borderRadius: 6, border: '1px solid #FECDD3' }}>
+                  uvicorn app.main:app --reload --port 8000
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div
+                style={{
+                  marginTop: 14,
+                  padding: 12,
+                  background: '#FFF1F2',
+                  border: '1px solid #FECDD3',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  color: '#9F1239',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                  <AlertCircleIcon size={16} />
+                  <span>Generation Error</span>
+                </div>
+                <div style={{ marginTop: 4 }}>{error}</div>
 
                 {infeasibleCauses.length > 0 && (
-                  <div style={{ marginTop: '0.75rem' }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.8125rem', marginBottom: '0.35rem' }}>
-                      Identified Root Causes:
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 4 }}>
+                      Identified Infeasibility Causes:
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {infeasibleCauses.map((c, i) => (
-                        <span key={i} className="badge badge-danger">
+                        <span key={i} className="admin-cand-pill rejected">
                           {c}
                         </span>
                       ))}
@@ -247,85 +243,97 @@ export default function GeneratePage() {
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {result && (
-            <div className="alert alert-success" style={{ marginTop: '1.25rem', marginBottom: 0 }}>
-              <CheckCircleIcon size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-              <div>
-                <strong>Success!</strong>
-                <div style={{ marginTop: 2 }}>{result}</div>
-                <div style={{ marginTop: '0.75rem' }}>
-                  <Link to="/admin/versions" className="btn btn-success btn-sm">
+            {result && (
+              <div
+                style={{
+                  marginTop: 14,
+                  padding: 14,
+                  background: '#E3F3DE',
+                  border: '1px solid #B8E3B0',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  color: '#0B5446',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                  <CheckCircleIcon size={16} />
+                  <span>Draft Timetable Produced!</span>
+                </div>
+                <div style={{ marginTop: 4 }}>{result}</div>
+                <div style={{ marginTop: 10 }}>
+                  <Link to="/admin/versions" className="admin-btn admin-btn-sm" style={{ background: '#0B5446' }}>
                     <span>Open Conflict Inspector</span>
-                    <ArrowRightIcon size={14} />
+                    <ArrowRightIcon size={13} />
                   </Link>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </section>
         </div>
 
-        {/* Right: Constraint Architecture Card */}
-        <div className="card">
-          <div className="card-header">
-            <h2 className="card-title">
-              <ShieldIcon size={18} style={{ color: 'var(--emerald-600)' }} />
-              <span>Enforced Constraints</span>
-            </h2>
-            <span className="badge badge-neutral">Architecture</span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <div style={{ padding: '0.75rem', background: 'var(--slate-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--slate-900)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <CheckCircleIcon size={15} style={{ color: 'var(--emerald-600)' }} />
-                <span>Zero Double-Booking (Hard)</span>
-              </div>
-              <div className="text-muted" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                No faculty member, room, or student section is ever assigned to multiple simultaneous sessions.
-              </div>
+        {/* Right Column: Architectural Constraints */}
+        <div className="admin-cal-stack">
+          <section className="admin-panel">
+            <div className="admin-panel-hd">
+              <h2>Enforced Constraints</h2>
+              <span className="admin-mu admin-m">CP-SAT formulation</span>
             </div>
 
-            <div style={{ padding: '0.75rem', background: 'var(--slate-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--slate-900)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <CheckCircleIcon size={15} style={{ color: 'var(--emerald-600)' }} />
-                <span>Qualifications &amp; Lab Fitting (Hard)</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ padding: 12, background: '#F7F7F8', borderRadius: 8 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircleIcon size={15} style={{ color: '#0B5446' }} />
+                  <span>Zero Double-Booking (Hard)</span>
+                </div>
+                <div className="admin-mu" style={{ fontSize: 12, marginTop: 4 }}>
+                  No faculty member, room, or student section is ever assigned to multiple simultaneous sessions.
+                </div>
               </div>
-              <div className="text-muted" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                Instructors only teach verified subjects; lab courses are strictly scheduled into designated laboratory facilities with capacity.
-              </div>
-            </div>
 
-            <div style={{ padding: '0.75rem', background: 'var(--slate-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--slate-900)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <CheckCircleIcon size={15} style={{ color: 'var(--emerald-600)' }} />
-                <span>Elective Slot Synchronizer (Hard)</span>
+              <div style={{ padding: 12, background: '#F7F7F8', borderRadius: 8 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircleIcon size={15} style={{ color: '#0B5446' }} />
+                  <span>Qualifications &amp; Lab Fitting (Hard)</span>
+                </div>
+                <div className="admin-mu" style={{ fontSize: 12, marginTop: 4 }}>
+                  Instructors only teach verified subjects; lab sessions are strictly scheduled in qualified laboratory facilities.
+                </div>
               </div>
-              <div className="text-muted" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                Electives are grouped into unified time blocks so students can select cross-department options without conflicts.
-              </div>
-            </div>
 
-            <div style={{ padding: '0.75rem', background: 'var(--slate-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--slate-900)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <SparklesIcon size={15} style={{ color: 'var(--primary-600)' }} />
-                <span>Gap &amp; Load Optimization (Soft)</span>
+              <div style={{ padding: 12, background: '#F7F7F8', borderRadius: 8 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircleIcon size={15} style={{ color: '#0B5446' }} />
+                  <span>Elective Slot Synchronizer (Hard)</span>
+                </div>
+                <div className="admin-mu" style={{ fontSize: 12, marginTop: 4 }}>
+                  Electives are grouped into unified time blocks so students can select cross-department options without overlap.
+                </div>
               </div>
-              <div className="text-muted" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                Minimizes idle student gaps between classes and balances weekly teaching loads equitably across the faculty.
+
+              <div style={{ padding: 12, background: '#F7F7F8', borderRadius: 8 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <SparklesIcon size={15} style={{ color: '#4F46E5' }} />
+                  <span>Gap &amp; Load Optimization (Soft)</span>
+                </div>
+                <div className="admin-mu" style={{ fontSize: 12, marginTop: 4 }}>
+                  Minimizes student idle gap periods and balances weekly teaching loads equitably across the faculty roster.
+                </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
 
-      {/* Generated Timetable Preview Matrix */}
       {generatedVersionId && (
-        <div style={{ marginTop: '2rem' }}>
+        <section className="admin-panel" style={{ marginTop: 20 }}>
+          <div className="admin-panel-hd">
+            <h2>Generated Timetable Preview</h2>
+            <span className="admin-mu admin-m">Version {generatedVersionId.slice(0, 8)}</span>
+          </div>
           <TimetablePreview key={generatedVersionId} versionId={generatedVersionId} />
-        </div>
+        </section>
       )}
     </div>
   )

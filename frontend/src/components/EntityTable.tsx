@@ -72,10 +72,11 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
       const maps: Record<string, Record<string, string>> = {}
       for (const f of def.fields) {
         if (f.reference) {
-          const { data: refRows } = await supabase.from(f.reference).select('id, name, code')
+          const selectCols = f.reference === 'courses' ? 'id, name, code' : 'id, name'
+          const { data: refRows } = await supabase.from(f.reference).select(selectCols as any)
           if (cancelled) return
           maps[f.name] = Object.fromEntries(
-            ((refRows ?? []) as Record<string, unknown>[]).map((r) => [String(r.id), refLabel(r)]),
+            ((refRows ?? []) as unknown as Record<string, unknown>[]).map((r) => [String(r.id), refLabel(r)]),
           )
         }
       }
