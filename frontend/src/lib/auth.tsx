@@ -33,33 +33,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
+    let isMounted = true
+
+    async function fetchProfile(userId: string, isInitial: boolean) {
+      if (isInitial) setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id, role, faculty_id, section_id')
+          .eq('user_id', userId)
+          .single()
+        if (isMounted) {
+          setProfile(error ? null : (data as Profile))
+        }
+      } catch {
+        if (isMounted) setProfile(null)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    // 1. Initial session check on startup
+    supabase.auth.getSession().then(({ data }) => {
+      if (!isMounted) return
+      const s = data.session
+      setSession(s)
+      if (s?.user) {
+        fetchProfile(s.user.id, true)
+      } else {
+        setLoading(false)
+      }
+    })
+
+    // 2. Auth state subscription (handles login, logout, token refresh, and window focus)
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!isMounted) return
+      setSession(s)
+
+      if (!s?.user) {
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+
+      // If the same user re-focused tab or refreshed their auth token,
+      // preserve existing profile and NEVER flip loading=true (prevents route unmounting).
+      setProfile((prev) => {
+        if (prev && prev.user_id === s.user.id) {
+          return prev
+        }
+        fetchProfile(s.user.id, prev === null)
+        return prev
+      })
+    })
+
     return () => {
+      isMounted = false
       sub.subscription.unsubscribe()
     }
   }, [])
 
-  useEffect(() => {
-    if (!session?.user) {
-      setProfile(null)
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    supabase
-      .from('profiles')
-      .select('user_id, role, faculty_id, section_id')
-      .eq('user_id', session.user.id)
-      .single()
-      .then(({ data, error }) => {
-        setProfile(error ? null : (data as Profile))
-        setLoading(false)
-      })
-  }, [session])
-
   async function signOut() {
     await supabase.auth.signOut()
+    setSession(null)
+    setProfile(null)
+    setLoading(false)
   }
 
   return (

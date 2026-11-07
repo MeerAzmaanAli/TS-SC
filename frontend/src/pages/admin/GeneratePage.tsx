@@ -11,6 +11,7 @@ import {
   RefreshIcon,
 } from '../../components/Icons'
 import TimetablePreview from '../../components/TimetablePreview'
+import AcademicShiftManager from '../../components/AcademicShiftManager'
 
 interface SolverEntry {
   section_id: string
@@ -98,6 +99,7 @@ export default function GeneratePage() {
       const { data: version, error: vErr } = await supabase
         .from('timetable_versions')
         .insert({
+          institution_id: snapshot.institution_id,
           status: 'draft',
           violations: data.violations ?? {},
         })
@@ -139,6 +141,8 @@ export default function GeneratePage() {
       <div className="admin-cal-cols" style={{ marginTop: 4 }}>
         {/* Left Column: Generator Controls */}
         <div className="admin-cal-stack">
+          <AcademicShiftManager />
+
           <section className="admin-panel">
             <div className="admin-panel-hd">
               <div>

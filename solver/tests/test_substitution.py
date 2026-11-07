@@ -105,7 +105,10 @@ def test_penalise():
 
 
 def test_email_mailer_dev_and_format():
-    from solver.app.mailer import send_email
+    try:
+        from app.mailer import send_email
+    except ModuleNotFoundError:
+        from solver.app.mailer import send_email
     # Test that dev dispatch without SMTP credentials outputs to console and returns True
     res = send_email(
         to_email='prof.test@iet.edu',

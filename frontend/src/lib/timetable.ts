@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 /** Shape expected by the solver's POST /generate (see solver/app/schemas.py). */
 export interface GenerateRequest {
   institution_id: string
-  sections: { id: string; strength: number; batch_count?: number }[]
+  sections: { id: string; strength: number; batch_count?: number; shift?: number }[]
   courses: { id: string; sessions_per_week: number; lab_required: boolean; is_elective: boolean }[]
   section_courses: { section_id: string; course_id: string; sessions_per_week: number | null }[]
   faculty: { id: string; max_weekly_load: number }[]
@@ -24,14 +24,18 @@ async function must<T>(
   return (data ?? []) as T
 }
 
-async function fetchSections(): Promise<{ id: string; program_id?: string; strength: number; batch_count?: number }[]> {
-  const res = await supabase.from('sections').select('id, program_id, strength, batch_count')
+async function fetchSections(): Promise<{ id: string; program_id?: string; strength: number; batch_count?: number; shift?: number }[]> {
+  const res = await supabase.from('sections').select('id, program_id, strength, batch_count, shift').limit(50000)
   if (res.error) {
-    const fb = await supabase.from('sections').select('id, program_id, strength')
-    if (fb.error) throw new Error(`Failed to load sections: ${fb.error.message}`)
-    return (fb.data ?? []).map((s) => ({ ...s, batch_count: 1 }))
+    const fb = await supabase.from('sections').select('id, program_id, strength, batch_count').limit(50000)
+    if (fb.error) {
+      const fb2 = await supabase.from('sections').select('id, program_id, strength').limit(50000)
+      if (fb2.error) throw new Error(`Failed to load sections: ${fb2.error.message}`)
+      return (fb2.data ?? []).map((s) => ({ ...s, batch_count: 1, shift: 1 }))
+    }
+    return (fb.data ?? []).map((s) => ({ ...s, batch_count: s.batch_count ?? 1, shift: 1 }))
   }
-  return (res.data ?? []).map((s) => ({ ...s, batch_count: s.batch_count ?? 1 }))
+  return (res.data ?? []).map((s: any) => ({ ...s, batch_count: s.batch_count ?? 1, shift: s.shift ?? 1 }))
 }
 
 async function fetchCurriculumMappings(
@@ -41,6 +45,7 @@ async function fetchCurriculumMappings(
   const { data: progCourses, error: pErr } = await supabase
     .from('program_courses')
     .select('program_id, course_id, sessions_per_week')
+    .limit(50000)
 
   if (!pErr && progCourses && progCourses.length > 0) {
     const progMap = new Map<string, { course_id: string; sessions_per_week: number | null }[]>()
@@ -72,6 +77,7 @@ async function fetchCurriculumMappings(
   const { data: secCourses, error: sErr } = await supabase
     .from('section_courses')
     .select('section_id, course_id, sessions_per_week')
+    .limit(50000)
 
   if (sErr) throw new Error(`Failed to load course curriculum mapping: ${sErr.message}`)
   return (secCourses ?? []) as { section_id: string; course_id: string; sessions_per_week: number | null }[]
@@ -87,35 +93,31 @@ export async function buildSnapshot(): Promise<GenerateRequest> {
   const institution_id = institutions[0].id
 
   const rawSections = await fetchSections()
-  const [courses, section_courses, faculty, rooms, time_slots, qualifications, blocks, constraints] =
+  const [courses, section_courses, faculty, rooms, time_slots, blocks, constraints] =
     await Promise.all([
       must<{ id: string; sessions_per_week: number; lab_required: boolean; is_elective: boolean }[]>(
-        supabase.from('courses').select('id, sessions_per_week, lab_required, is_elective'),
+        supabase.from('courses').select('id, sessions_per_week, lab_required, is_elective').limit(50000),
         'courses',
       ),
       fetchCurriculumMappings(rawSections),
       must<{ id: string; max_weekly_load: number }[]>(
-        supabase.from('faculty').select('id, max_weekly_load'),
+        supabase.from('faculty').select('id, max_weekly_load').limit(50000),
         'faculty',
       ),
       must<{ id: string; room_type: string; capacity: number }[]>(
-        supabase.from('rooms').select('id, room_type, capacity'),
+        supabase.from('rooms').select('id, room_type, capacity').limit(50000),
         'rooms',
       ),
       must<{ id: string; day_of_week: number; period: number }[]>(
-        supabase.from('time_slots').select('id, day_of_week, period').order('day_of_week').order('period'),
+        supabase.from('time_slots').select('id, day_of_week, period').order('day_of_week').order('period').limit(50000),
         'time_slots',
       ),
-      must<{ faculty_id: string; course_id: string }[]>(
-        supabase.from('faculty_qualifications').select('faculty_id, course_id'),
-        'qualifications',
-      ),
       must<{ time_slot_id: string }[]>(
-        supabase.from('elective_slot_blocks').select('time_slot_id'),
+        supabase.from('elective_slot_blocks').select('time_slot_id').limit(50000),
         'elective blocks',
       ),
       must<{ key: string; value: { value?: number } }[]>(
-        supabase.from('constraints').select('key, value'),
+        supabase.from('constraints').select('key, value').limit(50000),
         'constraints',
       ),
     ])
@@ -132,16 +134,16 @@ export async function buildSnapshot(): Promise<GenerateRequest> {
 
   return {
     institution_id,
-    sections: rawSections.map((s) => ({ id: s.id, strength: s.strength, batch_count: s.batch_count })),
+    sections: rawSections.map((s) => ({ id: s.id, strength: s.strength, batch_count: s.batch_count, shift: s.shift ?? 1 })),
     courses,
     section_courses,
     faculty,
     rooms,
     time_slots,
-    qualifications,
+    qualifications: [],
     elective_blocks: blocks.map((b) => b.time_slot_id),
     weights,
-    time_limit_seconds: !import.meta.env.VITE_SOLVER_URL || import.meta.env.VITE_SOLVER_URL === '/api' ? 10 : 60,
+    time_limit_seconds: !import.meta.env.VITE_SOLVER_URL || import.meta.env.VITE_SOLVER_URL === '/api' ? 15 : 120,
   }
 }
 

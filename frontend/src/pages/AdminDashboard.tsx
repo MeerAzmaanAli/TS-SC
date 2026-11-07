@@ -4,6 +4,7 @@ import { ENTITIES } from '../lib/entities'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import SectionPasskeyManager from '../components/SectionPasskeyManager'
+import AcademicShiftManager from '../components/AcademicShiftManager'
 import {
   SparklesIcon,
   RefreshIcon,
@@ -69,7 +70,7 @@ const DAY_NAMES = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 export default function AdminDashboard() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'overview' | 'access'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'shifts' | 'access'>('overview')
   const [stats, setStats] = useState<Stats>({
     departments: 0,
     programs: 0,
@@ -353,6 +354,13 @@ export default function AdminDashboard() {
             >
               Overview
             </button>
+            <button
+              type="button"
+              className={activeTab === 'shifts' ? 'on' : ''}
+              onClick={() => setActiveTab('shifts')}
+            >
+              Shifts &amp; Timings
+            </button>
             <Link to="/admin/timetable">Timetables</Link>
             <Link to="/admin/generate">Generator</Link>
             <Link to="/admin/versions">Conflicts</Link>
@@ -430,6 +438,10 @@ export default function AdminDashboard() {
       {activeTab === 'access' ? (
         <div style={{ marginTop: 8 }}>
           <SectionPasskeyManager />
+        </div>
+      ) : activeTab === 'shifts' ? (
+        <div style={{ marginTop: 8 }}>
+          <AcademicShiftManager />
         </div>
       ) : (
         /* Two-Column Responsive Layout */

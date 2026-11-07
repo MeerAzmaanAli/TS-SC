@@ -34,7 +34,12 @@ def health() -> dict[str, str]:
 
 @app.post("/generate", response_model=GenerateResponse)
 def generate(request: GenerateRequest) -> GenerateResponse:
-    return solver.solve(request)
+    print(f"\n==================== /generate REQUEST RECEIVED ====================")
+    print(f"Sections: {len(request.sections)}, Courses: {len(request.courses)}, Faculty: {len(request.faculty)}, Rooms: {len(request.rooms)}, Slots: {len(request.time_slots)}")
+    print(f"Section-Courses: {len(request.section_courses)}, Qualifications: {len(request.qualifications)}")
+    resp = solver.solve(request)
+    print(f"==================== /generate FINISHED: status={resp.status}, causes={resp.causes} ====================\n")
+    return resp
 
 
 @app.post("/substitutions/rank", response_model=RankSubstitutesResponse)

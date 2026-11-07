@@ -1,0 +1,5 @@
+academic_year,shift,timing_label,starts_at,ends_at
+1,1,First Shift (08:15 - 14:45),08:15:00,14:45:00
+2,2,Second Shift (10:15 - 16:45),10:15:00,16:45:00
+3,2,Second Shift (10:15 - 16:45),10:15:00,16:45:00
+4,1,First Shift (08:15 - 14:45),08:15:00,14:45:00

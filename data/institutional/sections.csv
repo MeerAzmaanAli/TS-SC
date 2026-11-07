@@ -1,0 +1,76 @@
+code,name,department_code,academic_year,semester,shift,strength,batch_count,passkey
+CSE-Y1-A,B.Tech CSE Year 1 - Sec A,CSE,1,1,1,60,2,A-DA79
+CSE-Y1-B,B.Tech CSE Year 1 - Sec B,CSE,1,1,1,60,2,B-7566
+CSE-Y1-C,B.Tech CSE Year 1 - Sec C,CSE,1,1,1,60,2,C-AD61
+CSE-Y1-D,B.Tech CSE Year 1 - Sec D,CSE,1,1,1,60,2,D-E1FC
+CSE-Y1-E,B.Tech CSE Year 1 - Sec E,CSE,1,1,1,60,2,E-797C
+CSE-Y1-F,B.Tech CSE Year 1 - Sec F,CSE,1,1,1,60,2,F-D01E
+CSE-Y1-G,B.Tech CSE Year 1 - Sec G,CSE,1,1,1,60,2,G-DE55
+CSE-Y1-H,B.Tech CSE Year 1 - Sec H,CSE,1,1,1,60,2,H-B745
+CSE-Y2-A,B.Tech CSE Year 2 - Sec A,CSE,2,3,2,60,2,A-B308
+CSE-Y2-B,B.Tech CSE Year 2 - Sec B,CSE,2,3,2,60,2,B-75D7
+CSE-Y2-C,B.Tech CSE Year 2 - Sec C,CSE,2,3,2,60,2,C-AE7F
+CSE-Y2-D,B.Tech CSE Year 2 - Sec D,CSE,2,3,2,60,2,D-3E54
+CSE-Y2-E,B.Tech CSE Year 2 - Sec E,CSE,2,3,2,60,2,E-043C
+CSE-Y2-F,B.Tech CSE Year 2 - Sec F,CSE,2,3,2,60,2,F-F512
+CSE-Y2-G,B.Tech CSE Year 2 - Sec G,CSE,2,3,2,60,2,G-3BA0
+CSE-Y2-H,B.Tech CSE Year 2 - Sec H,CSE,2,3,2,60,2,H-4A76
+CSE-Y3-A,B.Tech CSE Year 3 - Sec A,CSE,3,5,2,60,2,A-B96D
+CSE-Y3-B,B.Tech CSE Year 3 - Sec B,CSE,3,5,2,60,2,B-C93D
+CSE-Y3-C,B.Tech CSE Year 3 - Sec C,CSE,3,5,2,60,2,C-232F
+CSE-Y3-D,B.Tech CSE Year 3 - Sec D,CSE,3,5,2,60,2,D-3323
+CSE-Y3-E,B.Tech CSE Year 3 - Sec E,CSE,3,5,2,60,2,E-9F14
+CSE-Y3-F,B.Tech CSE Year 3 - Sec F,CSE,3,5,2,60,2,F-51AC
+CSE-Y3-G,B.Tech CSE Year 3 - Sec G,CSE,3,5,2,60,2,G-3E79
+CSE-Y3-H,B.Tech CSE Year 3 - Sec H,CSE,3,5,2,60,2,H-C01D
+CSE-Y3-I,B.Tech CSE Year 3 - Sec I,CSE,3,5,2,60,2,I-9602
+CSE-Y4-A,B.Tech CSE Year 4 - Sec A,CSE,4,7,1,60,2,A-0DB9
+CSE-Y4-B,B.Tech CSE Year 4 - Sec B,CSE,4,7,1,60,2,B-290D
+CSE-Y4-C,B.Tech CSE Year 4 - Sec C,CSE,4,7,1,60,2,C-D169
+CSE-Y4-D,B.Tech CSE Year 4 - Sec D,CSE,4,7,1,60,2,D-C9BF
+CSE-Y4-E,B.Tech CSE Year 4 - Sec E,CSE,4,7,1,60,2,E-AC9B
+CSE-Y4-F,B.Tech CSE Year 4 - Sec F,CSE,4,7,1,60,2,F-8330
+CSE-Y4-G,B.Tech CSE Year 4 - Sec G,CSE,4,7,1,60,2,G-14F7
+CSE-Y4-H,B.Tech CSE Year 4 - Sec H,CSE,4,7,1,60,2,H-56BD
+CSE-Y4-I,B.Tech CSE Year 4 - Sec I,CSE,4,7,1,60,2,I-5B24
+CSE-Y4-J,B.Tech CSE Year 4 - Sec J,CSE,4,7,1,60,2,J-3A62
+AIDS-Y1-A,B.Tech AI-DS Year 1 - Sec A,AIDS,1,1,1,60,2,A-CF8D
+AIDS-Y1-B,B.Tech AI-DS Year 1 - Sec B,AIDS,1,1,1,60,2,B-2339
+AIDS-Y2-A,B.Tech AI-DS Year 2 - Sec A,AIDS,2,3,2,60,2,A-A9C2
+AIDS-Y2-B,B.Tech AI-DS Year 2 - Sec B,AIDS,2,3,2,60,2,B-6F2E
+AIDS-Y3-A,B.Tech AI-DS Year 3 - Sec A,AIDS,3,5,2,60,2,A-68BD
+AIDS-Y3-B,B.Tech AI-DS Year 3 - Sec B,AIDS,3,5,2,60,2,B-6469
+AIDS-Y4-A,B.Tech AI-DS Year 4 - Sec A,AIDS,4,7,1,60,2,A-5766
+AIDS-Y4-B,B.Tech AI-DS Year 4 - Sec B,AIDS,4,7,1,60,2,B-27E9
+IT-Y1-A,B.Tech IT Year 1 - Sec A,IT,1,1,1,60,2,A-1AC5
+IT-Y1-B,B.Tech IT Year 1 - Sec B,IT,1,1,1,60,2,B-D4F3
+IT-Y1-C,B.Tech IT Year 1 - Sec C,IT,1,1,1,60,2,C-D0E8
+IT-Y1-D,B.Tech IT Year 1 - Sec D,IT,1,1,1,60,2,D-4B2D
+IT-Y2-A,B.Tech IT Year 2 - Sec A,IT,2,3,2,60,2,A-CF32
+IT-Y2-B,B.Tech IT Year 2 - Sec B,IT,2,3,2,60,2,B-C155
+IT-Y2-C,B.Tech IT Year 2 - Sec C,IT,2,3,2,60,2,C-A2EB
+IT-Y2-D,B.Tech IT Year 2 - Sec D,IT,2,3,2,60,2,D-A2D2
+IT-Y3-A,B.Tech IT Year 3 - Sec A,IT,3,5,2,60,2,A-652C
+IT-Y3-B,B.Tech IT Year 3 - Sec B,IT,3,5,2,60,2,B-9F9E
+IT-Y3-C,B.Tech IT Year 3 - Sec C,IT,3,5,2,60,2,C-EB32
+IT-Y3-D,B.Tech IT Year 3 - Sec D,IT,3,5,2,60,2,D-96B4
+IT-Y4-A,B.Tech IT Year 4 - Sec A,IT,4,7,1,60,2,A-CBFE
+IT-Y4-B,B.Tech IT Year 4 - Sec B,IT,4,7,1,60,2,B-56D3
+IT-Y4-C,B.Tech IT Year 4 - Sec C,IT,4,7,1,60,2,C-A746
+IT-Y4-D,B.Tech IT Year 4 - Sec D,IT,4,7,1,60,2,D-C7B3
+TCS-Y1-A,TCS Enterprise Computing Year 1,IND,1,1,1,60,2,T-871A
+IBM-Y1-A,IBM Cloud & AI Year 1 - Sec A,IND,1,1,1,60,2,I-4D0E
+IBM-Y1-B,IBM Cloud & AI Year 1 - Sec B,IND,1,1,1,60,2,I-AB04
+APPLE-Y1-A,Apple Systems & Swift Year 1,IND,1,1,1,60,2,A-E79A
+TCS-Y2-A,TCS Enterprise Computing Year 2,IND,2,3,2,60,2,T-461E
+IBM-Y2-A,IBM Cloud & AI Year 2 - Sec A,IND,2,3,2,60,2,I-10D1
+IBM-Y2-B,IBM Cloud & AI Year 2 - Sec B,IND,2,3,2,60,2,I-777A
+APPLE-Y2-A,Apple Systems & Swift Year 2,IND,2,3,2,60,2,A-F947
+TCS-Y3-A,TCS Enterprise Computing Year 3,IND,3,5,2,60,2,T-17F7
+IBM-Y3-A,IBM Cloud & AI Year 3 - Sec A,IND,3,5,2,60,2,I-FE80
+IBM-Y3-B,IBM Cloud & AI Year 3 - Sec B,IND,3,5,2,60,2,I-560F
+APPLE-Y3-A,Apple Systems & Swift Year 3,IND,3,5,2,60,2,A-6F5C
+TCS-Y4-A,TCS Enterprise Computing Year 4,IND,4,7,1,60,2,T-1B5B
+IBM-Y4-A,IBM Cloud & AI Year 4 - Sec A,IND,4,7,1,60,2,I-5B82
+IBM-Y4-B,IBM Cloud & AI Year 4 - Sec B,IND,4,7,1,60,2,I-689B
+APPLE-Y4-A,Apple Systems & Swift Year 4,IND,4,7,1,60,2,A-B7D2

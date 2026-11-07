@@ -9,6 +9,8 @@ class Section(BaseModel):
     id: str
     strength: int
     batch_count: int = 1
+    shift: int = 1
+    academic_year: Optional[int] = None
 
 
 class Course(BaseModel):
@@ -85,6 +87,7 @@ class GenerateResponse(BaseModel):
     # Populated when status == "infeasible": the constraint groups whose
     # relaxation restores feasibility (see solver.diagnose()).
     causes: list[str] = Field(default_factory=list)
+    wall_time_seconds: Optional[float] = None
 
 
 # ---------------- substitution (Phase 5) ----------------

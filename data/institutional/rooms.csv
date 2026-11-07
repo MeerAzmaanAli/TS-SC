@@ -1,0 +1,102 @@
+code,name,building,room_type,capacity
+MB-101,Main Block Room 101,Main Academic Block,classroom,70
+MB-102,Main Block Room 102,Main Academic Block,classroom,70
+MB-103,Main Block Room 103,Main Academic Block,classroom,70
+MB-104,Main Block Room 104,Main Academic Block,classroom,70
+MB-105,Main Block Room 105,Main Academic Block,classroom,70
+MB-106,Main Block Room 106,Main Academic Block,classroom,70
+MB-107,Main Block Room 107,Main Academic Block,classroom,70
+MB-108,Main Block Room 108,Main Academic Block,classroom,70
+MB-109,Main Block Room 109,Main Academic Block,classroom,70
+MB-110,Main Block Room 110,Main Academic Block,classroom,70
+MB-111,Main Block Room 111,Main Academic Block,classroom,70
+MB-112,Main Block Room 112,Main Academic Block,classroom,70
+MB-113,Main Block Room 113,Main Academic Block,classroom,70
+MB-114,Main Block Room 114,Main Academic Block,classroom,70
+MB-115,Main Block Room 115,Main Academic Block,classroom,70
+MB-116,Main Block Room 116,Main Academic Block,classroom,70
+MB-117,Main Block Room 117,Main Academic Block,classroom,70
+MB-118,Main Block Room 118,Main Academic Block,classroom,70
+MB-201,Main Block Room 201,Main Academic Block,classroom,70
+MB-202,Main Block Room 202,Main Academic Block,classroom,70
+MB-203,Main Block Room 203,Main Academic Block,classroom,70
+MB-204,Main Block Room 204,Main Academic Block,classroom,70
+MB-205,Main Block Room 205,Main Academic Block,classroom,70
+MB-206,Main Block Room 206,Main Academic Block,classroom,70
+MB-207,Main Block Room 207,Main Academic Block,classroom,70
+MB-208,Main Block Room 208,Main Academic Block,classroom,70
+MB-209,Main Block Room 209,Main Academic Block,classroom,70
+MB-210,Main Block Room 210,Main Academic Block,classroom,70
+MB-211,Main Block Room 211,Main Academic Block,classroom,70
+MB-212,Main Block Room 212,Main Academic Block,classroom,70
+MB-213,Main Block Room 213,Main Academic Block,classroom,70
+MB-214,Main Block Room 214,Main Academic Block,classroom,70
+MB-215,Main Block Room 215,Main Academic Block,classroom,70
+MB-216,Main Block Room 216,Main Academic Block,classroom,70
+MB-217,Main Block Room 217,Main Academic Block,classroom,70
+MB-218,Main Block Room 218,Main Academic Block,classroom,70
+MB-301,Main Block Room 301,Main Academic Block,classroom,70
+MB-302,Main Block Room 302,Main Academic Block,classroom,70
+MB-303,Main Block Room 303,Main Academic Block,classroom,70
+MB-304,Main Block Room 304,Main Academic Block,classroom,70
+MB-305,Main Block Room 305,Main Academic Block,classroom,70
+MB-306,Main Block Room 306,Main Academic Block,classroom,70
+MB-307,Main Block Room 307,Main Academic Block,classroom,70
+MB-308,Main Block Room 308,Main Academic Block,classroom,70
+MB-309,Main Block Room 309,Main Academic Block,classroom,70
+MB-310,Main Block Room 310,Main Academic Block,classroom,70
+MB-311,Main Block Room 311,Main Academic Block,classroom,70
+MB-312,Main Block Room 312,Main Academic Block,classroom,70
+MB-313,Main Block Room 313,Main Academic Block,classroom,70
+MB-314,Main Block Room 314,Main Academic Block,classroom,70
+MB-315,Main Block Room 315,Main Academic Block,classroom,70
+MB-316,Main Block Room 316,Main Academic Block,classroom,70
+ME-101,Mechanical Block 101,Mechanical Engineering Block,classroom,70
+ME-102,Mechanical Block 102,Mechanical Engineering Block,classroom,70
+ME-103,Mechanical Block 103,Mechanical Engineering Block,classroom,70
+ME-104,Mechanical Block 104,Mechanical Engineering Block,classroom,70
+ME-105,Mechanical Block 105,Mechanical Engineering Block,classroom,70
+ME-106,Mechanical Block 106,Mechanical Engineering Block,classroom,70
+ME-107,Mechanical Block 107,Mechanical Engineering Block,classroom,70
+ME-108,Mechanical Block 108,Mechanical Engineering Block,classroom,70
+CE-101,Civil Block 101,Civil Engineering Block,classroom,70
+CE-102,Civil Block 102,Civil Engineering Block,classroom,70
+CE-103,Civil Block 103,Civil Engineering Block,classroom,70
+CE-104,Civil Block 104,Civil Engineering Block,classroom,70
+CE-105,Civil Block 105,Civil Engineering Block,classroom,70
+CE-106,Civil Block 106,Civil Engineering Block,classroom,70
+CE-107,Civil Block 107,Civil Engineering Block,classroom,70
+CE-108,Civil Block 108,Civil Engineering Block,classroom,70
+TE-101,Telecom Block 101,Telecommunication Block,classroom,70
+TE-102,Telecom Block 102,Telecommunication Block,classroom,70
+TE-103,Telecom Block 103,Telecommunication Block,classroom,70
+TE-104,Telecom Block 104,Telecommunication Block,classroom,70
+EE-101,Electrical Block 101,Electrical Engineering Block,classroom,70
+LAB-01,High-Performance Computing Lab 01,Central Computing Complex,lab,35
+LAB-02,High-Performance Computing Lab 02,Central Computing Complex,lab,35
+LAB-03,High-Performance Computing Lab 03,Central Computing Complex,lab,35
+LAB-04,High-Performance Computing Lab 04,Central Computing Complex,lab,35
+LAB-05,High-Performance Computing Lab 05,Central Computing Complex,lab,35
+LAB-06,High-Performance Computing Lab 06,Central Computing Complex,lab,35
+LAB-07,High-Performance Computing Lab 07,Central Computing Complex,lab,35
+LAB-08,High-Performance Computing Lab 08,Central Computing Complex,lab,35
+LAB-09,High-Performance Computing Lab 09,Central Computing Complex,lab,35
+LAB-10,High-Performance Computing Lab 10,Central Computing Complex,lab,35
+LAB-11,High-Performance Computing Lab 11,Central Computing Complex,lab,35
+LAB-12,High-Performance Computing Lab 12,Central Computing Complex,lab,35
+LAB-13,High-Performance Computing Lab 13,Central Computing Complex,lab,35
+LAB-14,High-Performance Computing Lab 14,Central Computing Complex,lab,35
+LAB-15,High-Performance Computing Lab 15,Central Computing Complex,lab,35
+LAB-16,High-Performance Computing Lab 16,Central Computing Complex,lab,35
+LAB-17,High-Performance Computing Lab 17,Central Computing Complex,lab,35
+LAB-18,High-Performance Computing Lab 18,Central Computing Complex,lab,35
+LAB-19,High-Performance Computing Lab 19,Central Computing Complex,lab,35
+LAB-20,High-Performance Computing Lab 20,Central Computing Complex,lab,35
+LAB-21,High-Performance Computing Lab 21,Central Computing Complex,lab,35
+LAB-22,High-Performance Computing Lab 22,Central Computing Complex,lab,35
+LAB-23,High-Performance Computing Lab 23,Central Computing Complex,lab,35
+LAB-24,High-Performance Computing Lab 24,Central Computing Complex,lab,35
+LAB-25,High-Performance Computing Lab 25,Central Computing Complex,lab,35
+LAB-26,High-Performance Computing Lab 26,Central Computing Complex,lab,35
+LAB-27,High-Performance Computing Lab 27,Central Computing Complex,lab,35
+LAB-28,High-Performance Computing Lab 28,Central Computing Complex,lab,35
