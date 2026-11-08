@@ -31,9 +31,60 @@ export default function GeneratePage() {
   const [infeasibleCauses, setInfeasibleCauses] = useState<string[]>([])
   const [solverOnline, setSolverOnline] = useState<boolean | null>(null)
 
+  const [progress, setProgress] = useState(0)
+  const [progressStage, setProgressStage] = useState('')
+
   useEffect(() => {
     checkHealth()
   }, [])
+
+  // Fast-start / slow-end animated progress simulation while generation runs
+  useEffect(() => {
+    if (!busy) {
+      if (result) {
+        setProgress(100)
+        setProgressStage('Timetable generation complete!')
+      }
+      return
+    }
+
+    setProgress(5)
+    setProgressStage('Extracting curriculum data and validating academic shifts…')
+    const startTime = Date.now()
+
+    const interval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000
+
+      // Fast-Start: 0s to 3s -> 5% to 25%
+      // Stage 1: 3s to 8s -> 25% to 48%
+      // Stage 2: 8s to 22s -> 48% to 75%
+      // Slow-End: 22s+ -> 75% slowly asymptotes towards 94%
+      let p = 5
+      let stageText = 'Extracting curriculum data and validating academic shifts…'
+
+      if (elapsed < 3) {
+        p = 5 + (elapsed / 3) * 20
+        stageText = 'Assembling institutional entities & shift constraints…'
+      } else if (elapsed < 8) {
+        p = 25 + ((elapsed - 3) / 5) * 23
+        stageText = 'Stage 1: Allocating faculty workloads (Max 24 hrs/week balance)…'
+      } else if (elapsed < 24) {
+        p = 48 + ((elapsed - 8) / 16) * 28
+        stageText = 'Stage 2: CP-SAT solving core section periods & parallel lab batches…'
+      } else if (elapsed < 40) {
+        p = 76 + ((elapsed - 24) / 16) * 14
+        stageText = 'Stage 3: Physical room matching and elective block verification…'
+      } else {
+        p = 90 + Math.min(4, (elapsed - 40) * 0.1)
+        stageText = 'Optimizing student schedule continuity & finalizing entries…'
+      }
+
+      setProgress(Math.min(95, Math.round(p)))
+      setProgressStage(stageText)
+    }, 250)
+
+    return () => clearInterval(interval)
+  }, [busy, result])
 
   async function checkHealth() {
     try {
@@ -119,10 +170,17 @@ export default function GeneratePage() {
         batch: e.batch ?? null,
       }))
 
-      const { error: insErr } = await supabase.from('timetable_entries').insert(rows)
-      if (insErr) throw insErr
+      // Batch insert rows in chunks of 500 to prevent payload timeouts or limits
+      const CHUNK_SIZE = 500
+      for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+        const chunk = rows.slice(i, i + CHUNK_SIZE)
+        const { error: insErr } = await supabase.from('timetable_entries').insert(chunk)
+        if (insErr) throw insErr
+      }
 
       setGeneratedVersionId(version.id)
+      setProgress(100)
+      setProgressStage('Timetable generation complete!')
       setResult(
         `Generated timetable with ${rows.length} entries successfully in ${(data.wall_time_seconds ?? 0).toFixed(2)}s.`
       )
@@ -194,6 +252,51 @@ export default function GeneratePage() {
                 </>
               )}
             </button>
+
+            {/* Fast-Start / Slow-End Generation Progress Bar */}
+            {busy && (
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: 16,
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 8,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>
+                    {progressStage}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#4f46e5', fontFamily: 'monospace' }}>
+                    {progress}%
+                  </span>
+                </div>
+                <div
+                  style={{
+                    width: '100%',
+                    height: 10,
+                    backgroundColor: '#e2e8f0',
+                    borderRadius: 999,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${progress}%`,
+                      backgroundColor: progress >= 100 ? '#10b981' : '#4f46e5',
+                      borderRadius: 999,
+                      transition: 'width 0.25s ease-out',
+                    }}
+                  />
+                </div>
+                <div style={{ marginTop: 8, fontSize: 11, color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Fast-Start / Asymptotic Solver Monitor</span>
+                  <span>Stages: Allocation → CP-SAT Slots → Room Ingestion</span>
+                </div>
+              </div>
+            )}
 
             {solverOnline === false && (
               <div
@@ -334,7 +437,7 @@ export default function GeneratePage() {
         <section className="admin-panel" style={{ marginTop: 20 }}>
           <div className="admin-panel-hd">
             <h2>Generated Timetable Preview</h2>
-            <span className="admin-mu admin-m">Version {generatedVersionId.slice(0, 8)}</span>
+            <span className="admin-mu admin-m">Newly Generated Draft Timetable</span>
           </div>
           <TimetablePreview key={generatedVersionId} versionId={generatedVersionId} />
         </section>

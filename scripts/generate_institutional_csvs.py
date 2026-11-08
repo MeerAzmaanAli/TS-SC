@@ -301,8 +301,21 @@ with open("docs/Semester course-.txt", encoding="utf-8") as f:
                     credit = 1
                 is_lab = "(p)" in code.lower() or "lab" in name.lower() or "practical" in name.lower()
                 
-                # Rule: Course with max credit has at most 4 sessions, min credit has 1 session
-                sessions = min(4, max(1, credit))
+                # Teaching scheme: L (lectures), T (tutorials), P (practicals/lab)
+                # In the text file:
+                # - For practicals (P), the value is the lab hours (usually 2).
+                #   As user specified: "lets say P is 2 then one for each batch" -> sessions = P // 2 (or 1 session per batch for 2 hours)
+                # - For theory, the value is L+T -> sessions = val
+                if is_lab:
+                    p_val = credit
+                    l_val = 0
+                    t_val = 0
+                    sessions = max(1, p_val // 2)
+                else:
+                    l_val = min(4, max(1, credit))
+                    t_val = 0
+                    p_val = 0
+                    sessions = l_val + t_val
                 
                 # Unique code per semester for generic electives
                 is_elective = False
@@ -328,6 +341,9 @@ with open("docs/Semester course-.txt", encoding="utf-8") as f:
                     "academic_year": acad_yr,
                     "semester": cur_sem,
                     "credits": credit,
+                    "lectures_per_week": l_val,
+                    "tutorials_per_week": t_val,
+                    "practicals_per_week": p_val,
                     "sessions_per_week": sessions,
                     "lab_required": is_lab,
                     "is_elective": is_elective,
@@ -339,7 +355,9 @@ for s in sorted(semesters.keys()):
 
 with open(os.path.join(DATA_DIR, "courses.csv"), "w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=[
-        "code", "name", "department_code", "academic_year", "semester", "credits", "sessions_per_week", "lab_required", "is_elective"
+        "code", "name", "department_code", "academic_year", "semester", "credits",
+        "lectures_per_week", "tutorials_per_week", "practicals_per_week",
+        "sessions_per_week", "lab_required", "is_elective"
     ])
     writer.writeheader()
     writer.writerows(courses)
@@ -375,7 +393,7 @@ for i in range(1, 121):
         "name": name,
         "email": email,
         "department_code": dept,
-        "max_weekly_load": 18,
+        "max_weekly_load": 24,
     })
 
 faculty.append({

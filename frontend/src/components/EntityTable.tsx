@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, Fragment } from 'react'
 import { supabase } from '../lib/supabase'
 import { EntityDef, refLabel } from '../lib/entities'
-import { EditIcon, TrashIcon, SearchIcon, BookOpenIcon } from './Icons'
+import { EditIcon, TrashIcon, SearchIcon, BookOpenIcon, LayersIcon } from './Icons'
 
 interface Props {
   def: EntityDef
@@ -36,18 +36,87 @@ function renderCellValue(value: unknown): React.ReactNode {
   return String(value)
 }
 
+function getGroupKey(
+  row: Record<string, unknown>,
+  defName: string,
+  labels: Record<string, Record<string, string>>,
+  progDeptMap: Record<string, string>,
+): { key: string; label: string; icon: string } {
+  if (defName === 'programs') {
+    const dept = labels['department_id']?.[String(row.department_id)] || 'General / Unassigned'
+    return { key: dept, label: `Department: ${dept}`, icon: '🏛️' }
+  }
+
+  if (defName === 'sections') {
+    const sem = Number(row.semester) || 1
+    const year = Math.ceil(sem / 2)
+    const progId = String(row.program_id ?? '')
+    const progName = labels['program_id']?.[progId] || 'General'
+    const deptName = progDeptMap[progId] || ''
+    const deptPart = deptName ? ` — ${deptName}` : ''
+    const key = `Y${year}-${deptName}-${progName}`
+    return {
+      key,
+      label: `Year ${year} (Semesters ${year * 2 - 1} & ${year * 2})${deptPart} [${progName}]`,
+      icon: '🎓',
+    }
+  }
+
+  if (defName === 'rooms') {
+    const name = String(row.name ?? '').trim()
+    const prefix = name.includes('-') ? name.split('-')[0].trim().toUpperCase() : ''
+    let bldgName = ''
+    if (prefix === 'MB') bldgName = 'Main Building (MB)'
+    else if (prefix === 'ME') bldgName = 'Mechanical Engineering Block (ME)'
+    else if (prefix === 'CE') bldgName = 'Civil Engineering Block (CE)'
+    else if (prefix === 'EE') bldgName = 'Electrical Engineering Block (EE)'
+    else if (prefix === 'CS' || prefix === 'CSE') bldgName = 'Computer Science Block (CSE)'
+    else if (prefix === 'LAB' || row.room_type === 'lab') bldgName = 'Laboratory Complex (LAB)'
+    else if (prefix) bldgName = `${prefix} Complex / Wing`
+    else bldgName = row.room_type === 'lab' ? 'Laboratory Facilities' : 'General Campus Classrooms'
+
+    return { key: bldgName, label: bldgName, icon: '🏢' }
+  }
+
+  if (defName === 'courses') {
+    const dept = labels['department_id']?.[String(row.department_id)] || 'General Curriculum'
+    return { key: dept, label: `Department: ${dept}`, icon: '📚' }
+  }
+
+  if (defName === 'faculty') {
+    const dept = labels['department_id']?.[String(row.department_id)] || 'General Faculty'
+    return { key: dept, label: `Department: ${dept}`, icon: '👨‍🏫' }
+  }
+
+  if (defName === 'program_courses') {
+    const prog = labels['program_id']?.[String(row.program_id)] || 'General Program'
+    return { key: prog, label: `Program: ${prog}`, icon: '📋' }
+  }
+
+  if (defName === 'time_slots') {
+    const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    const day = Number(row.day_of_week) || 0
+    return { key: `Day-${day}`, label: dayNames[day] || `Day ${day}`, icon: '📅' }
+  }
+
+  return { key: 'all', label: 'All Records', icon: '📁' }
+}
+
 export default function EntityTable({ def, onEdit, refreshKey }: Props) {
   const [rows, setRows] = useState<Record<string, unknown>[]>([])
   const [labels, setLabels] = useState<Record<string, Record<string, string>>>({})
+  const [progDeptMap, setProgDeptMap] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [isGrouped, setIsGrouped] = useState(true)
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       setLoading(true)
-      let query = supabase.from(def.name).select('*')
+      let query = supabase.from(def.name).select('*').limit(50000)
       if (def.orderBy && def.orderBy.length > 0) {
         for (const ord of def.orderBy) {
           query = query.order(ord.column, { ascending: ord.ascending ?? true })
@@ -73,13 +142,29 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
       for (const f of def.fields) {
         if (f.reference) {
           const selectCols = f.reference === 'courses' ? 'id, name, code' : 'id, name'
-          const { data: refRows } = await supabase.from(f.reference).select(selectCols as any)
+          const { data: refRows } = await supabase.from(f.reference).select(selectCols as any).limit(50000)
           if (cancelled) return
           maps[f.name] = Object.fromEntries(
             ((refRows ?? []) as unknown as Record<string, unknown>[]).map((r) => [String(r.id), refLabel(r)]),
           )
         }
       }
+
+      // If sections table, fetch program -> department mappings for richer grouping
+      if (def.name === 'sections') {
+        const { data: progRows } = await supabase
+          .from('programs')
+          .select('id, name, department_id, departments(name)')
+          .limit(50000)
+        if (!cancelled && progRows) {
+          const pDept: Record<string, string> = {}
+          for (const p of progRows as any[]) {
+            pDept[p.id] = p.departments?.name ?? ''
+          }
+          setProgDeptMap(pDept)
+        }
+      }
+
       if (!cancelled) {
         setLabels(maps)
         setLoading(false)
@@ -111,6 +196,37 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
       })
     })
   }, [rows, search])
+
+  const groups = useMemo(() => {
+    const map = new Map<string, { key: string; label: string; icon: string; rows: Record<string, unknown>[] }>()
+    for (const r of filteredRows) {
+      const info = getGroupKey(r, def.name, labels, progDeptMap)
+      let g = map.get(info.key)
+      if (!g) {
+        g = { ...info, rows: [] }
+        map.set(info.key, g)
+      }
+      g.rows.push(r)
+    }
+    return Array.from(map.values())
+  }, [filteredRows, def.name, labels, progDeptMap])
+
+  function toggleGroup(key: string) {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  function toggleAllGroups() {
+    if (collapsedGroups.size > 0) {
+      setCollapsedGroups(new Set())
+    } else {
+      setCollapsedGroups(new Set(groups.map((g) => g.key)))
+    }
+  }
 
   if (loading) {
     return (
@@ -165,9 +281,32 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setIsGrouped((v) => !v)}
+            className={`btn btn-sm ${isGrouped ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            title="Toggle between grouped categories and standard flat table"
+          >
+            <LayersIcon size={14} />
+            <span>{isGrouped ? 'Grouped View' : 'Flat View'}</span>
+          </button>
+
+          {isGrouped && groups.length > 1 && (
+            <button
+              type="button"
+              onClick={toggleAllGroups}
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: '0.78rem' }}
+            >
+              {collapsedGroups.size > 0 ? 'Expand All' : 'Collapse All'}
+            </button>
+          )}
+
           <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>
             {filteredRows.length} of {rows.length} {def.label}
+            {isGrouped && ` (${groups.length} groups)`}
           </span>
         </div>
       </div>
@@ -183,38 +322,120 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
             </tr>
           </thead>
           <tbody>
-            {filteredRows.map((row) => (
-              <tr key={String(row.id)}>
-                {displayFields.map((f) => {
-                  const raw = row[f.name]
-                  const resolved =
-                    f.reference && typeof raw === 'string'
-                      ? labels[f.name]?.[raw] ?? raw
-                      : raw
-                  return <td key={f.name}>{renderCellValue(resolved)}</td>
-                })}
-                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                  <div className="flex gap-1" style={{ justifyContent: 'flex-end' }}>
-                    <button
-                      onClick={() => onEdit(row)}
-                      className="btn btn-secondary btn-sm"
-                      title={`Edit ${def.singular}`}
+            {isGrouped ? (
+              groups.map((grp) => {
+                const isCollapsed = collapsedGroups.has(grp.key)
+                return (
+                  <Fragment key={grp.key}>
+                    <tr
+                      onClick={() => toggleGroup(grp.key)}
+                      style={{
+                        backgroundColor: '#f1f5f9',
+                        cursor: 'pointer',
+                        borderTop: '2px solid #cbd5e1',
+                        borderBottom: '1px solid #e2e8f0',
+                        userSelect: 'none',
+                      }}
                     >
-                      <EditIcon size={14} />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(String(row.id))}
-                      className="btn btn-danger btn-sm"
-                      title={`Delete ${def.singular}`}
-                    >
-                      <TrashIcon size={14} />
-                      <span>Delete</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      <td
+                        colSpan={displayFields.length + 1}
+                        style={{ padding: '0.65rem 1rem', fontWeight: 700, color: '#1e293b' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'inline-block', width: 14 }}>
+                              {isCollapsed ? '▶' : '▼'}
+                            </span>
+                            <span style={{ fontSize: '1rem' }}>{grp.icon}</span>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0f172a' }}>
+                              {grp.label}
+                            </span>
+                          </div>
+                          <span
+                            className="badge badge-neutral"
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              padding: '0.2rem 0.6rem',
+                              backgroundColor: '#ffffff',
+                              border: '1px solid #cbd5e1',
+                            }}
+                          >
+                            {grp.rows.length} {grp.rows.length === 1 ? def.singular : def.label}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    {!isCollapsed &&
+                      grp.rows.map((row) => (
+                        <tr key={String(row.id)}>
+                          {displayFields.map((f) => {
+                            const raw = row[f.name]
+                            const resolved =
+                              f.reference && typeof raw === 'string'
+                                ? labels[f.name]?.[raw] ?? raw
+                                : raw
+                            return <td key={f.name}>{renderCellValue(resolved)}</td>
+                          })}
+                          <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            <div className="flex gap-1" style={{ justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => onEdit(row)}
+                                className="btn btn-secondary btn-sm"
+                                title={`Edit ${def.singular}`}
+                              >
+                                <EditIcon size={14} />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(String(row.id))}
+                                className="btn btn-danger btn-sm"
+                                title={`Delete ${def.singular}`}
+                              >
+                                <TrashIcon size={14} />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </Fragment>
+                )
+              })
+            ) : (
+              filteredRows.map((row) => (
+                <tr key={String(row.id)}>
+                  {displayFields.map((f) => {
+                    const raw = row[f.name]
+                    const resolved =
+                      f.reference && typeof raw === 'string'
+                        ? labels[f.name]?.[raw] ?? raw
+                        : raw
+                    return <td key={f.name}>{renderCellValue(resolved)}</td>
+                  })}
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div className="flex gap-1" style={{ justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => onEdit(row)}
+                        className="btn btn-secondary btn-sm"
+                        title={`Edit ${def.singular}`}
+                      >
+                        <EditIcon size={14} />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(String(row.id))}
+                        className="btn btn-danger btn-sm"
+                        title={`Delete ${def.singular}`}
+                      >
+                        <TrashIcon size={14} />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
 
             {filteredRows.length === 0 && (
               <tr>

@@ -265,12 +265,11 @@ export async function createSubstitutionRequest(
     )
   }
 
-  const [sectionRows, qualRows, slotRows, facultyRows, loadRows, courseRes, requesterRes] = await Promise.all([
+  const [sectionRows, qualRows, slotRows, facultyRows, courseRes, requesterRes] = await Promise.all([
     supabase.from('timetable_entries').select('faculty_id').eq('version_id', versionId).eq('section_id', session.sectionId),
     supabase.from('faculty_qualifications').select('faculty_id').eq('course_id', session.courseId),
     supabase.from('timetable_entries').select('faculty_id').eq('version_id', versionId).eq('time_slot_id', session.timeSlotId),
     supabase.from('faculty').select('id, name, email'),
-    supabase.from('timetable_entries').select('faculty_id').eq('version_id', versionId),
     supabase.from('courses').select('code, name').eq('id', session.courseId).single(),
     supabase.from('faculty').select('name, email').eq('id', requesterFacultyId).single(),
   ])
@@ -280,9 +279,25 @@ export async function createSubstitutionRequest(
     [qualRows, 'qualifications'],
     [slotRows, 'slot entries'],
     [facultyRows, 'faculty'],
-    [loadRows, 'loads'],
   ] as const) {
     if (rows.error) throw new Error(`Failed to load ${what}: ${rows.error.message}`)
+  }
+
+  // Multi-pass fetch for all faculty loads across all entries to prevent 1000-row cap
+  let allLoadEntries: { faculty_id: string | null }[] = []
+  let loadFrom = 0
+  let loadHasMore = true
+  while (loadHasMore) {
+    const { data: loadChunk, error: loadErr } = await supabase
+      .from('timetable_entries')
+      .select('faculty_id')
+      .eq('version_id', versionId)
+      .range(loadFrom, loadFrom + 999)
+    if (loadErr) break
+    const arr = (loadChunk ?? []) as { faculty_id: string | null }[]
+    allLoadEntries = allLoadEntries.concat(arr)
+    if (arr.length < 1000) loadHasMore = false
+    else loadFrom += 1000
   }
 
   const allFacultyList = (facultyRows.data ?? []) as { id: string; name: string; email: string }[]
@@ -294,9 +309,11 @@ export async function createSubstitutionRequest(
   }
 
   const loads: Record<string, number> = {}
-  for (const r of ((loadRows.data ?? []) as { faculty_id: string }[])) {
-    const id = String(r.faculty_id)
-    loads[id] = (loads[id] ?? 0) + 1
+  for (const r of allLoadEntries) {
+    if (r.faculty_id) {
+      const id = String(r.faculty_id)
+      loads[id] = (loads[id] ?? 0) + 1
+    }
   }
 
   const candidates = await rank({
@@ -437,13 +454,24 @@ export async function tryFinaliseRequest(requestId: string): Promise<boolean> {
     .single()
   const loads: Record<string, number> = {}
   if (entry) {
-    const { data: loadRows } = await supabase
-      .from('timetable_entries')
-      .select('faculty_id')
-      .eq('version_id', (entry as { version_id: string }).version_id)
-    for (const r of ((loadRows ?? []) as { faculty_id: string }[])) {
-      const id = String(r.faculty_id)
-      loads[id] = (loads[id] ?? 0) + 1
+    let loadFrom = 0
+    let loadHasMore = true
+    while (loadHasMore) {
+      const { data: loadChunk, error: loadErr } = await supabase
+        .from('timetable_entries')
+        .select('faculty_id')
+        .eq('version_id', (entry as { version_id: string }).version_id)
+        .range(loadFrom, loadFrom + 999)
+      if (loadErr) break
+      const arr = (loadChunk ?? []) as { faculty_id: string | null }[]
+      for (const r of arr) {
+        if (r.faculty_id) {
+          const id = String(r.faculty_id)
+          loads[id] = (loads[id] ?? 0) + 1
+        }
+      }
+      if (arr.length < 1000) loadHasMore = false
+      else loadFrom += 1000
     }
   }
 

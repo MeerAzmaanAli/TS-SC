@@ -124,9 +124,9 @@ export default function WeeklyGrid({
   actionBusyId,
   orientation = 'responsive',
 }: WeeklyGridProps) {
-  // Ensure the full standard school week (Monday to Friday, Periods 1 to 6) is shown by default
+  // Ensure the full standard school week (Monday to Friday, Periods 1 to 8) is shown by default
   const defaultDays = [1, 2, 3, 4, 5]
-  const defaultPeriods = [1, 2, 3, 4, 5, 6]
+  const defaultPeriods = [1, 2, 3, 4, 5, 6, 7, 8]
 
   const days =
     allDays && allDays.length > 0
@@ -500,9 +500,9 @@ export default function WeeklyGrid({
                     )}
 
                     {/* Room Location Chip */}
-                    <span className="meta-chip room" title={`Room Location: ${e.room_name}`}>
+                    <span className="meta-chip room" title={e.is_elective ? "Generic Elective: Assigned by chosen course" : `Room Location: ${e.room_name || 'Classroom'}`}>
                       <MapPinIcon size={11} />
-                      <span>{e.room_name}</span>
+                      <span>{e.is_elective ? (e.room_name || 'Elective Room') : (e.room_name || 'Classroom')}</span>
                     </span>
                   </div>
 

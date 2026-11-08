@@ -14,13 +14,21 @@ alter table if exists sections
   add column if not exists academic_year int default 1 check (academic_year between 1 and 4);
 
 alter table if exists courses
-  add column if not exists is_elective boolean not null default false;
+  add column if not exists is_elective boolean not null default false,
+  add column if not exists lectures_per_week int not null default 0,
+  add column if not exists tutorials_per_week int not null default 0,
+  add column if not exists practicals_per_week int not null default 0;
 
 alter table if exists timetable_versions
   add column if not exists violations jsonb not null default '{}';
 
 alter table if exists timetable_entries
-  add column if not exists batch int default null check (batch is null or batch >= 1);
+  add column if not exists batch int default null check (batch is null or batch >= 1),
+  alter column room_id drop not null,
+  alter column faculty_id drop not null;
+
+alter table if exists faculty
+  alter column max_weekly_load set default 24;
 
 create table if not exists academic_year_shifts (
   institution_id uuid not null references institutions(id) on delete cascade,
@@ -559,390 +567,390 @@ begin
   -- -------------------------------------------------------------------------
   -- 7. Courses (Real University Degree Curriculum)
   -- -------------------------------------------------------------------------
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS101M', 'INTRODUCTION TO COMPUTER SCIENCE AND ENGINEERING', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS101M(P)', 'INTRODUCTION TO COmPUTER SCIENCE AND ENGINEERING LAB', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS103M', 'COMPUTER SYSTEM ORGANIZATION', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS103M(P)', 'COMPUTER SYSTEM ORGANIZATION', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS107M(P)', 'PROGRAM DEVELOPMENT USING C', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTMA101N', 'MATHEMATICS - I', 4, 4, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTPH101', 'APPLIED PHYSICS', 4, 4, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTPH101(P)', 'APPLIED PHYSICS', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'HUCS101', 'COMMUNICATION SKILLS', 1, 1, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'HUCS101(P)', 'COMMUNICATION SKILLS', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS102M', 'INTRODUCTION TO DESIGN THINKING', 2, 2, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS102M(P)', 'INTRODUCTION TO DESIGN THINKING', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS202M', 'OBJECT ORIENTED PROGRAMMING WITH C++', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS202M(P)', 'OBJECT ORIENTED PROGRAMMING WITH C++', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTEC104', 'DIGITAL LOGIC AND CIRCUIT DESIGN', 4, 4, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTEC104(P)', 'DIGITAL LOGIC AND CIRCUIT DESIGN', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT201M', 'DATA COMMUNICATION', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT208M(P)', 'UNIX PROGRAMMING', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTMA201N', 'MATHEMATICS - II', 4, 4, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS301N', 'DISCRETE STRUCTURES', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS306M', 'FUNDAMENTALS OF DATA STRUCTURES', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS306M(P)', 'FUNDAMENTALS OF DATA STRUCTURES', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS307M', 'PRICIPLES OF OPERATING SYSTEMS', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS307M(P)', 'PRICIPLES OF OPERATING SYSTEMS', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS402N', 'SOFTWARE ENGINEERING AND PROJECT MANAGEMENT', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS402N(P)', 'SOFTWARE ENGINEERING AND PROJECT MANAGEMENT', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE322M', 'PRINCIPLES OF PROGRAMMING LANGUAGE', 2, 2, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE322M(P)', 'PRINCIPLES OF PROGRAMMING LANGUAGE', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT307N(P)', 'INTRODUCTION TO CORE JAVA', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'GU-SEM3', 'GENERIC ELECTIVE (SEM 3)', 3, 3, false, true);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS302N', 'ANALYSIS AND DESIGN OF ALGORITHMS', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS302N(P)', 'ANALYSIS AND DESIGN OF ALGORITHMS', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS401N', 'DATABASE MANAGEMENT SYSTEMS', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS401N(P)', 'DATABASE MANAGEMENT SYSTEMS', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE423M', 'INFORMATION STORAGE AND MANAGEMENT', 2, 2, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE423M(P)', 'INFORMATION STORAGE AND MANAGEMENT', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT301N', 'COMPUTER NETWORKS', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT301N(P)', 'COMPUTER NETWORKS', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT410M(P)', 'ADVANCED CONCEPTS IN JAVA', 2, 2, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'ML307', 'ENVIRONMENTAL MANAGEMENT AND SUSTAINABILITY', 4, 4, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS501N', 'THEORY OF COMPUTATION', 4, 4, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS502N', 'INTRODUCTION TO ARTIFICIAL INTELLIGENCE', 1, 1, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS502N(P)', 'INTRODUCTION TO ARTIFICIAL INTELLIGENCE', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS503M', 'NETWORK SECURITY AND CRYPTOGRAPHY', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS503M(P)', 'NETWORK SECURITY AND CRYPTOGRAPHY', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE511M', 'IMAGE PROCESSING', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE511M(P)', 'IMAGE PROCESSING', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT507M(P)', 'PROGRAMMING WITH PYTHON', 2, 2, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT508M(p)', 'NO SQL AND MONGODB', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'GU-SEM5', 'GENERIC ELECTIVE (SEM 5)', 4, 4, false, true);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS601N', 'COMPILER DESIGN', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS601N(P)', 'COMPILER DESIGN', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS602N', 'OBJECT ORIENTED ANALYSIS AND DESIGN', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS602N(P)', 'OBJECT ORIENTED ANALYSIS AND DESIGN', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS603N', 'INTRODUCTION TO CLOUD COMPUTING', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS603N(P)', 'INTRODUCTION TO CLOUD COMPUTING', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS607N', 'MINOR PROJECT', 2, 2, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS708N', 'INTRODUCTION TO DATA SCIENCE', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS708N(P)', 'INTRODUCTION TO DATA SCIENCE', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE613M', 'INTERNET OF THINGS', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BBAI501', 'HUMAN VALUES AND PROFESSIONAL ETHICS', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS706N', 'MAJOR PROJECT', 1, 1, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS710', 'DEEP LEARNING FOUNDATIONS', 4, 4, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS710(P)', 'DEEP LEARNING FOUNDATIONS', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS711', 'INTRODUCTION TO QUANTUM COMPUTING', 4, 4, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS711(P)', 'INTRODUCTION TO QUANTUM COMPUTING', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS712(P)', 'CLOUD COMPETENCY LAB', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE722', 'PROMPT ENGINEERING AND FINE-TUNING', 3, 3, false, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE722(P)', 'PROMPT ENGINEERING AND FINE-TUNING', 1, 1, true, false);
-  insert into courses (department_id, code, name, credits, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'GU-SEM7', 'GENERIC ELECTIVE (SEM 7)', 4, 4, false, true);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS101M', 'INTRODUCTION TO COMPUTER SCIENCE AND ENGINEERING', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS101M(P)', 'INTRODUCTION TO COmPUTER SCIENCE AND ENGINEERING LAB', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS103M', 'COMPUTER SYSTEM ORGANIZATION', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS103M(P)', 'COMPUTER SYSTEM ORGANIZATION', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS107M(P)', 'PROGRAM DEVELOPMENT USING C', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTMA101N', 'MATHEMATICS - I', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTPH101', 'APPLIED PHYSICS', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTPH101(P)', 'APPLIED PHYSICS', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'HUCS101', 'COMMUNICATION SKILLS', 2, 2, 0, 0, 2, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'HUCS101(P)', 'COMMUNICATION SKILLS', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS102M', 'INTRODUCTION TO DESIGN THINKING', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS102M(P)', 'INTRODUCTION TO DESIGN THINKING', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS202M', 'OBJECT ORIENTED PROGRAMMING WITH C++', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS202M(P)', 'OBJECT ORIENTED PROGRAMMING WITH C++', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTEC104', 'DIGITAL LOGIC AND CIRCUIT DESIGN', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTEC104(P)', 'DIGITAL LOGIC AND CIRCUIT DESIGN', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT201M', 'DATA COMMUNICATION', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT208M(P)', 'UNIX PROGRAMMING', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTMA201N', 'MATHEMATICS - II', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS301N', 'DISCRETE STRUCTURES', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS306M', 'FUNDAMENTALS OF DATA STRUCTURES', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS306M(P)', 'FUNDAMENTALS OF DATA STRUCTURES', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS307M', 'PRICIPLES OF OPERATING SYSTEMS', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS307M(P)', 'PRICIPLES OF OPERATING SYSTEMS', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS402N', 'SOFTWARE ENGINEERING AND PROJECT MANAGEMENT', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS402N(P)', 'SOFTWARE ENGINEERING AND PROJECT MANAGEMENT', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE322M', 'PRINCIPLES OF PROGRAMMING LANGUAGE', 2, 2, 0, 0, 2, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE322M(P)', 'PRINCIPLES OF PROGRAMMING LANGUAGE', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT307N(P)', 'INTRODUCTION TO CORE JAVA', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'GU-SEM3', 'GENERIC ELECTIVE (SEM 3)', 4, 4, 0, 0, 4, false, true);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS302N', 'ANALYSIS AND DESIGN OF ALGORITHMS', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS302N(P)', 'ANALYSIS AND DESIGN OF ALGORITHMS', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS401N', 'DATABASE MANAGEMENT SYSTEMS', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS401N(P)', 'DATABASE MANAGEMENT SYSTEMS', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE423M', 'INFORMATION STORAGE AND MANAGEMENT', 2, 2, 0, 0, 2, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE423M(P)', 'INFORMATION STORAGE AND MANAGEMENT', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT301N', 'COMPUTER NETWORKS', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT301N(P)', 'COMPUTER NETWORKS', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT410M(P)', 'ADVANCED CONCEPTS IN JAVA', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'ML307', 'ENVIRONMENTAL MANAGEMENT AND SUSTAINABILITY', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS501N', 'THEORY OF COMPUTATION', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS502N', 'INTRODUCTION TO ARTIFICIAL INTELLIGENCE', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS502N(P)', 'INTRODUCTION TO ARTIFICIAL INTELLIGENCE', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS503M', 'NETWORK SECURITY AND CRYPTOGRAPHY', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS503M(P)', 'NETWORK SECURITY AND CRYPTOGRAPHY', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE511M', 'IMAGE PROCESSING', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE511M(P)', 'IMAGE PROCESSING', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT507M(P)', 'PROGRAMMING WITH PYTHON', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT508M(p)', 'NO SQL AND MONGODB', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'GU-SEM5', 'GENERIC ELECTIVE (SEM 5)', 4, 4, 0, 0, 4, false, true);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS601N', 'COMPILER DESIGN', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS601N(P)', 'COMPILER DESIGN', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS602N', 'OBJECT ORIENTED ANALYSIS AND DESIGN', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS602N(P)', 'OBJECT ORIENTED ANALYSIS AND DESIGN', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS603N', 'INTRODUCTION TO CLOUD COMPUTING', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS603N(P)', 'INTRODUCTION TO CLOUD COMPUTING', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS607N', 'MINOR PROJECT', 2, 2, 0, 0, 2, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS708N', 'INTRODUCTION TO DATA SCIENCE', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS708N(P)', 'INTRODUCTION TO DATA SCIENCE', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE613M', 'INTERNET OF THINGS', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BBAI501', 'HUMAN VALUES AND PROFESSIONAL ETHICS', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS706N', 'MAJOR PROJECT', 1, 1, 0, 0, 1, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS710', 'DEEP LEARNING FOUNDATIONS', 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS710(P)', 'DEEP LEARNING FOUNDATIONS', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS711', 'INTRODUCTION TO QUANTUM COMPUTING', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS711(P)', 'INTRODUCTION TO QUANTUM COMPUTING', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS712(P)', 'CLOUD COMPETENCY LAB', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE722', 'PROMPT ENGINEERING AND FINE-TUNING', 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE722(P)', 'PROMPT ENGINEERING AND FINE-TUNING', 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'GU-SEM7', 'GENERIC ELECTIVE (SEM 7)', 4, 4, 0, 0, 4, false, true);
 
   -- -------------------------------------------------------------------------
-  -- 8. Faculty (100 Instructors, Max Load 18)
+  -- 8. Faculty (121 Instructors, Max Load 24 hr/week)
   -- -------------------------------------------------------------------------
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Aarav Sharma', 'aarav.sharma1@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Aarav Sharma', 'aarav.sharma1@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Aditi Sharma', 'aditi.sharma2@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Aditi Sharma', 'aditi.sharma2@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Amit Sharma', 'amit.sharma3@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Amit Sharma', 'amit.sharma3@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Ananya Sharma', 'ananya.sharma4@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Ananya Sharma', 'ananya.sharma4@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Arjun Sharma', 'arjun.sharma5@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Arjun Sharma', 'arjun.sharma5@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Bhavna Sharma', 'bhavna.sharma6@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Bhavna Sharma', 'bhavna.sharma6@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Chetan Sharma', 'chetan.sharma7@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Chetan Sharma', 'chetan.sharma7@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Dev Sharma', 'dev.sharma8@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Dev Sharma', 'dev.sharma8@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Divya Sharma', 'divya.sharma9@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Divya Sharma', 'divya.sharma9@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Eshan Sharma', 'eshan.sharma10@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Eshan Sharma', 'eshan.sharma10@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Fatima Sharma', 'fatima.sharma11@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Fatima Sharma', 'fatima.sharma11@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Gaurav Sharma', 'gaurav.sharma12@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Gaurav Sharma', 'gaurav.sharma12@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Harshit Sharma', 'harshit.sharma13@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Harshit Sharma', 'harshit.sharma13@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Ishita Sharma', 'ishita.sharma14@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Ishita Sharma', 'ishita.sharma14@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Jatin Sharma', 'jatin.sharma15@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Jatin Sharma', 'jatin.sharma15@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Kavita Sharma', 'kavita.sharma16@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Kavita Sharma', 'kavita.sharma16@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Lalit Sharma', 'lalit.sharma17@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Lalit Sharma', 'lalit.sharma17@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Meenakshi Sharma', 'meenakshi.sharma18@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Meenakshi Sharma', 'meenakshi.sharma18@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Nitin Sharma', 'nitin.sharma19@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Nitin Sharma', 'nitin.sharma19@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Omkar Sharma', 'omkar.sharma20@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Omkar Sharma', 'omkar.sharma20@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Pooja Sharma', 'pooja.sharma21@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Pooja Sharma', 'pooja.sharma21@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Pranav Sharma', 'pranav.sharma22@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Pranav Sharma', 'pranav.sharma22@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Priya Sharma', 'priya.sharma23@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Priya Sharma', 'priya.sharma23@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Rahul Sharma', 'rahul.sharma24@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Rahul Sharma', 'rahul.sharma24@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Rakesh Sharma', 'rakesh.sharma25@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Rakesh Sharma', 'rakesh.sharma25@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Riya Sharma', 'riya.sharma26@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Riya Sharma', 'riya.sharma26@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Rohan Sharma', 'rohan.sharma27@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Rohan Sharma', 'rohan.sharma27@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Sakshi Sharma', 'sakshi.sharma28@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Sakshi Sharma', 'sakshi.sharma28@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Sameer Sharma', 'sameer.sharma29@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Sameer Sharma', 'sameer.sharma29@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Sanjay Sharma', 'sanjay.sharma30@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Sanjay Sharma', 'sanjay.sharma30@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Shreya Sharma', 'shreya.sharma31@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Shreya Sharma', 'shreya.sharma31@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Siddharth Sharma', 'siddharth.sharma32@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Siddharth Sharma', 'siddharth.sharma32@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Sneha Sharma', 'sneha.sharma33@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Sneha Sharma', 'sneha.sharma33@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Tanvi Sharma', 'tanvi.sharma34@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Tanvi Sharma', 'tanvi.sharma34@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Utkarsh Sharma', 'utkarsh.sharma35@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Utkarsh Sharma', 'utkarsh.sharma35@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Varun Sharma', 'varun.sharma36@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Varun Sharma', 'varun.sharma36@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Vikram Sharma', 'vikram.sharma37@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Vikram Sharma', 'vikram.sharma37@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Yash Sharma', 'yash.sharma38@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Yash Sharma', 'yash.sharma38@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Zoya Sharma', 'zoya.sharma39@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Zoya Sharma', 'zoya.sharma39@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Alok Sharma', 'alok.sharma40@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Alok Sharma', 'alok.sharma40@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Ashish Sharma', 'ashish.sharma41@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Ashish Sharma', 'ashish.sharma41@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Deepak Sharma', 'deepak.sharma42@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Deepak Sharma', 'deepak.sharma42@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Karan Sharma', 'karan.sharma43@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Karan Sharma', 'karan.sharma43@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Manish Sharma', 'manish.sharma44@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Manish Sharma', 'manish.sharma44@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Mayank Sharma', 'mayank.sharma45@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Mayank Sharma', 'mayank.sharma45@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Naveen Sharma', 'naveen.sharma46@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Naveen Sharma', 'naveen.sharma46@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Nikhil Sharma', 'nikhil.sharma47@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Nikhil Sharma', 'nikhil.sharma47@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Pankaj Sharma', 'pankaj.sharma48@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Pankaj Sharma', 'pankaj.sharma48@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Rajesh Sharma', 'rajesh.sharma49@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Rajesh Sharma', 'rajesh.sharma49@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Sachin Sharma', 'sachin.sharma50@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Sachin Sharma', 'sachin.sharma50@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Aarav Verma', 'aarav.verma51@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Aarav Verma', 'aarav.verma51@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Aditi Verma', 'aditi.verma52@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Aditi Verma', 'aditi.verma52@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Amit Verma', 'amit.verma53@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Amit Verma', 'amit.verma53@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Ananya Verma', 'ananya.verma54@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Dr. Ananya Verma', 'ananya.verma54@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Arjun Verma', 'arjun.verma55@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Arjun Verma', 'arjun.verma55@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Bhavna Verma', 'bhavna.verma56@institute.edu', v_dept_cse, 18);
+  values (v_inst, 'Prof. Bhavna Verma', 'bhavna.verma56@institute.edu', v_dept_cse, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Chetan Verma', 'chetan.verma57@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Dr. Chetan Verma', 'chetan.verma57@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Dev Verma', 'dev.verma58@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Dev Verma', 'dev.verma58@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Divya Verma', 'divya.verma59@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Divya Verma', 'divya.verma59@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Eshan Verma', 'eshan.verma60@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Dr. Eshan Verma', 'eshan.verma60@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Fatima Verma', 'fatima.verma61@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Fatima Verma', 'fatima.verma61@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Gaurav Verma', 'gaurav.verma62@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Gaurav Verma', 'gaurav.verma62@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Harshit Verma', 'harshit.verma63@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Dr. Harshit Verma', 'harshit.verma63@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Ishita Verma', 'ishita.verma64@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Ishita Verma', 'ishita.verma64@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Jatin Verma', 'jatin.verma65@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Jatin Verma', 'jatin.verma65@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Kavita Verma', 'kavita.verma66@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Dr. Kavita Verma', 'kavita.verma66@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Lalit Verma', 'lalit.verma67@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Lalit Verma', 'lalit.verma67@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Meenakshi Verma', 'meenakshi.verma68@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Meenakshi Verma', 'meenakshi.verma68@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Nitin Verma', 'nitin.verma69@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Dr. Nitin Verma', 'nitin.verma69@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Omkar Verma', 'omkar.verma70@institute.edu', v_dept_aids, 18);
+  values (v_inst, 'Prof. Omkar Verma', 'omkar.verma70@institute.edu', v_dept_aids, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Pooja Verma', 'pooja.verma71@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Pooja Verma', 'pooja.verma71@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Pranav Verma', 'pranav.verma72@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Dr. Pranav Verma', 'pranav.verma72@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Priya Verma', 'priya.verma73@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Priya Verma', 'priya.verma73@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Rahul Verma', 'rahul.verma74@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Rahul Verma', 'rahul.verma74@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Rakesh Verma', 'rakesh.verma75@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Dr. Rakesh Verma', 'rakesh.verma75@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Riya Verma', 'riya.verma76@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Riya Verma', 'riya.verma76@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Rohan Verma', 'rohan.verma77@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Rohan Verma', 'rohan.verma77@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Sakshi Verma', 'sakshi.verma78@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Dr. Sakshi Verma', 'sakshi.verma78@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Sameer Verma', 'sameer.verma79@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Sameer Verma', 'sameer.verma79@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Sanjay Verma', 'sanjay.verma80@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Sanjay Verma', 'sanjay.verma80@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Shreya Verma', 'shreya.verma81@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Dr. Shreya Verma', 'shreya.verma81@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Siddharth Verma', 'siddharth.verma82@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Siddharth Verma', 'siddharth.verma82@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Sneha Verma', 'sneha.verma83@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Sneha Verma', 'sneha.verma83@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Tanvi Verma', 'tanvi.verma84@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Dr. Tanvi Verma', 'tanvi.verma84@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Utkarsh Verma', 'utkarsh.verma85@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Utkarsh Verma', 'utkarsh.verma85@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Varun Verma', 'varun.verma86@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Varun Verma', 'varun.verma86@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Vikram Verma', 'vikram.verma87@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Dr. Vikram Verma', 'vikram.verma87@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Yash Verma', 'yash.verma88@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Yash Verma', 'yash.verma88@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Zoya Verma', 'zoya.verma89@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Zoya Verma', 'zoya.verma89@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Alok Verma', 'alok.verma90@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Dr. Alok Verma', 'alok.verma90@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Ashish Verma', 'ashish.verma91@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Ashish Verma', 'ashish.verma91@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Deepak Verma', 'deepak.verma92@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Deepak Verma', 'deepak.verma92@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Karan Verma', 'karan.verma93@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Dr. Karan Verma', 'karan.verma93@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Manish Verma', 'manish.verma94@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Manish Verma', 'manish.verma94@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Mayank Verma', 'mayank.verma95@institute.edu', v_dept_it, 18);
+  values (v_inst, 'Prof. Mayank Verma', 'mayank.verma95@institute.edu', v_dept_it, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Naveen Verma', 'naveen.verma96@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Naveen Verma', 'naveen.verma96@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Nikhil Verma', 'nikhil.verma97@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Nikhil Verma', 'nikhil.verma97@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Pankaj Verma', 'pankaj.verma98@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Pankaj Verma', 'pankaj.verma98@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Rajesh Verma', 'rajesh.verma99@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Rajesh Verma', 'rajesh.verma99@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Sachin Verma', 'sachin.verma100@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Sachin Verma', 'sachin.verma100@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Aarav Gupta', 'aarav.gupta101@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Aarav Gupta', 'aarav.gupta101@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Aditi Gupta', 'aditi.gupta102@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Aditi Gupta', 'aditi.gupta102@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Amit Gupta', 'amit.gupta103@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Amit Gupta', 'amit.gupta103@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Ananya Gupta', 'ananya.gupta104@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Ananya Gupta', 'ananya.gupta104@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Arjun Gupta', 'arjun.gupta105@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Arjun Gupta', 'arjun.gupta105@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Bhavna Gupta', 'bhavna.gupta106@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Bhavna Gupta', 'bhavna.gupta106@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Chetan Gupta', 'chetan.gupta107@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Chetan Gupta', 'chetan.gupta107@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Dev Gupta', 'dev.gupta108@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Dev Gupta', 'dev.gupta108@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Divya Gupta', 'divya.gupta109@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Divya Gupta', 'divya.gupta109@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Eshan Gupta', 'eshan.gupta110@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Eshan Gupta', 'eshan.gupta110@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Fatima Gupta', 'fatima.gupta111@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Fatima Gupta', 'fatima.gupta111@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Gaurav Gupta', 'gaurav.gupta112@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Gaurav Gupta', 'gaurav.gupta112@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Harshit Gupta', 'harshit.gupta113@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Harshit Gupta', 'harshit.gupta113@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Ishita Gupta', 'ishita.gupta114@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Ishita Gupta', 'ishita.gupta114@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Jatin Gupta', 'jatin.gupta115@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Jatin Gupta', 'jatin.gupta115@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Kavita Gupta', 'kavita.gupta116@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Kavita Gupta', 'kavita.gupta116@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Lalit Gupta', 'lalit.gupta117@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Lalit Gupta', 'lalit.gupta117@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Meenakshi Gupta', 'meenakshi.gupta118@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Meenakshi Gupta', 'meenakshi.gupta118@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Prof. Nitin Gupta', 'nitin.gupta119@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Prof. Nitin Gupta', 'nitin.gupta119@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
-  values (v_inst, 'Dr. Omkar Gupta', 'omkar.gupta120@institute.edu', v_dept_ind, 18);
+  values (v_inst, 'Dr. Omkar Gupta', 'omkar.gupta120@institute.edu', v_dept_ind, 24);
   insert into faculty (institution_id, name, email, department_id, max_weekly_load)
   values (v_inst, 'Cross-Department / Elective Faculty', 'elective.faculty@institute.edu', v_dept_cse, 999);
 

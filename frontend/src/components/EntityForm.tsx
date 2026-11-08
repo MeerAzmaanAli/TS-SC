@@ -50,7 +50,7 @@ export default function EntityForm({ def, initial, onSaved, onCancel }: Props) {
       for (const f of def.fields) {
         if ((f.type === 'select' || f.type === 'multiselect') && f.reference) {
           const selectCols = f.reference === 'courses' ? 'id, name, code' : 'id, name'
-          const { data, error } = await supabase.from(f.reference).select(selectCols as any)
+          const { data, error } = await supabase.from(f.reference).select(selectCols as any).limit(50000)
           if (!cancelled && !error && data) {
             next[f.name] = ((data ?? []) as unknown as Record<string, unknown>[]).map((r) => ({
               value: String(r.id),
@@ -69,6 +69,7 @@ export default function EntityForm({ def, initial, onSaved, onCancel }: Props) {
               .from(f.relation.joinTable)
               .select(f.relation.targetKey)
               .eq(f.relation.sourceKey, initial.id as string)
+              .limit(50000)
             if (!cancelled && !error && data) {
               const ids = ((data ?? []) as unknown as Record<string, unknown>[]).map((r) => String(r[f.relation!.targetKey]))
               setValues((v) => ({ ...v, [f.name]: ids }))
@@ -84,7 +85,23 @@ export default function EntityForm({ def, initial, onSaved, onCancel }: Props) {
   }, [def, initial])
 
   function setValue(name: string, val: unknown) {
-    setValues((prev) => ({ ...prev, [name]: val }))
+    setValues((prev) => {
+      const updated = { ...prev, [name]: val }
+      // Auto-compute sessions_per_week and lab_required when L, T, P change in courses
+      if (def.name === 'courses' && (name === 'lectures_per_week' || name === 'tutorials_per_week' || name === 'practicals_per_week')) {
+        const l = Number(name === 'lectures_per_week' ? val : updated.lectures_per_week) || 0
+        const t = Number(name === 'tutorials_per_week' ? val : updated.tutorials_per_week) || 0
+        const p = Number(name === 'practicals_per_week' ? val : updated.practicals_per_week) || 0
+        if (p > 0 && l === 0 && t === 0) {
+          updated.lab_required = true
+          updated.sessions_per_week = p
+        } else if (l + t > 0) {
+          updated.sessions_per_week = l + t
+          if (p === 0) updated.lab_required = false
+        }
+      }
+      return updated
+    })
   }
 
   async function handleSubmit(e: React.FormEvent) {

@@ -670,14 +670,19 @@ def _solve_fast_institutional(req: GenerateRequest) -> Optional[GenerateResponse
 
     classrooms = [r for r in req.rooms if r.room_type == "classroom"]
     labs = [r for r in req.rooms if r.room_type == "lab"]
-    elective_blocks = set(req.elective_blocks)
-    if not elective_blocks and any(c.is_elective for c in req.courses) and len(req.time_slots) >= 30:
-        # Default institutional elective window: Thursday (4) & Friday (5) last two periods of each shift
-        # Shift 1 (periods 5, 6), Shift 2 (periods 7, 8)
-        elective_blocks = {
-            sl.id for sl in req.time_slots
-            if sl.day_of_week in (4, 5) and sl.period in (5, 6, 7, 8)
-        }
+
+    # Shift-specific elective windows:
+    # Shift 1 (periods 1-6): last 2 periods of Thu (D4) and Fri (D5) -> periods 5, 6
+    # Shift 2 (periods 3-8): last 2 periods of Thu (D4) and Fri (D5) -> periods 7, 8
+    shift_elective_periods = {
+        1: {5, 6},
+        2: {7, 8},
+    }
+    shift_elective_slot_ids = {
+        1: {sl.id for sl in req.time_slots if sl.day_of_week in (4, 5) and sl.period in {5, 6}},
+        2: {sl.id for sl in req.time_slots if sl.day_of_week in (4, 5) and sl.period in {7, 8}},
+    }
+    elective_blocks = shift_elective_slot_ids[1] | shift_elective_slot_ids[2]
 
     # -----------------------------------------------------------------
     # Stage 1: Faculty Workload Allocation (Core Courses Only)
@@ -868,12 +873,13 @@ def _solve_fast_institutional(req: GenerateRequest) -> Optional[GenerateResponse
     for si, sess in enumerate(sessions):
         sec_shift = getattr(sec_map.get(sess["sec_id"]), "shift", 1) or 1
         allowed_shift_periods = shift_allowed_periods.get(sec_shift, shift_allowed_periods[1])
+        sec_elec_slot_ids = shift_elective_slot_ids.get(sec_shift, shift_elective_slot_ids[1])
 
-        # Core courses for a section with an elective must leave the reserved elective window free
+        # Core courses for a section with an elective must leave its shift's reserved elective window free
         if sess["sec_id"] in sec_elective_course:
             allowed = [
                 ti for ti, sl in enumerate(req.time_slots)
-                if sl.id not in elective_blocks and sl.period in allowed_shift_periods
+                if sl.id not in sec_elec_slot_ids and sl.period in allowed_shift_periods
             ]
         else:
             allowed = [
@@ -954,13 +960,15 @@ def _solve_fast_institutional(req: GenerateRequest) -> Optional[GenerateResponse
         sec_total_sis = [si for si, s in enumerate(sessions) if s["sec_id"] == sec_id]
         for d in days:
             d_slot_indices = [ti for ti, t in enumerate(req.time_slots) if t.day_of_week == d]
-            # No blank days if total sessions >= number of days (enforced for smaller/test datasets)
-            if len(sessions) < 500 and len(sec_total_sis) >= len(days):
+            # Distribute section workload across weekdays (avoid empty days)
+            if len(sec_total_sis) >= len(days):
                 sec_d_vars = [
                     slot_of[(si, ti)] for si in sec_total_sis for ti in d_slot_indices if (si, ti) in slot_of
                 ]
                 if sec_d_vars:
-                    s_model.Add(sum(sec_d_vars) >= 1)
+                    # If section has elective on Thu/Fri, it already has sessions on those days
+                    if not (d in (4, 5) and sec_id in sec_elective_course):
+                        s_model.Add(sum(sec_d_vars) >= 1)
 
             for c_id, crs in crs_map.items():
                 if not crs.lab_required:
@@ -1110,10 +1118,10 @@ def _solve_fast_institutional(req: GenerateRequest) -> Optional[GenerateResponse
     # Append Generic Electives into their dedicated reserved window
     for sec_id, crs_id in sec_elective_course.items():
         sec_shift = getattr(sec_map.get(sec_id), "shift", 1) or 1
-        shift_periods = shift_allowed_periods.get(sec_shift, shift_allowed_periods[1])
+        sec_elec_slot_ids = shift_elective_slot_ids.get(sec_shift, shift_elective_slot_ids[1])
         sec_elec_slots = [
             sl.id for sl in req.time_slots
-            if sl.id in elective_blocks and sl.period in shift_periods
+            if sl.id in sec_elec_slot_ids
         ]
         elec_cand_facs = qual_map.get(crs_id, [])
         elec_fac_id = elec_cand_facs[0] if elec_cand_facs else (req.faculty[0].id if req.faculty else "FAC-DEFAULT")

@@ -646,7 +646,7 @@ export default function AdminDashboard() {
               {activeVersion ? (
                 <div className="admin-version-card">
                   <div className="admin-mu">Active timetable</div>
-                  <b>Version {activeVersion.id.slice(0, 8)}</b>
+                  <b>Published Timetable ({new Date(activeVersion.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })})</b>
                   <div className="admin-mu admin-m" style={{ marginTop: 4 }}>
                     Published {activeVersion.published_at ? new Date(activeVersion.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'recently'}
                   </div>
@@ -664,7 +664,7 @@ export default function AdminDashboard() {
               {latestDraft && (
                 <div className="admin-version-card draft">
                   <div className="admin-mu">Latest draft</div>
-                  <b>Version {latestDraft.id.slice(0, 8)}</b>
+                  <b>Draft Schedule ({new Date(latestDraft.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })})</b>
                   <div className="admin-mu admin-m" style={{ marginTop: 4 }}>
                     {facultyClashes + roomClashes + sectionClashes === 0
                       ? '0 hard conflicts · ready to publish'

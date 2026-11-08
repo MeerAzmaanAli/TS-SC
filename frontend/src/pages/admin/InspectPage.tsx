@@ -18,23 +18,37 @@ interface Version {
 export default function InspectPage() {
   const [versions, setVersions] = useState<Version[]>([])
   const [selected, setSelected] = useState<Version | null>(null)
+  const [facultyMap, setFacultyMap] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   async function load() {
-    const { data, error } = await supabase
-      .from('timetable_versions')
-      .select('id, status, created_at, published_at, violations')
-      .order('created_at', { ascending: false })
-    if (error) setError(error.message)
-    else {
-      const list = (data ?? []) as Version[]
+    const [verRes, facRes] = await Promise.all([
+      supabase
+        .from('timetable_versions')
+        .select('id, status, created_at, published_at, violations')
+        .order('created_at', { ascending: false }),
+      supabase.from('faculty').select('id, name, email').limit(50000),
+    ])
+
+    if (verRes.error) {
+      setError(verRes.error.message)
+    } else {
+      const list = (verRes.data ?? []) as Version[]
       setVersions(list)
       setSelected((prev) => {
         if (!prev) return list[0] ?? null
         return list.find((v) => v.id === prev.id) ?? list[0] ?? null
       })
+    }
+
+    if (facRes.data) {
+      const fMap: Record<string, string> = {}
+      for (const f of facRes.data) {
+        fMap[f.id] = f.name
+      }
+      setFacultyMap(fMap)
     }
   }
 
@@ -131,7 +145,16 @@ export default function InspectPage() {
                 <div className="admin-panel-hd">
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <h2>Version {selected.id.slice(0, 8)}</h2>
+                      <h2>
+                        {selected.status === 'published' ? 'Official Published Timetable' : 'Draft Schedule'}{' '}
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#64748b' }}>
+                          ({new Date(selected.created_at).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })})
+                        </span>
+                      </h2>
                       <span
                         className={`admin-tag ${
                           selected.status === 'published'
@@ -225,8 +248,8 @@ export default function InspectPage() {
                           boxShadow: '0 0 0 1px #E3E4E8',
                         }}
                       >
-                        <span className="admin-m" style={{ color: '#1B1D22', fontWeight: 500 }}>
-                          {id.length > 12 ? `${id.slice(0, 8)}…` : id}
+                        <span className="admin-m" style={{ color: '#1B1D22', fontWeight: 600 }}>
+                          {facultyMap[id] || (id.length > 12 ? `Faculty #${id.slice(0, 6)}` : id)}
                         </span>
                         <span className="admin-tag assigned" style={{ fontWeight: 600 }}>
                           {load} p/wk
@@ -240,7 +263,7 @@ export default function InspectPage() {
               {/* Timetable Grid for Version */}
               <section className="admin-panel">
                 <div className="admin-panel-hd">
-                  <h2>Schedule Matrix for Version {selected.id.slice(0, 8)}</h2>
+                  <h2>Schedule Matrix ({selected.status.toUpperCase()} — {new Date(selected.created_at).toLocaleDateString()})</h2>
                 </div>
                 <TimetablePreview key={selected.id} versionId={selected.id} />
               </section>
@@ -290,7 +313,7 @@ export default function InspectPage() {
                     </div>
 
                     <b style={{ display: 'block', marginTop: 6, fontSize: 13, color: '#1B1D22' }}>
-                      Version {ver.id.slice(0, 8)}
+                      {ver.status === 'published' ? 'Official Published Timetable' : `Timetable Draft #${versions.length - versions.indexOf(ver)}`}
                     </b>
 
                     <div className="admin-mu" style={{ fontSize: 12, marginTop: 2 }}>
