@@ -54,12 +54,90 @@ const DAYS = [
   { value: '5', label: 'Friday' },
 ]
 
+export const UNIVERSITY_INSTITUTES: { group: string; institutes: string[] }[] = [
+  {
+    group: 'Engineering & Technology',
+    institutes: [
+      'Shri Vaishnav Institute of Technology and Science',
+      'Shri Vaishnav Institute of Information Technology',
+      'Shri Vaishnav Institute of Textile Technology',
+      'Shri Vaishnav Institute of Computer Applications',
+    ],
+  },
+  {
+    group: 'Arts',
+    institutes: ['Shri Vaishnav Institute of Fine Arts'],
+  },
+  {
+    group: 'Law, Management & Commerce',
+    institutes: [
+      'Shri Vaishnav Institute of Law',
+      'Shri Vaishnav School of Management',
+      'Shri Vaishnav Institute of Commerce',
+    ],
+  },
+  {
+    group: 'Social Sciences & Humanities',
+    institutes: ['Shri Vaishnav Institute of Social Science, Humanities and Arts'],
+  },
+  {
+    group: 'Media & Communication',
+    institutes: ['Shri Vaishnav Institute of Journalism & Mass Communication'],
+  },
+  {
+    group: 'Science & Applied Fields',
+    institutes: [
+      'Shri Vaishnav Institute of Science',
+      'Shri Vaishnav Institute of Forensic Science',
+      'Shri Vaishnav Institute of Agriculture',
+    ],
+  },
+  {
+    group: 'Architecture & Planning',
+    institutes: [
+      'Shri Vaishnav Institute of Architecture',
+      'Shri Vaishnav Institute of Planning',
+    ],
+  },
+  {
+    group: 'Health Sciences',
+    institutes: [
+      'Shri Vaishnav Institute of Paramedical Sciences',
+      'Shri Vaishnav Institute of Pharmacy',
+      'Shri Vaishnav Institute of Home Science',
+    ],
+  },
+  {
+    group: 'Education & Research',
+    institutes: [
+      'Shri Vaishnav Institute of Education',
+      'Faculty of Doctoral Studies & Research',
+    ],
+  },
+]
+
+export const INSTITUTE_OPTIONS: { value: string; label: string }[] = UNIVERSITY_INSTITUTES.flatMap((g) =>
+  g.institutes.map((inst) => ({
+    value: inst,
+    label: `${inst} (${g.group})`,
+  }))
+)
+
 export const ENTITIES: EntityDef[] = [
   {
     name: 'departments',
     label: 'Departments',
     singular: 'Department',
-    fields: [{ name: 'name', label: 'Name', type: 'text', required: true }],
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      {
+        name: 'institute',
+        label: 'Institute',
+        type: 'select',
+        required: true,
+        options: INSTITUTE_OPTIONS,
+      },
+    ],
   },
   {
     name: 'programs',
@@ -113,6 +191,21 @@ export const ENTITIES: EntityDef[] = [
       { name: 'code', label: 'Code', type: 'text', required: true },
       { name: 'name', label: 'Name', type: 'text', required: true },
       { name: 'department_id', label: 'Department', type: 'select', reference: 'departments', required: true },
+      {
+        name: 'semester',
+        label: 'Default Semester (1-8)',
+        type: 'select',
+        options: [
+          { value: '1', label: 'Semester 1' },
+          { value: '2', label: 'Semester 2' },
+          { value: '3', label: 'Semester 3' },
+          { value: '4', label: 'Semester 4' },
+          { value: '5', label: 'Semester 5' },
+          { value: '6', label: 'Semester 6' },
+          { value: '7', label: 'Semester 7' },
+          { value: '8', label: 'Semester 8' },
+        ],
+      },
       { name: 'lectures_per_week', label: 'Lectures / week (L)', type: 'number' },
       { name: 'tutorials_per_week', label: 'Tutorials / week (T)', type: 'number' },
       { name: 'practicals_per_week', label: 'Practicals / week (P)', type: 'number' },
@@ -124,10 +217,26 @@ export const ENTITIES: EntityDef[] = [
   },
   {
     name: 'program_courses',
-    label: 'Program courses',
-    singular: 'Program course',
+    label: 'Syllabus Scheme (Program Courses)',
+    singular: 'Curriculum Course',
     fields: [
       { name: 'program_id', label: 'Program', type: 'select', reference: 'programs', required: true },
+      {
+        name: 'semester',
+        label: 'Semester (1-8)',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '1', label: 'Semester 1' },
+          { value: '2', label: 'Semester 2' },
+          { value: '3', label: 'Semester 3' },
+          { value: '4', label: 'Semester 4' },
+          { value: '5', label: 'Semester 5' },
+          { value: '6', label: 'Semester 6' },
+          { value: '7', label: 'Semester 7' },
+          { value: '8', label: 'Semester 8' },
+        ],
+      },
       { name: 'course_id', label: 'Course', type: 'select', reference: 'courses', required: true },
       { name: 'sessions_per_week', label: 'Sessions / week (blank = course default)', type: 'number' },
     ],

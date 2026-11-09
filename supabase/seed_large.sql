@@ -23,12 +23,7 @@ alter table if exists timetable_versions
   add column if not exists violations jsonb not null default '{}';
 
 alter table if exists timetable_entries
-  add column if not exists batch int default null check (batch is null or batch >= 1),
-  alter column room_id drop not null,
-  alter column faculty_id drop not null;
-
-alter table if exists faculty
-  alter column max_weekly_load set default 24;
+  add column if not exists batch int default null check (batch is null or batch >= 1);
 
 create table if not exists academic_year_shifts (
   institution_id uuid not null references institutions(id) on delete cascade,
@@ -567,146 +562,146 @@ begin
   -- -------------------------------------------------------------------------
   -- 7. Courses (Real University Degree Curriculum)
   -- -------------------------------------------------------------------------
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS101M', 'INTRODUCTION TO COMPUTER SCIENCE AND ENGINEERING', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS101M(P)', 'INTRODUCTION TO COmPUTER SCIENCE AND ENGINEERING LAB', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS103M', 'COMPUTER SYSTEM ORGANIZATION', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS103M(P)', 'COMPUTER SYSTEM ORGANIZATION', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS107M(P)', 'PROGRAM DEVELOPMENT USING C', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTMA101N', 'MATHEMATICS - I', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTPH101', 'APPLIED PHYSICS', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTPH101(P)', 'APPLIED PHYSICS', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'HUCS101', 'COMMUNICATION SKILLS', 2, 2, 0, 0, 2, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'HUCS101(P)', 'COMMUNICATION SKILLS', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS102M', 'INTRODUCTION TO DESIGN THINKING', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS102M(P)', 'INTRODUCTION TO DESIGN THINKING', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS202M', 'OBJECT ORIENTED PROGRAMMING WITH C++', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS202M(P)', 'OBJECT ORIENTED PROGRAMMING WITH C++', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTEC104', 'DIGITAL LOGIC AND CIRCUIT DESIGN', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTEC104(P)', 'DIGITAL LOGIC AND CIRCUIT DESIGN', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT201M', 'DATA COMMUNICATION', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT208M(P)', 'UNIX PROGRAMMING', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTMA201N', 'MATHEMATICS - II', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS301N', 'DISCRETE STRUCTURES', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS306M', 'FUNDAMENTALS OF DATA STRUCTURES', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS306M(P)', 'FUNDAMENTALS OF DATA STRUCTURES', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS307M', 'PRICIPLES OF OPERATING SYSTEMS', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS307M(P)', 'PRICIPLES OF OPERATING SYSTEMS', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS402N', 'SOFTWARE ENGINEERING AND PROJECT MANAGEMENT', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS402N(P)', 'SOFTWARE ENGINEERING AND PROJECT MANAGEMENT', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE322M', 'PRINCIPLES OF PROGRAMMING LANGUAGE', 2, 2, 0, 0, 2, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE322M(P)', 'PRINCIPLES OF PROGRAMMING LANGUAGE', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT307N(P)', 'INTRODUCTION TO CORE JAVA', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'GU-SEM3', 'GENERIC ELECTIVE (SEM 3)', 4, 4, 0, 0, 4, false, true);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS302N', 'ANALYSIS AND DESIGN OF ALGORITHMS', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS302N(P)', 'ANALYSIS AND DESIGN OF ALGORITHMS', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS401N', 'DATABASE MANAGEMENT SYSTEMS', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS401N(P)', 'DATABASE MANAGEMENT SYSTEMS', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE423M', 'INFORMATION STORAGE AND MANAGEMENT', 2, 2, 0, 0, 2, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE423M(P)', 'INFORMATION STORAGE AND MANAGEMENT', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT301N', 'COMPUTER NETWORKS', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT301N(P)', 'COMPUTER NETWORKS', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT410M(P)', 'ADVANCED CONCEPTS IN JAVA', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'ML307', 'ENVIRONMENTAL MANAGEMENT AND SUSTAINABILITY', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS501N', 'THEORY OF COMPUTATION', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS502N', 'INTRODUCTION TO ARTIFICIAL INTELLIGENCE', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS502N(P)', 'INTRODUCTION TO ARTIFICIAL INTELLIGENCE', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS503M', 'NETWORK SECURITY AND CRYPTOGRAPHY', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS503M(P)', 'NETWORK SECURITY AND CRYPTOGRAPHY', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE511M', 'IMAGE PROCESSING', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE511M(P)', 'IMAGE PROCESSING', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT507M(P)', 'PROGRAMMING WITH PYTHON', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_it, 'BTIT508M(p)', 'NO SQL AND MONGODB', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'GU-SEM5', 'GENERIC ELECTIVE (SEM 5)', 4, 4, 0, 0, 4, false, true);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS601N', 'COMPILER DESIGN', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS601N(P)', 'COMPILER DESIGN', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS602N', 'OBJECT ORIENTED ANALYSIS AND DESIGN', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS602N(P)', 'OBJECT ORIENTED ANALYSIS AND DESIGN', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS603N', 'INTRODUCTION TO CLOUD COMPUTING', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS603N(P)', 'INTRODUCTION TO CLOUD COMPUTING', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS607N', 'MINOR PROJECT', 2, 2, 0, 0, 2, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS708N', 'INTRODUCTION TO DATA SCIENCE', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS708N(P)', 'INTRODUCTION TO DATA SCIENCE', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE613M', 'INTERNET OF THINGS', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BBAI501', 'HUMAN VALUES AND PROFESSIONAL ETHICS', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS706N', 'MAJOR PROJECT', 1, 1, 0, 0, 1, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS710', 'DEEP LEARNING FOUNDATIONS', 4, 4, 0, 0, 4, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS710(P)', 'DEEP LEARNING FOUNDATIONS', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS711', 'INTRODUCTION TO QUANTUM COMPUTING', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS711(P)', 'INTRODUCTION TO QUANTUM COMPUTING', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'BTCS712(P)', 'CLOUD COMPETENCY LAB', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE722', 'PROMPT ENGINEERING AND FINE-TUNING', 3, 3, 0, 0, 3, false, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_aids, 'BTDSE722(P)', 'PROMPT ENGINEERING AND FINE-TUNING', 2, 0, 0, 2, 1, true, false);
-  insert into courses (department_id, code, name, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
-  values (v_dept_cse, 'GU-SEM7', 'GENERIC ELECTIVE (SEM 7)', 4, 4, 0, 0, 4, false, true);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS101M', 'INTRODUCTION TO COMPUTER SCIENCE AND ENGINEERING', 1, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS101M(P)', 'INTRODUCTION TO COmPUTER SCIENCE AND ENGINEERING LAB', 1, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS103M', 'COMPUTER SYSTEM ORGANIZATION', 1, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS103M(P)', 'COMPUTER SYSTEM ORGANIZATION', 1, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS107M(P)', 'PROGRAM DEVELOPMENT USING C', 1, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTMA101N', 'MATHEMATICS - I', 1, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTPH101', 'APPLIED PHYSICS', 1, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTPH101(P)', 'APPLIED PHYSICS', 1, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'HUCS101', 'COMMUNICATION SKILLS', 1, 2, 2, 0, 0, 2, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'HUCS101(P)', 'COMMUNICATION SKILLS', 1, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS102M', 'INTRODUCTION TO DESIGN THINKING', 2, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS102M(P)', 'INTRODUCTION TO DESIGN THINKING', 2, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS202M', 'OBJECT ORIENTED PROGRAMMING WITH C++', 2, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS202M(P)', 'OBJECT ORIENTED PROGRAMMING WITH C++', 2, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTEC104', 'DIGITAL LOGIC AND CIRCUIT DESIGN', 2, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTEC104(P)', 'DIGITAL LOGIC AND CIRCUIT DESIGN', 2, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT201M', 'DATA COMMUNICATION', 2, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT208M(P)', 'UNIX PROGRAMMING', 2, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTMA201N', 'MATHEMATICS - II', 2, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS301N', 'DISCRETE STRUCTURES', 3, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS306M', 'FUNDAMENTALS OF DATA STRUCTURES', 3, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS306M(P)', 'FUNDAMENTALS OF DATA STRUCTURES', 3, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS307M', 'PRICIPLES OF OPERATING SYSTEMS', 3, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS307M(P)', 'PRICIPLES OF OPERATING SYSTEMS', 3, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS402N', 'SOFTWARE ENGINEERING AND PROJECT MANAGEMENT', 3, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS402N(P)', 'SOFTWARE ENGINEERING AND PROJECT MANAGEMENT', 3, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE322M', 'PRINCIPLES OF PROGRAMMING LANGUAGE', 3, 2, 2, 0, 0, 2, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE322M(P)', 'PRINCIPLES OF PROGRAMMING LANGUAGE', 3, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT307N(P)', 'INTRODUCTION TO CORE JAVA', 3, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'GU-SEM3', 'GENERIC ELECTIVE (SEM 3)', 3, 4, 4, 0, 0, 4, false, true);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS302N', 'ANALYSIS AND DESIGN OF ALGORITHMS', 4, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS302N(P)', 'ANALYSIS AND DESIGN OF ALGORITHMS', 4, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS401N', 'DATABASE MANAGEMENT SYSTEMS', 4, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS401N(P)', 'DATABASE MANAGEMENT SYSTEMS', 4, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE423M', 'INFORMATION STORAGE AND MANAGEMENT', 4, 2, 2, 0, 0, 2, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE423M(P)', 'INFORMATION STORAGE AND MANAGEMENT', 4, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT301N', 'COMPUTER NETWORKS', 4, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT301N(P)', 'COMPUTER NETWORKS', 4, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT410M(P)', 'ADVANCED CONCEPTS IN JAVA', 4, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'ML307', 'ENVIRONMENTAL MANAGEMENT AND SUSTAINABILITY', 4, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS501N', 'THEORY OF COMPUTATION', 5, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS502N', 'INTRODUCTION TO ARTIFICIAL INTELLIGENCE', 5, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS502N(P)', 'INTRODUCTION TO ARTIFICIAL INTELLIGENCE', 5, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS503M', 'NETWORK SECURITY AND CRYPTOGRAPHY', 5, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS503M(P)', 'NETWORK SECURITY AND CRYPTOGRAPHY', 5, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE511M', 'IMAGE PROCESSING', 5, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE511M(P)', 'IMAGE PROCESSING', 5, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT507M(P)', 'PROGRAMMING WITH PYTHON', 5, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_it, 'BTIT508M(p)', 'NO SQL AND MONGODB', 5, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'GU-SEM5', 'GENERIC ELECTIVE (SEM 5)', 5, 4, 4, 0, 0, 4, false, true);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS601N', 'COMPILER DESIGN', 6, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS601N(P)', 'COMPILER DESIGN', 6, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS602N', 'OBJECT ORIENTED ANALYSIS AND DESIGN', 6, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS602N(P)', 'OBJECT ORIENTED ANALYSIS AND DESIGN', 6, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS603N', 'INTRODUCTION TO CLOUD COMPUTING', 6, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS603N(P)', 'INTRODUCTION TO CLOUD COMPUTING', 6, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS607N', 'MINOR PROJECT', 6, 2, 2, 0, 0, 2, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS708N', 'INTRODUCTION TO DATA SCIENCE', 6, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS708N(P)', 'INTRODUCTION TO DATA SCIENCE', 6, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE613M', 'INTERNET OF THINGS', 6, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BBAI501', 'HUMAN VALUES AND PROFESSIONAL ETHICS', 7, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS706N', 'MAJOR PROJECT', 7, 1, 1, 0, 0, 1, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS710', 'DEEP LEARNING FOUNDATIONS', 7, 4, 4, 0, 0, 4, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS710(P)', 'DEEP LEARNING FOUNDATIONS', 7, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS711', 'INTRODUCTION TO QUANTUM COMPUTING', 7, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS711(P)', 'INTRODUCTION TO QUANTUM COMPUTING', 7, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'BTCS712(P)', 'CLOUD COMPETENCY LAB', 7, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE722', 'PROMPT ENGINEERING AND FINE-TUNING', 7, 3, 3, 0, 0, 3, false, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_aids, 'BTDSE722(P)', 'PROMPT ENGINEERING AND FINE-TUNING', 7, 2, 0, 0, 2, 1, true, false);
+  insert into courses (department_id, code, name, semester, credits, lectures_per_week, tutorials_per_week, practicals_per_week, sessions_per_week, lab_required, is_elective)
+  values (v_dept_cse, 'GU-SEM7', 'GENERIC ELECTIVE (SEM 7)', 7, 4, 4, 0, 0, 4, false, true);
 
   -- -------------------------------------------------------------------------
   -- 8. Faculty (121 Instructors, Max Load 24 hr/week)
@@ -2498,6 +2493,17 @@ begin
   values ((select id from sections where code = 'APPLE-Y4-A' limit 1), (select id from courses where code = 'BTDSE722(P)' limit 1));
   insert into section_courses (section_id, course_id)
   values ((select id from sections where code = 'APPLE-Y4-A' limit 1), (select id from courses where code = 'GU-SEM7' limit 1));
+
+  -- -------------------------------------------------------------------------
+  -- 10b. Program-Course Syllabus Scheme Mapping (from courses.csv)
+  -- -------------------------------------------------------------------------
+  insert into program_courses (program_id, course_id, semester, sessions_per_week)
+  select distinct s.program_id, sc.course_id, s.semester, c.sessions_per_week
+  from section_courses sc
+  join sections s on s.id = sc.section_id
+  join courses c on c.id = sc.course_id
+  where s.program_id is not null
+  on conflict (program_id, course_id, semester) do nothing;
 
   -- -------------------------------------------------------------------------
   -- 11. Generic Elective Reserved Slot Blocks (Thu & Fri Last Two Periods of Each Shift)

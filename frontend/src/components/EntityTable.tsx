@@ -42,6 +42,11 @@ function getGroupKey(
   labels: Record<string, Record<string, string>>,
   progDeptMap: Record<string, string>,
 ): { key: string; label: string; icon: string } {
+  if (defName === 'departments') {
+    const inst = String(row.institute || 'Shri Vaishnav Institute of Information Technology')
+    return { key: inst, label: `Institute: ${inst}`, icon: '🏫' }
+  }
+
   if (defName === 'programs') {
     const dept = labels['department_id']?.[String(row.department_id)] || 'General / Unassigned'
     return { key: dept, label: `Department: ${dept}`, icon: '🏛️' }
@@ -80,7 +85,8 @@ function getGroupKey(
 
   if (defName === 'courses') {
     const dept = labels['department_id']?.[String(row.department_id)] || 'General Curriculum'
-    return { key: dept, label: `Department: ${dept}`, icon: '📚' }
+    const sem = row.semester ? ` — Semester ${row.semester}` : ''
+    return { key: `${dept}${sem}`, label: `Department: ${dept}${sem}`, icon: '📚' }
   }
 
   if (defName === 'faculty') {
@@ -90,7 +96,8 @@ function getGroupKey(
 
   if (defName === 'program_courses') {
     const prog = labels['program_id']?.[String(row.program_id)] || 'General Program'
-    return { key: prog, label: `Program: ${prog}`, icon: '📋' }
+    const sem = row.semester ? ` — Semester ${row.semester}` : ''
+    return { key: `${prog}${sem}`, label: `Syllabus Scheme: ${prog}${sem}`, icon: '📋' }
   }
 
   if (defName === 'time_slots') {

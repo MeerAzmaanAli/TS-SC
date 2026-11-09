@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ENTITIES, getEntity } from '../../lib/entities'
 import EntityTable from '../../components/EntityTable'
 import EntityForm from '../../components/EntityForm'
+import SectionModal from '../../components/SectionModal'
 import AdminHeader from '../../components/AdminHeader'
 import { PlusIcon } from '../../components/Icons'
 
@@ -81,12 +82,20 @@ export default function EntitiesPage() {
           <div>
             {(adding || editing) && (
               <div style={{ marginBottom: 20 }}>
-                <EntityForm
-                  def={def}
-                  initial={editing ?? undefined}
-                  onSaved={closeForm}
-                  onCancel={closeForm}
-                />
+                {entity === 'sections' ? (
+                  <SectionModal
+                    initial={editing ?? undefined}
+                    onSaved={closeForm}
+                    onCancel={closeForm}
+                  />
+                ) : (
+                  <EntityForm
+                    def={def}
+                    initial={editing ?? undefined}
+                    onSaved={closeForm}
+                    onCancel={closeForm}
+                  />
+                )}
               </div>
             )}
 

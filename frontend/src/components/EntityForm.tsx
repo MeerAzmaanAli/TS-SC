@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { EntityDef, EntityField, refLabel } from '../lib/entities'
+import { EntityDef, EntityField, refLabel, UNIVERSITY_INSTITUTES } from '../lib/entities'
 import { CheckIcon, XIcon, AlertCircleIcon } from './Icons'
 
 interface Props {
@@ -13,6 +13,9 @@ interface Props {
 type Values = Record<string, unknown>
 
 function emptyFor(field: EntityField): unknown {
+  if (field.name === 'institute') {
+    return 'Shri Vaishnav Institute of Information Technology'
+  }
   switch (field.type) {
     case 'boolean':
       return false
@@ -243,11 +246,23 @@ export default function EntityForm({ def, initial, onSaved, onCancel }: Props) {
                       onChange={(e) => setValue(f.name, e.target.value)}
                     >
                       <option value="">— Select {f.label.toLowerCase()} —</option>
-                      {opts.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
+                      {f.name === 'institute' ? (
+                        UNIVERSITY_INSTITUTES.map((g) => (
+                          <optgroup key={g.group} label={g.group}>
+                            {g.institutes.map((inst) => (
+                              <option key={inst} value={inst}>
+                                {inst}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))
+                      ) : (
+                        opts.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
                 )

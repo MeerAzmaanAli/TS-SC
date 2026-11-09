@@ -7,8 +7,8 @@ create or replace function public.get_section_timetable(
   p_passkey text
 )
 returns jsonb
-language plpgsql
 security definer
+language plpgsql
 set search_path = public
 as $$
 declare

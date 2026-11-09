@@ -24,35 +24,37 @@ async function must<T>(
   return (data ?? []) as T
 }
 
-async function fetchSections(): Promise<{ id: string; program_id?: string; strength: number; batch_count?: number; shift?: number }[]> {
-  const res = await supabase.from('sections').select('id, program_id, strength, batch_count, shift').limit(50000)
+async function fetchSections(): Promise<{ id: string; program_id?: string; semester?: number; strength: number; batch_count?: number; shift?: number }[]> {
+  const res = await supabase.from('sections').select('id, program_id, semester, strength, batch_count, shift').limit(50000)
   if (res.error) {
-    const fb = await supabase.from('sections').select('id, program_id, strength, batch_count').limit(50000)
+    const fb = await supabase.from('sections').select('id, program_id, strength, batch_count, shift').limit(50000)
     if (fb.error) {
       const fb2 = await supabase.from('sections').select('id, program_id, strength').limit(50000)
       if (fb2.error) throw new Error(`Failed to load sections: ${fb2.error.message}`)
-      return (fb2.data ?? []).map((s) => ({ ...s, batch_count: 1, shift: 1 }))
+      return (fb2.data ?? []).map((s) => ({ ...s, batch_count: 1, shift: 1, semester: 1 }))
     }
-    return (fb.data ?? []).map((s) => ({ ...s, batch_count: s.batch_count ?? 1, shift: 1 }))
+    return (fb.data ?? []).map((s: any) => ({ ...s, batch_count: s.batch_count ?? 1, shift: s.shift ?? 1, semester: s.semester ?? 1 }))
   }
-  return (res.data ?? []).map((s: any) => ({ ...s, batch_count: s.batch_count ?? 1, shift: s.shift ?? 1 }))
+  return (res.data ?? []).map((s: any) => ({ ...s, batch_count: s.batch_count ?? 1, shift: s.shift ?? 1, semester: s.semester ?? 1 }))
 }
 
 async function fetchCurriculumMappings(
-  sections: { id: string; program_id?: string }[],
+  sections: { id: string; program_id?: string; semester?: number }[],
 ): Promise<{ section_id: string; course_id: string; sessions_per_week: number | null }[]> {
-  // 1. Try reading program_courses first (new curriculum model)
+  // 1. Try reading program_courses first (new curriculum model with semester support)
   const { data: progCourses, error: pErr } = await supabase
     .from('program_courses')
-    .select('program_id, course_id, sessions_per_week')
+    .select('program_id, course_id, semester, sessions_per_week')
     .limit(50000)
 
   if (!pErr && progCourses && progCourses.length > 0) {
-    const progMap = new Map<string, { course_id: string; sessions_per_week: number | null }[]>()
+    // Map by program_id and optional semester
+    const progMap = new Map<string, { course_id: string; semester?: number | null; sessions_per_week: number | null }[]>()
     for (const pc of progCourses) {
       if (!progMap.has(pc.program_id)) progMap.set(pc.program_id, [])
       progMap.get(pc.program_id)!.push({
         course_id: pc.course_id,
+        semester: pc.semester,
         sessions_per_week: pc.sessions_per_week,
       })
     }
@@ -60,7 +62,12 @@ async function fetchCurriculumMappings(
     const mapped: { section_id: string; course_id: string; sessions_per_week: number | null }[] = []
     for (const sec of sections) {
       if (sec.program_id && progMap.has(sec.program_id)) {
-        for (const c of progMap.get(sec.program_id)!) {
+        const candidates = progMap.get(sec.program_id)!
+        for (const c of candidates) {
+          // If the program_course specifies a semester, only match sections in that semester
+          if (c.semester && sec.semester && Number(c.semester) !== Number(sec.semester)) {
+            continue
+          }
           mapped.push({
             section_id: sec.id,
             course_id: c.course_id,
