@@ -118,9 +118,18 @@ export function toLocalDateString(d: Date): string {
   return `${year}-${month}-${day}`
 }
 
-export function formatHeldDate(slotDayOfWeek: number, referenceCreatedAt?: string | Date | null): string {
-  const d = getHeldLectureDate(slotDayOfWeek, referenceCreatedAt)
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+/**
+ * Checks whether an assigned or past substitution request has finished its day,
+ * so it can be moved from "active" to "past / archive".
+ * Example: If request was for Thursday, once Friday starts (00:00:00 Friday local time),
+ * isSubstitutionPast returns true.
+ */
+export function isSubstitutionDayPast(slotDayOfWeek: number, referenceCreatedAt?: string | Date | null): boolean {
+  const heldDate = getHeldLectureDate(slotDayOfWeek, referenceCreatedAt)
+  // End of the held day is 23:59:59.999
+  const endOfHeldDay = new Date(heldDate)
+  endOfHeldDay.setHours(23, 59, 59, 999)
+  return new Date().getTime() > endOfHeldDay.getTime()
 }
 
 async function publishedVersion(): Promise<{ id: string; institution_id: string }> {
@@ -402,6 +411,16 @@ export async function createSubstitutionRequest(
  * resolves accepted ones or automatically expires them and assigns penalties to unresponding faculties.
  */
 export async function sweepAllExpiredRequests(): Promise<number> {
+  // Call server-side RPC first if available for high-performance atomic sweep & penalty writing
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc('sweep_substitution_requests')
+    if (!rpcErr && rpcRes && rpcRes.success) {
+      // Swept via Postgres RPC
+    }
+  } catch {
+    /* Fallback to client sweep below */
+  }
+
   // Query all open substitution requests to finalize accepted ones or expire timed-out ones
   const { data: openList, error } = await supabase
     .from('substitution_requests')
@@ -546,17 +565,20 @@ export async function tryFinaliseRequest(requestId: string): Promise<boolean> {
       }).catch((e) => console.warn(e))
     }
   } else {
-    // If deadline passed with 0 accepts, transition to expired/unfilled
+    // If deadline passed with 0 accepts, transition to expired
     const { error } = await supabase
       .from('substitution_requests')
-      .update({ status: 'unfilled' })
+      .update({ status: 'expired' })
       .eq('id', requestId)
-    if (error) throw new Error(error.message)
+    if (error) {
+      // Fallback in case old DB schema has strict check constraint
+      await supabase.from('substitution_requests').update({ status: 'unfilled' }).eq('id', requestId)
+    }
 
     // Mark all candidate rows that never responded as timed_out
     await supabase
       .from('substitution_candidates')
-      .update({ response: 'timed_out' })
+      .update({ response: 'timed_out', responded_at: new Date().toISOString() })
       .eq('request_id', requestId)
       .eq('response', 'pending')
 
@@ -564,30 +586,40 @@ export async function tryFinaliseRequest(requestId: string): Promise<boolean> {
       sendEmailNotification({
         to_email: requesterRes.data.email,
         to_name: requesterRes.data.name,
-        subject: '[TS-SC] Substitution Request Expired / Unfilled',
+        subject: '[TS-SC] Substitution Request Expired',
         body_html: `
           <div style="font-family: sans-serif; line-height: 1.6; color: #1f2937;">
             <h2 style="color: #dc2626;">Substitution Request Expired</h2>
             <p>Dear <strong>${requesterRes.data.name}</strong>,</p>
-            <p>The response deadline for your substitution request has passed without acceptance. The session has been marked unfilled.</p>
-            <p>Penalties have been recorded for faculty candidates who failed to respond before deadline.</p>
+            <p>The response deadline for your substitution request has passed without acceptance. The session has been marked expired.</p>
+            <p>Penalties have been recorded for faculty candidates who failed to respond before the deadline.</p>
           </div>
         `,
       }).catch((e) => console.warn(e))
     }
   }
 
-  // Record penalties for rejections and timeouts
+  // Record penalties for rejections and timeouts (with duplicate prevention)
   if (out.penalties.length > 0) {
-    const { error } = await supabase.from('substitution_penalties').insert(
-      out.penalties.map((p) => ({
+    const { data: existingPenalties } = await supabase
+      .from('substitution_penalties')
+      .select('faculty_id')
+      .eq('request_id', requestId)
+    const existingSet = new Set((existingPenalties || []).map((p: any) => p.faculty_id))
+
+    const newPenalties = out.penalties
+      .filter((p) => !existingSet.has(p.faculty_id))
+      .map((p) => ({
         institution_id: typed.institution_id,
         faculty_id: p.faculty_id,
         request_id: requestId,
         reason: p.reason,
-      })),
-    )
-    if (error) throw new Error(error.message)
+      }))
+
+    if (newPenalties.length > 0) {
+      const { error } = await supabase.from('substitution_penalties').insert(newPenalties)
+      if (error) console.warn('Failed to insert penalties:', error.message)
+    }
   }
   return true
 }

@@ -8,6 +8,7 @@ import {
   getLectureTemporalStatus,
   getHeldLectureDate,
   toLocalDateString,
+  isSubstitutionDayPast,
   SessionInfo,
   sweepAllExpiredRequests,
   tryFinaliseRequest,
@@ -76,6 +77,7 @@ interface OutgoingRequestInfo {
   starts_at: string
   ends_at: string
   assigned_name: string | null
+  is_past_day: boolean
   candidates: {
     faculty_id: string
     faculty_name: string
@@ -106,6 +108,7 @@ export default function FacultyView() {
   const [activeTab, setActiveTab] = useState<'schedule' | 'request' | 'inbox'>('schedule')
   const [requestModalSession, setRequestModalSession] = useState<Row | null>(null)
   const [requestReason, setRequestReason] = useState('')
+  const [outgoingFilter, setOutgoingFilter] = useState<'active' | 'past'>('active')
 
   const loadData = useCallback(async () => {
     if (!profile?.faculty_id) return
@@ -193,6 +196,8 @@ export default function FacultyView() {
           response: c.response,
         }))
 
+        const isPastDay = ts?.day_of_week ? isSubstitutionDayPast(ts.day_of_week, s.created_at) : false
+
         outList.push({
           id: s.id,
           status: s.status,
@@ -207,6 +212,7 @@ export default function FacultyView() {
           starts_at: ts?.starts_at ? ts.starts_at.slice(0, 5) : '',
           ends_at: ts?.ends_at ? ts.ends_at.slice(0, 5) : '',
           assigned_name: s.assigned_faculty?.name ?? null,
+          is_past_day: isPastDay,
           candidates: cands,
         })
       }
@@ -694,9 +700,29 @@ export default function FacultyView() {
             {/* Outgoing Requests Card */}
             <div className="admin-panel" style={{ margin: 0 }}>
               <div className="admin-panel-hd">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <SendIcon size={16} style={{ color: '#4F46E5' }} />
-                  <h2>Outgoing Coverage Requests</h2>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <SendIcon size={16} style={{ color: '#4F46E5' }} />
+                    <h2>Outgoing Coverage Requests</h2>
+                  </div>
+                  <div style={{ display: 'inline-flex', gap: 6, marginTop: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => setOutgoingFilter('active')}
+                      className={`admin-btn admin-btn-sm ${outgoingFilter === 'active' ? '' : 'admin-btn-outline'}`}
+                      style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+                    >
+                      Active ({outgoingRequests.filter((r) => !r.is_past_day && r.status !== 'expired' && r.status !== 'unfilled').length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOutgoingFilter('past')}
+                      className={`admin-btn admin-btn-sm ${outgoingFilter === 'past' ? '' : 'admin-btn-outline'}`}
+                      style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+                    >
+                      Past / Expired ({outgoingRequests.filter((r) => r.is_past_day || r.status === 'expired' || r.status === 'unfilled').length})
+                    </button>
+                  </div>
                 </div>
                 {outgoingRequests.length > 0 && (
                   <span className="admin-tag">
@@ -705,112 +731,125 @@ export default function FacultyView() {
                 )}
               </div>
 
-              {outgoingRequests.length === 0 ? (
-                <div style={{ padding: '24px 16px', textAlign: 'center', color: '#68707D', fontSize: 13 }}>
-                  You haven't dispatched any substitution requests yet.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {outgoingRequests.slice(0, 3).map((out) => {
-                    const isAssigned = out.status === 'assigned'
-                    const isOpen = out.status === 'open'
+              {(() => {
+                const displayedOutgoing = outgoingRequests.filter((r) =>
+                  outgoingFilter === 'active'
+                    ? !r.is_past_day && r.status !== 'expired' && r.status !== 'unfilled'
+                    : r.is_past_day || r.status === 'expired' || r.status === 'unfilled'
+                )
 
-                    return (
-                      <div
-                        key={out.id}
-                        className="admin-req-card"
-                        style={{ margin: 0, padding: 12 }}
-                      >
+                if (displayedOutgoing.length === 0) {
+                  return (
+                    <div style={{ padding: '24px 16px', textAlign: 'center', color: '#68707D', fontSize: 13 }}>
+                      {outgoingFilter === 'active'
+                        ? 'No active coverage requests for today or upcoming lectures.'
+                        : 'No past or expired coverage requests in history.'}
+                    </div>
+                  )
+                }
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {displayedOutgoing.slice(0, 4).map((out) => {
+                      const isAssigned = out.status === 'assigned'
+                      const isExpired = out.status === 'expired' || out.status === 'unfilled'
+                      const isOpen = out.status === 'open'
+
+                      return (
                         <div
-                          className={`admin-req-badge-box ${
-                            isAssigned ? 'assigned' : isOpen ? 'open' : 'unfilled'
-                          }`}
-                          style={{ minWidth: 100 }}
+                          key={out.id}
+                          className="admin-req-card"
+                          style={{ margin: 0, padding: 12 }}
                         >
-                          <b>{out.course_code}</b>
-                          <span>Sec {out.section_name}</span>
-                          <span className="admin-m" style={{ marginTop: 6, fontSize: 11 }}>
-                            {DAYS[out.day_of_week]?.slice(0, 3)} P{out.period}
-                          </span>
-                        </div>
+                          <div
+                            className={`admin-req-badge-box ${
+                              isAssigned ? 'assigned' : isOpen ? 'open' : 'unfilled'
+                            }`}
+                            style={{ minWidth: 100 }}
+                          >
+                            <b>{out.course_code}</b>
+                            <span>Sec {out.section_name}</span>
+                            <span className="admin-m" style={{ marginTop: 6, fontSize: 11 }}>
+                              {DAYS[out.day_of_week]?.slice(0, 3)} P{out.period}
+                            </span>
+                          </div>
 
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
-                            <div>
-                              <b style={{ color: '#1B1D22', fontSize: 13 }}>{out.course_name}</b>
-                              {out.reason && (
-                                <div className="admin-mu" style={{ fontSize: 12, marginTop: 2 }}>
-                                  Reason: {out.reason}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
+                              <div>
+                                <b style={{ color: '#1B1D22', fontSize: 13 }}>{out.course_name}</b>
+                                {out.reason && (
+                                  <div className="admin-mu" style={{ fontSize: 12, marginTop: 2 }}>
+                                    Reason: {out.reason}
+                                  </div>
+                                )}
+                              </div>
+                              <span
+                                className={`admin-tag ${
+                                  isAssigned ? 'assigned' : isOpen ? 'open' : 'unfilled'
+                                }`}
+                              >
+                                {isAssigned
+                                  ? out.is_past_day
+                                    ? `Completed · Covered by ${out.assigned_name ?? 'Colleague'}`
+                                    : `Covered by ${out.assigned_name ?? 'Colleague'}`
+                                  : isExpired
+                                  ? 'Expired (No substitute assigned)'
+                                  : isOpen
+                                  ? 'Searching substitute'
+                                  : 'Unfilled / Free'}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
+                              <span className="admin-mu admin-m" style={{ fontSize: 11 }}>
+                                {out.starts_at && out.ends_at ? `${out.starts_at}–${out.ends_at} · ` : ''}
+                                {out.is_past_day
+                                  ? 'Day Ended'
+                                  : `Deadline ${new Date(out.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                              </span>
+
+                              {out.candidates.length > 0 && (
+                                <div className="admin-cands-wrap" style={{ margin: 0 }}>
+                                  {out.candidates.slice(0, 3).map((cand) => (
+                                    <div
+                                      key={cand.faculty_id}
+                                      className={`admin-cand-pill ${
+                                        out.assigned_name === cand.faculty_name
+                                          ? 'winner'
+                                          : cand.response === 'accepted'
+                                          ? 'accepted'
+                                          : cand.response === 'rejected' || (cand as any).response === 'timed_out'
+                                          ? 'rejected'
+                                          : ''
+                                      }`}
+                                      style={{ fontSize: 10, padding: '1px 6px' }}
+                                    >
+                                      <em>P{cand.priority}</em>
+                                      <span>{cand.faculty_name}</span>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </div>
-                            <span
-                              className={`admin-tag ${
-                                isAssigned ? 'assigned' : isOpen ? 'open' : 'unfilled'
-                              }`}
-                            >
-                              {isAssigned
-                                ? `Covered by ${out.assigned_name ?? 'Colleague'}`
-                                : isOpen
-                                ? 'Searching substitute'
-                                : 'Unfilled / Free'}
-                            </span>
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
-                            <span className="admin-mu admin-m" style={{ fontSize: 11 }}>
-                              {out.starts_at && out.ends_at ? `${out.starts_at}–${out.ends_at} · ` : ''}
-                              {new Date(out.created_at).toLocaleDateString(undefined, {
-                                day: 'numeric',
-                                month: 'short',
-                              })}
-                            </span>
-
-                            {out.candidates.length > 0 && (
-                              <div className="admin-cands-wrap" style={{ margin: 0 }}>
-                                {out.candidates.slice(0, 2).map((cand) => (
-                                  <div
-                                    key={cand.faculty_id}
-                                    className={`admin-cand-pill ${
-                                      out.assigned_name === cand.faculty_name
-                                        ? 'winner'
-                                        : cand.response === 'accepted'
-                                        ? 'accepted'
-                                        : cand.response === 'rejected'
-                                        ? 'rejected'
-                                        : ''
-                                    }`}
-                                    style={{ fontSize: 10, padding: '1px 6px' }}
-                                  >
-                                    <em>P{cand.priority}</em>
-                                    <span>{cand.faculty_name}</span>
-                                  </div>
-                                ))}
-                                {out.candidates.length > 2 && (
-                                  <span className="admin-mu admin-m" style={{ fontSize: 10 }}>
-                                    +{out.candidates.length - 2} more
-                                  </span>
-                                )}
-                              </div>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
 
-                  {outgoingRequests.length > 3 && (
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('request')}
-                      className="admin-btn admin-btn-outline admin-btn-sm"
-                      style={{ alignSelf: 'flex-start', marginTop: 4 }}
-                    >
-                      View all {outgoingRequests.length} dispatched requests →
-                    </button>
-                  )}
-                </div>
-              )}
+                    {displayedOutgoing.length > 4 && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('request')}
+                        className="admin-btn admin-btn-outline admin-btn-sm"
+                        style={{ alignSelf: 'flex-start', marginTop: 4 }}
+                      >
+                        View all {displayedOutgoing.length} {outgoingFilter} requests →
+                      </button>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
           </div>
 

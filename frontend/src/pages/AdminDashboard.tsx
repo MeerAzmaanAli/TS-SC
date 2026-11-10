@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import SectionPasskeyManager from '../components/SectionPasskeyManager'
 import AcademicShiftManager from '../components/AcademicShiftManager'
 import FacultyAuthManager from '../components/FacultyAuthManager'
+import { sweepAllExpiredRequests, isSubstitutionDayPast } from '../lib/substitution'
 import {
   SparklesIcon,
   RefreshIcon,
@@ -49,6 +50,7 @@ interface DispatchedRequest {
   period: number
   starts_at: string
   ends_at: string
+  is_past_day: boolean
   candidates: {
     faculty_id: string
     faculty_name: string
@@ -80,6 +82,7 @@ export default function AdminDashboard() {
     faculty: 0,
     rooms: 0,
   })
+  const [subFilter, setSubFilter] = useState<'active' | 'past'>('active')
   const [substitutions, setSubstitutions] = useState<DispatchedRequest[]>([])
   const [allFaculty, setAllFaculty] = useState<FacultyOption[]>([])
   const [assignModalReq, setAssignModalReq] = useState<DispatchedRequest | null>(null)
@@ -140,6 +143,9 @@ export default function AdminDashboard() {
   async function loadSubstitutions() {
     setSubsLoading(true)
     try {
+      // Auto-sweep any expired requests before loading
+      await sweepAllExpiredRequests().catch((e) => console.warn('Sweep failed:', e))
+
       const { data, error } = await supabase
         .from('substitution_requests')
         .select(`
@@ -169,7 +175,7 @@ export default function AdminDashboard() {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(20)
+        .limit(50)
 
       if (error) {
         console.error('Failed to load substitutions:', error)
@@ -178,6 +184,7 @@ export default function AdminDashboard() {
 
       const formatted: DispatchedRequest[] = ((data ?? []) as any[]).map((r) => {
         const entry = r.timetable_entries
+        const slotDay = entry?.time_slots?.day_of_week ?? 0
         const cands = (r.substitution_candidates ?? []).map((c: any) => ({
           faculty_id: c.faculty_id,
           faculty_name: c.faculty?.name ?? 'Faculty',
@@ -186,6 +193,9 @@ export default function AdminDashboard() {
           responded_at: c.responded_at,
         }))
         cands.sort((a: any, b: any) => a.priority - b.priority)
+
+        // Check if the scheduled lecture day has completely passed
+        const isPastDay = slotDay > 0 ? isSubstitutionDayPast(slotDay, r.created_at) : false
 
         return {
           id: r.id,
@@ -200,10 +210,11 @@ export default function AdminDashboard() {
           course_code: entry?.courses?.code ?? '—',
           course_name: entry?.courses?.name ?? '—',
           section_name: entry?.sections?.name ?? '—',
-          day_of_week: entry?.time_slots?.day_of_week ?? 0,
+          day_of_week: slotDay,
           period: entry?.time_slots?.period ?? 0,
           starts_at: entry?.time_slots?.starts_at ? entry.time_slots.starts_at.slice(0, 5) : '—',
           ends_at: entry?.time_slots?.ends_at ? entry.time_slots.ends_at.slice(0, 5) : '—',
+          is_past_day: isPastDay,
           candidates: cands,
         }
       })
@@ -460,12 +471,32 @@ export default function AdminDashboard() {
         <div className="admin-cal-cols">
           {/* Main Column */}
           <div className="admin-cal-stack">
-            {/* Active Substitution Requests */}
+            {/* Active / Past Substitution Requests */}
             <section className="admin-panel">
               <div className="admin-panel-hd">
-                <h2>Active substitution requests</h2>
+                <div>
+                  <h2>Substitution Requests</h2>
+                  <div style={{ display: 'inline-flex', gap: 6, marginTop: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => setSubFilter('active')}
+                      className={`admin-btn admin-btn-sm ${subFilter === 'active' ? '' : 'admin-btn-outline'}`}
+                      style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+                    >
+                      Active ({substitutions.filter((s) => !s.is_past_day && s.status !== 'expired' && s.status !== 'unfilled').length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSubFilter('past')}
+                      className={`admin-btn admin-btn-sm ${subFilter === 'past' ? '' : 'admin-btn-outline'}`}
+                      style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+                    >
+                      Past / Expired ({substitutions.filter((s) => s.is_past_day || s.status === 'expired' || s.status === 'unfilled').length})
+                    </button>
+                  </div>
+                </div>
                 <span className="admin-mu admin-m">
-                  {subsLoading ? 'loading...' : `${substitutions.length} request${substitutions.length === 1 ? '' : 's'}`}
+                  {subsLoading ? 'loading...' : `${substitutions.length} total request${substitutions.length === 1 ? '' : 's'}`}
                 </span>
               </div>
 
@@ -473,140 +504,171 @@ export default function AdminDashboard() {
                 <div style={{ padding: '24px 0', textAlign: 'center', color: '#555B66' }}>
                   Loading live substitution requests...
                 </div>
-              ) : substitutions.length === 0 ? (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: '#555B66' }}>
-                  <InboxIcon size={28} style={{ opacity: 0.35, margin: '0 auto 8px' }} />
-                  <div style={{ fontWeight: 500 }}>No active substitution requests at this time.</div>
-                  <div style={{ fontSize: 12, marginTop: 4 }}>
-                    When faculty report absences, target lecture slots and ranked candidate responses will appear here.
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  {substitutions.slice(0, 3).map((sub) => {
-                    const isAssigned = sub.status === 'assigned'
-                    const isUnfilled = sub.status === 'unfilled'
-                    const isOpen = sub.status === 'open'
+              ) : (() => {
+                const filteredSubs = substitutions.filter((s) =>
+                  subFilter === 'active'
+                    ? !s.is_past_day && s.status !== 'expired' && s.status !== 'unfilled'
+                    : s.is_past_day || s.status === 'expired' || s.status === 'unfilled'
+                )
 
-                    return (
-                      <div key={sub.id} className="admin-req-card">
-                        <div
-                          className={`admin-req-badge-box ${
-                            isAssigned ? 'assigned' : isOpen ? 'open' : isUnfilled ? 'unfilled' : ''
-                          }`}
-                        >
-                          <b>{sub.course_code}</b>
-                          <span>{sub.section_name} · {sub.course_name}</span>
-                          <span className="admin-m" style={{ marginTop: 8 }}>
-                            {DAY_NAMES[sub.day_of_week] || `Day ${sub.day_of_week}`} · P{sub.period} · {sub.starts_at}–{sub.ends_at}
-                          </span>
-                        </div>
+                if (filteredSubs.length === 0) {
+                  return (
+                    <div style={{ padding: '24px 0', textAlign: 'center', color: '#555B66' }}>
+                      <InboxIcon size={28} style={{ opacity: 0.35, margin: '0 auto 8px' }} />
+                      <div style={{ fontWeight: 500 }}>
+                        {subFilter === 'active'
+                          ? 'No active substitution requests for today or upcoming days.'
+                          : 'No past or expired substitution requests in history.'}
+                      </div>
+                      <div style={{ fontSize: 12, marginTop: 4 }}>
+                        {subFilter === 'active'
+                          ? 'Requests will appear here when faculty report absences.'
+                          : 'Completed assignments and requests whose deadline passed automatically move here once the day ends.'}
+                      </div>
+                    </div>
+                  )
+                }
 
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                            <div>
-                              <b style={{ color: '#1B1D22', fontSize: 14 }}>{sub.requester_name}</b>{' '}
-                              {sub.reason && <span className="admin-mu">· {sub.reason}</span>}
-                            </div>
-                            <span
-                              className={`admin-tag ${
-                                isAssigned ? 'assigned' : isOpen ? 'open' : isUnfilled ? 'unfilled' : ''
-                              }`}
-                            >
-                              {isAssigned
-                                ? `Assigned · ${new Date(sub.created_at).toLocaleDateString(undefined, {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}`
-                                : isOpen
-                                ? 'Awaiting acceptance'
-                                : sub.status}
+                return (
+                  <div>
+                    {filteredSubs.slice(0, 5).map((sub) => {
+                      const isAssigned = sub.status === 'assigned'
+                      const isExpired = sub.status === 'expired' || sub.status === 'unfilled'
+                      const isOpen = sub.status === 'open'
+
+                      return (
+                        <div key={sub.id} className="admin-req-card">
+                          <div
+                            className={`admin-req-badge-box ${
+                              isAssigned ? 'assigned' : isOpen ? 'open' : 'unfilled'
+                            }`}
+                          >
+                            <b>{sub.course_code}</b>
+                            <span>{sub.section_name} · {sub.course_name}</span>
+                            <span className="admin-m" style={{ marginTop: 8 }}>
+                              {DAY_NAMES[sub.day_of_week] || `Day ${sub.day_of_week}`} · P{sub.period} · {sub.starts_at}–{sub.ends_at}
                             </span>
                           </div>
 
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
-                            <div className="admin-mu admin-m">
-                              Deadline {new Date(sub.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                              <div>
+                                <b style={{ color: '#1B1D22', fontSize: 14 }}>{sub.requester_name}</b>{' '}
+                                {sub.reason && <span className="admin-mu">· {sub.reason}</span>}
+                              </div>
+                              <span
+                                className={`admin-tag ${
+                                  isAssigned ? 'assigned' : isOpen ? 'open' : 'unfilled'
+                                }`}
+                              >
+                                {isAssigned
+                                  ? sub.is_past_day
+                                    ? `Completed · Covered by ${sub.assigned_name ?? 'Substitute'}`
+                                    : `Assigned · ${new Date(sub.created_at).toLocaleDateString(undefined, {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })}`
+                                  : isExpired
+                                  ? 'Expired (No substitute assigned)'
+                                  : isOpen
+                                  ? 'Awaiting acceptance'
+                                  : sub.status}
+                              </span>
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAssignModalReq(sub)
-                                setSelectedFacultyId(sub.candidates[0]?.faculty_id ?? '')
-                                setAssignError(null)
-                              }}
-                              className="admin-btn admin-btn-sm"
-                              style={{
-                                background: isAssigned ? '#ffffff' : '#4F46E5',
-                                color: isAssigned ? '#1B1D22' : '#ffffff',
-                                border: isAssigned ? '1px solid #D0D3D9' : 'none',
-                                fontSize: 12,
-                                height: 28,
-                                padding: '0 10px',
-                                gap: 6,
-                              }}
-                              title="Force assign a teacher to substitute this lecture"
-                            >
-                              <UsersIcon size={13} />
-                              <span>{isAssigned ? 'Reassign Teacher' : 'Force Assign Teacher'}</span>
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
+                              <div className="admin-mu admin-m">
+                                {sub.is_past_day ? 'Lecture Day Completed' : `Deadline ${new Date(sub.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                              </div>
+
+                              {!sub.is_past_day && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAssignModalReq(sub)
+                                    setSelectedFacultyId(sub.candidates[0]?.faculty_id ?? '')
+                                    setAssignError(null)
+                                  }}
+                                  className="admin-btn admin-btn-sm"
+                                  style={{
+                                    background: isAssigned ? '#ffffff' : '#4F46E5',
+                                    color: isAssigned ? '#1B1D22' : '#ffffff',
+                                    border: isAssigned ? '1px solid #D0D3D9' : 'none',
+                                    fontSize: 12,
+                                    height: 28,
+                                    padding: '0 10px',
+                                    gap: 6,
+                                  }}
+                                  title="Force assign a teacher to substitute this lecture"
+                                >
+                                  <UsersIcon size={13} />
+                                  <span>{isAssigned ? 'Reassign Teacher' : 'Force Assign Teacher'}</span>
+                                </button>
+                              )}
+                            </div>
+
+                            {sub.candidates.length > 0 && (
+                              <div className="admin-cands-wrap">
+                                {sub.candidates.map((cand) => {
+                                  const isWinner = sub.assigned_name === cand.faculty_name
+                                  const isAccepted = cand.response === 'accepted'
+                                  const isRejected = cand.response === 'rejected'
+                                  const isTimedOut = cand.response === 'timed_out'
+
+                                  return (
+                                    <div
+                                      key={cand.faculty_id}
+                                      className={`admin-cand-pill ${
+                                        isWinner ? 'winner' : isAccepted ? 'accepted' : isRejected || isTimedOut ? 'rejected' : ''
+                                      }`}
+                                      title={`Priority ${cand.priority} · ${cand.response}`}
+                                    >
+                                      <em>P{cand.priority}</em>
+                                      <span>
+                                        {cand.faculty_name}
+                                        {isWinner
+                                          ? ', accepted'
+                                          : isAccepted
+                                          ? ' (accepted)'
+                                          : isRejected
+                                          ? ' (declined)'
+                                          : isTimedOut
+                                          ? ' (timed out)'
+                                          : ''}
+                                      </span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
                           </div>
-
-                          {sub.candidates.length > 0 && (
-                            <div className="admin-cands-wrap">
-                              {sub.candidates.map((cand) => {
-                                const isWinner = sub.assigned_name === cand.faculty_name
-                                const isAccepted = cand.response === 'accepted'
-                                const isRejected = cand.response === 'rejected'
-
-                                return (
-                                  <div
-                                    key={cand.faculty_id}
-                                    className={`admin-cand-pill ${
-                                      isWinner ? 'winner' : isAccepted ? 'accepted' : isRejected ? 'rejected' : ''
-                                    }`}
-                                    title={`Priority ${cand.priority} · ${cand.response}`}
-                                  >
-                                    <em>P{cand.priority}</em>
-                                    <span>
-                                      {cand.faculty_name}
-                                      {isWinner ? ', accepted' : isAccepted ? ' (accepted)' : isRejected ? ' (declined)' : ''}
-                                    </span>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
 
-                  <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <Link to="/admin/timetable" className="admin-btn admin-btn-outline admin-btn-sm">
-                      Open slot in timetable
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleClearAllSubstitutions}
-                      disabled={clearing}
-                      className="admin-btn admin-btn-danger admin-btn-sm"
-                      title="Clear all substitution requests and candidate logs"
-                    >
-                      <TrashIcon size={13} />
-                      <span>{clearing ? 'Clearing...' : 'Clear requests'}</span>
-                    </button>
-                    {substitutions.length > 3 && (
-                      <Link to="/admin/penalties" className="admin-btn admin-btn-outline admin-btn-sm" style={{ marginLeft: 'auto' }}>
-                        View all {substitutions.length} requests →
+                    <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <Link to="/admin/timetable" className="admin-btn admin-btn-outline admin-btn-sm">
+                        Open slot in timetable
                       </Link>
-                    )}
+                      <button
+                        type="button"
+                        onClick={handleClearAllSubstitutions}
+                        disabled={clearing}
+                        className="admin-btn admin-btn-danger admin-btn-sm"
+                        title="Clear all substitution requests and candidate logs"
+                      >
+                        <TrashIcon size={13} />
+                        <span>{clearing ? 'Clearing...' : 'Clear requests'}</span>
+                      </button>
+                      <Link to="/admin/penalties" className="admin-btn admin-btn-outline admin-btn-sm" style={{ marginLeft: 'auto' }}>
+                        View Infraction Trail &amp; Penalties →
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
             </section>
 
             {/* Conflicts Overview */}
