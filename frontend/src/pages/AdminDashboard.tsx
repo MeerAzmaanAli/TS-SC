@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import SectionPasskeyManager from '../components/SectionPasskeyManager'
 import AcademicShiftManager from '../components/AcademicShiftManager'
+import FacultyAuthManager from '../components/FacultyAuthManager'
 import {
   SparklesIcon,
   RefreshIcon,
@@ -70,7 +71,7 @@ const DAY_NAMES = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 export default function AdminDashboard() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'overview' | 'shifts' | 'access'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'shifts' | 'access' | 'faculty-auth'>('overview')
   const [stats, setStats] = useState<Stats>({
     departments: 0,
     programs: 0,
@@ -373,6 +374,13 @@ export default function AdminDashboard() {
             >
               Access &amp; Passkeys
             </button>
+            <button
+              type="button"
+              className={activeTab === 'faculty-auth' ? 'on' : ''}
+              onClick={() => setActiveTab('faculty-auth')}
+            >
+              Faculty Logins
+            </button>
           </div>
         </div>
 
@@ -442,6 +450,10 @@ export default function AdminDashboard() {
       ) : activeTab === 'shifts' ? (
         <div style={{ marginTop: 8 }}>
           <AcademicShiftManager />
+        </div>
+      ) : activeTab === 'faculty-auth' ? (
+        <div style={{ marginTop: 8 }}>
+          <FacultyAuthManager />
         </div>
       ) : (
         /* Two-Column Responsive Layout */

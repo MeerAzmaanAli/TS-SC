@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo, Fragment } from 'react'
 import { supabase } from '../lib/supabase'
 import { EntityDef, refLabel } from '../lib/entities'
-import { EditIcon, TrashIcon, SearchIcon, BookOpenIcon, LayersIcon } from './Icons'
+import { EditIcon, TrashIcon, SearchIcon, BookOpenIcon, LayersIcon, KeyIcon } from './Icons'
+import FacultyAuthManager from './FacultyAuthManager'
 
 interface Props {
   def: EntityDef
@@ -118,6 +119,7 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
   const [search, setSearch] = useState('')
   const [isGrouped, setIsGrouped] = useState(true)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  const [showFacultyAuthManager, setShowFacultyAuthManager] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -289,6 +291,19 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
         </div>
 
         <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
+          {def.name === 'faculty' && (
+            <button
+              type="button"
+              onClick={() => setShowFacultyAuthManager((v) => !v)}
+              className={`btn btn-sm ${showFacultyAuthManager ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              title="Manage Supabase Login Credentials for Faculty"
+            >
+              <KeyIcon size={14} />
+              <span>{showFacultyAuthManager ? 'Hide Faculty Logins' : 'Manage Faculty Logins'}</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setIsGrouped((v) => !v)}
@@ -317,6 +332,12 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
           </span>
         </div>
       </div>
+
+      {def.name === 'faculty' && showFacultyAuthManager && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <FacultyAuthManager />
+        </div>
+      )}
 
       <div className="table-responsive" style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
         <table className="data-table">

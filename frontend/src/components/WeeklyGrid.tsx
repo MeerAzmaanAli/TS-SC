@@ -72,6 +72,8 @@ export interface WeeklyGridProps {
    * 'time-rows': Rows = Periods / Times, Columns = Days (force mobile transposed layout)
    */
   orientation?: 'responsive' | 'day-rows' | 'time-rows'
+  /** Show Course-Faculty or Course-Section-Classroom breakdown table underneath the grid */
+  showSummaryTable?: boolean
 }
 
 const DAY_NAMES = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -123,6 +125,7 @@ export default function WeeklyGrid({
   onRejectRequest,
   actionBusyId,
   orientation = 'responsive',
+  showSummaryTable = true,
 }: WeeklyGridProps) {
   // Ensure the full standard school week (Monday to Friday, Periods 1 to 8) is shown by default
   const defaultDays = [1, 2, 3, 4, 5]
@@ -714,12 +717,388 @@ export default function WeeklyGrid({
     </div>
   )
 
+  // 3. Render Breakdown / Summary Table underneath the grid
+  const renderBreakdownTable = () => {
+    if (!showSummaryTable || entries.length === 0) return null
+
+    if (viewMode === 'section') {
+      // Group by Course -> Faculty
+      interface CourseFacultyGroup {
+        course_code: string
+        course_name: string
+        is_elective: boolean
+        facultyNames: Set<string>
+        totalSessions: number
+        roomNames: Set<string>
+      }
+
+      const map = new Map<string, CourseFacultyGroup>()
+      for (const e of entries) {
+        const key = `${e.course_code}__${e.course_name}`
+        if (!map.has(key)) {
+          map.set(key, {
+            course_code: e.course_code,
+            course_name: e.course_name,
+            is_elective: e.is_elective,
+            facultyNames: new Set<string>(),
+            totalSessions: 0,
+            roomNames: new Set<string>(),
+          })
+        }
+        const item = map.get(key)!
+        item.totalSessions += 1
+        if (e.faculty_name && e.faculty_name !== '—') item.facultyNames.add(e.faculty_name)
+        if (e.room_name && e.room_name !== '—') item.roomNames.add(e.room_name)
+      }
+
+      const items = Array.from(map.values()).sort((a, b) => a.course_code.localeCompare(b.course_code))
+
+      return (
+        <div
+          style={{
+            marginTop: '1.75rem',
+            background: '#ffffff',
+            borderRadius: '10px',
+            border: '1px solid #e2e8f0',
+            overflow: 'hidden',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}
+        >
+          <div
+            style={{
+              padding: '0.85rem 1.25rem',
+              background: '#f8fafc',
+              borderBottom: '1px solid #e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.75rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <BookOpenIcon size={16} style={{ color: '#2563eb' }} />
+              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b' }}>
+                Course &amp; Faculty Roster
+              </span>
+            </div>
+            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+              {items.length} Course{items.length === 1 ? '' : 's'} assigned to this section
+            </span>
+          </div>
+
+          <div className="table-responsive">
+            <table className="table" style={{ width: '100%', fontSize: '0.875rem', margin: 0 }}>
+              <thead>
+                <tr style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
+                  <th style={{ padding: '0.65rem 1.25rem', width: '140px', color: '#475569', fontWeight: 600 }}>Course Code</th>
+                  <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Course Name</th>
+                  <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Faculty Name</th>
+                  <th style={{ padding: '0.65rem 1rem', width: '130px', textAlign: 'center', color: '#475569', fontWeight: 600 }}>Sessions/Week</th>
+                  <th style={{ padding: '0.65rem 1.25rem', width: '140px', textAlign: 'right', color: '#475569', fontWeight: 600 }}>Classroom / Lab</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((it, idx) => {
+                  const facList = Array.from(it.facultyNames)
+                  const roomList = Array.from(it.roomNames)
+                  return (
+                    <tr
+                      key={it.course_code + idx}
+                      style={{
+                        borderBottom: '1px solid #f1f5f9',
+                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fcfdfe',
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      <td style={{ padding: '0.65rem 1.25rem' }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            background: '#eff6ff',
+                            color: '#1d4ed8',
+                            borderRadius: '4px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          {it.course_code}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: '#1e293b' }}>
+                        {it.course_name}
+                        {it.is_elective && (
+                          <span
+                            style={{
+                              marginLeft: '0.5rem',
+                              fontSize: '0.7rem',
+                              padding: '2px 6px',
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                            }}
+                          >
+                            Elective
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.65rem 1rem' }}>
+                        {facList.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            {facList.map((fName, fIdx) => (
+                              <span key={fIdx} style={{ color: '#0f172a', fontWeight: 500 }}>
+                                {fName}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ color: '#94a3b8' }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            background: '#f1f5f9',
+                            color: '#334155',
+                            borderRadius: '12px',
+                            fontWeight: 600,
+                            fontSize: '0.78rem',
+                          }}
+                        >
+                          {it.totalSessions} hrs/wk
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.65rem 1.25rem', textAlign: 'right', color: '#475569', fontSize: '0.825rem' }}>
+                        {roomList.length > 0 ? roomList.join(', ') : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )
+    }
+
+    // viewMode === 'faculty': Group by Course, Section, Classroom
+    interface FacultyCourseGroup {
+      course_code: string
+      course_name: string
+      is_elective: boolean
+      sectionNames: Set<string>
+      roomNames: Set<string>
+      totalSessions: number
+    }
+
+    const facMap = new Map<string, FacultyCourseGroup>()
+    for (const e of entries) {
+      const key = `${e.course_code}__${e.course_name}`
+      if (!facMap.has(key)) {
+        facMap.set(key, {
+          course_code: e.course_code,
+          course_name: e.course_name,
+          is_elective: e.is_elective,
+          sectionNames: new Set<string>(),
+          roomNames: new Set<string>(),
+          totalSessions: 0,
+        })
+      }
+      const item = facMap.get(key)!
+      item.totalSessions += 1
+      if (e.section_name && e.section_name !== '—') item.sectionNames.add(e.section_name)
+      if (e.room_name && e.room_name !== '—') item.roomNames.add(e.room_name)
+    }
+
+    const facItems = Array.from(facMap.values()).sort((a, b) => a.course_code.localeCompare(b.course_code))
+
+    return (
+      <div
+        style={{
+          marginTop: '1.75rem',
+          background: '#ffffff',
+          borderRadius: '10px',
+          border: '1px solid #e2e8f0',
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        }}
+      >
+        <div
+          style={{
+            padding: '0.85rem 1.25rem',
+            background: '#f8fafc',
+            borderBottom: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BookOpenIcon size={16} style={{ color: '#059669' }} />
+            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b' }}>
+              Assigned Courses, Sections &amp; Classrooms
+            </span>
+          </div>
+          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+            {facItems.length} Teaching Assignment{facItems.length === 1 ? '' : 's'}
+          </span>
+        </div>
+
+        <div className="table-responsive">
+          <table className="table" style={{ width: '100%', fontSize: '0.875rem', margin: 0 }}>
+            <thead>
+              <tr style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
+                <th style={{ padding: '0.65rem 1.25rem', width: '140px', color: '#475569', fontWeight: 600 }}>Course Code</th>
+                <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Course Name</th>
+                <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Assigned Section(s)</th>
+                <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Classroom / Lab</th>
+                <th style={{ padding: '0.65rem 1.25rem', width: '130px', textAlign: 'right', color: '#475569', fontWeight: 600 }}>Total Load</th>
+              </tr>
+            </thead>
+            <tbody>
+              {facItems.map((it, idx) => {
+                const secList = Array.from(it.sectionNames)
+                const roomList = Array.from(it.roomNames)
+                return (
+                  <tr
+                    key={it.course_code + idx}
+                    style={{
+                      borderBottom: '1px solid #f1f5f9',
+                      backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fcfdfe',
+                      verticalAlign: 'middle',
+                    }}
+                  >
+                    <td style={{ padding: '0.65rem 1.25rem' }}>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '2px 8px',
+                          background: '#ecfdf5',
+                          color: '#047857',
+                          borderRadius: '4px',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          fontFamily: 'monospace',
+                        }}
+                      >
+                        {it.course_code}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: '#1e293b' }}>
+                      {it.course_name}
+                      {it.is_elective && (
+                        <span
+                          style={{
+                            marginLeft: '0.5rem',
+                            fontSize: '0.7rem',
+                            padding: '2px 6px',
+                            background: '#fef3c7',
+                            color: '#92400e',
+                            borderRadius: '4px',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Elective
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.65rem 1rem' }}>
+                      {secList.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {secList.map((sec, sIdx) => (
+                            <span
+                              key={sIdx}
+                              style={{
+                                display: 'inline-block',
+                                padding: '1px 6px',
+                                background: '#f1f5f9',
+                                color: '#334155',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {sec}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: '#94a3b8' }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.65rem 1rem', color: '#334155', fontWeight: 500 }}>
+                      {roomList.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {roomList.map((r, rIdx) => (
+                            <span
+                              key={rIdx}
+                              style={{
+                                display: 'inline-block',
+                                padding: '1px 6px',
+                                background: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                color: '#1e293b',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: '#94a3b8' }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.65rem 1.25rem', textAlign: 'right' }}>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '2px 8px',
+                          background: '#f1f5f9',
+                          color: '#334155',
+                          borderRadius: '12px',
+                          fontWeight: 600,
+                          fontSize: '0.78rem',
+                        }}
+                      >
+                        {it.totalSessions} hrs/wk
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
   if (orientation === 'day-rows') {
-    return renderDayRowsTable()
+    return (
+      <>
+        {renderDayRowsTable()}
+        {renderBreakdownTable()}
+      </>
+    )
   }
 
   if (orientation === 'time-rows') {
-    return renderTimeRowsTable()
+    return (
+      <>
+        {renderTimeRowsTable()}
+        {renderBreakdownTable()}
+      </>
+    )
   }
 
   // Responsive mode: Day/Time on Desktop, Time/Day on Mobile
@@ -731,6 +1110,7 @@ export default function WeeklyGrid({
       <div className="timetable-responsive-mobile">
         {renderTimeRowsTable('mob-')}
       </div>
+      {renderBreakdownTable()}
     </>
   )
 }
