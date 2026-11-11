@@ -100,11 +100,11 @@ export default function InspectPage() {
           style={{
             marginTop: 4,
             padding: 12,
-            background: '#FFF1F2',
-            border: '1px solid #FECDD3',
+            background: '#FEF2F2',
+            border: '1px solid #FECACA',
             borderRadius: 8,
             fontSize: 13,
-            color: '#9F1239',
+            color: '#991B1B',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -120,11 +120,11 @@ export default function InspectPage() {
           style={{
             marginTop: 4,
             padding: 12,
-            background: '#E3F3DE',
-            border: '1px solid #B8E3B0',
+            background: '#ECFDF5',
+            border: '1px solid #A7F3D0',
             borderRadius: 8,
             fontSize: 13,
-            color: '#0B5446',
+            color: '#065F46',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -147,7 +147,7 @@ export default function InspectPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <h2>
                         {selected.status === 'published' ? 'Official Published Timetable' : 'Draft Schedule'}{' '}
-                        <span style={{ fontSize: 14, fontWeight: 500, color: '#64748b' }}>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#78716C' }}>
                           ({new Date(selected.created_at).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
@@ -179,7 +179,7 @@ export default function InspectPage() {
                         type="button"
                         disabled={busy}
                         onClick={() => setStatus(selected, 'published')}
-                        className="admin-btn admin-btn-sm"
+                        className="admin-btn admin-btn-primary admin-btn-sm"
                       >
                         <CheckCircleIcon size={14} />
                         <span>{busy ? 'Publishing…' : 'Publish schedule'}</span>
@@ -240,18 +240,25 @@ export default function InspectPage() {
                         key={id}
                         style={{
                           padding: '8px 12px',
-                          background: '#F7F7F8',
+                          background: '#F5F5F0',
                           borderRadius: 8,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          boxShadow: '0 0 0 1px #E3E4E8',
+                          boxShadow: '0 0 0 1px #E7E5E4',
                         }}
                       >
-                        <span className="admin-m" style={{ color: '#1B1D22', fontWeight: 600 }}>
+                        <span className="admin-m" style={{ color: '#1C1917', fontWeight: 600 }}>
                           {facultyMap[id] || (id.length > 12 ? `Faculty #${id.slice(0, 6)}` : id)}
                         </span>
-                        <span className="admin-tag assigned" style={{ fontWeight: 600 }}>
+                        <span
+                          className="admin-tag"
+                          style={{
+                            background: '#292524',
+                            color: '#FFB900',
+                            fontWeight: 600,
+                          }}
+                        >
                           {load} p/wk
                         </span>
                       </div>
@@ -294,8 +301,8 @@ export default function InspectPage() {
                       padding: 12,
                       borderRadius: 8,
                       cursor: 'pointer',
-                      background: isSelected ? '#FFFFFF' : '#F7F7F8',
-                      boxShadow: isSelected ? '0 0 0 2px #1B1D22' : '0 0 0 1px #E3E4E8',
+                      background: isSelected ? '#FFFBEB' : '#FAFAF9',
+                      boxShadow: isSelected ? '0 0 0 2px #FFB900' : '0 0 0 1px #E7E5E4',
                       transition: 'all 0.15s ease',
                     }}
                   >
@@ -312,7 +319,7 @@ export default function InspectPage() {
                       </span>
                     </div>
 
-                    <b style={{ display: 'block', marginTop: 6, fontSize: 13, color: '#1B1D22' }}>
+                    <b style={{ display: 'block', marginTop: 6, fontSize: 13, color: '#1C1917' }}>
                       {ver.status === 'published' ? 'Official Published Timetable' : `Timetable Draft #${versions.length - versions.indexOf(ver)}`}
                     </b>
 
@@ -328,7 +335,7 @@ export default function InspectPage() {
               })}
 
               {versions.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '24px 0', color: '#555B66', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: '24px 0', color: '#57534E', fontSize: 13 }}>
                   No timetable versions generated yet.
                 </div>
               )}

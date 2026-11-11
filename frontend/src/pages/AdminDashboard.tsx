@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ENTITIES } from '../lib/entities'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../lib/auth'
+import AdminHeader, { type AdminDashboardTab } from '../components/AdminHeader'
 import SectionPasskeyManager from '../components/SectionPasskeyManager'
 import AcademicShiftManager from '../components/AcademicShiftManager'
 import FacultyAuthManager from '../components/FacultyAuthManager'
 import { sweepAllExpiredRequests, isSubstitutionDayPast } from '../lib/substitution'
 import {
-  SparklesIcon,
-  RefreshIcon,
   InboxIcon,
   TrashIcon,
-  LogOutIcon,
   UsersIcon,
   CheckCircleIcon,
   XIcon,
@@ -70,10 +67,20 @@ interface VersionSummary {
 
 const DAY_NAMES = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
+const VALID_TABS: AdminDashboardTab[] = ['overview', 'shifts', 'access', 'faculty-auth']
+
 export default function AdminDashboard() {
-  const { signOut } = useAuth()
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'overview' | 'shifts' | 'access' | 'faculty-auth'>('overview')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const rawTab = searchParams.get('tab') as AdminDashboardTab | null
+  const activeTab: AdminDashboardTab = rawTab && VALID_TABS.includes(rawTab) ? rawTab : 'overview'
+
+  function handleTabChange(tab: AdminDashboardTab) {
+    if (tab === 'overview') {
+      setSearchParams({})
+    } else {
+      setSearchParams({ tab })
+    }
+  }
   const [stats, setStats] = useState<Stats>({
     departments: 0,
     programs: 0,
@@ -330,11 +337,6 @@ export default function AdminDashboard() {
     loadFacultyList()
   }, [])
 
-  async function handleSignOut() {
-    await signOut()
-    navigate('/login')
-  }
-
   const targetViolations = (activeVersion?.violations || latestDraft?.violations || {}) as any
   const facultyClashes = Array.isArray(targetViolations?.faculty_clashes) ? targetViolations.faculty_clashes.length : 0
   const roomClashes = Array.isArray(targetViolations?.room_clashes) ? targetViolations.room_clashes.length : 0
@@ -345,95 +347,26 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-cal-wrapper">
-      {/* Top Navigation & Fast Actions Bar */}
-      <div className="admin-cal-topbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div className="admin-cal-brand">
-            <div className="admin-cal-logo" title="Timetable Scheduler & Smart Classroom">
-              TS
-            </div>
-            <div className="admin-role-badge">
-              <span className="admin-role-dot"></span>
-              <span>Admin</span>
-            </div>
-          </div>
-
-          <div className="admin-cal-nav">
-            <button
-              type="button"
-              className={activeTab === 'overview' ? 'on' : ''}
-              onClick={() => setActiveTab('overview')}
-            >
-              Overview
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'shifts' ? 'on' : ''}
-              onClick={() => setActiveTab('shifts')}
-            >
-              Shifts &amp; Timings
-            </button>
-            <Link to="/admin/timetable">Timetables</Link>
-            <Link to="/admin/generate">Generator</Link>
-            <Link to="/admin/versions">Conflicts</Link>
-            <Link to="/admin/penalties">Substitutions</Link>
-            <Link to="/admin/data">Data</Link>
-            <button
-              type="button"
-              className={activeTab === 'access' ? 'on' : ''}
-              onClick={() => setActiveTab('access')}
-            >
-              Access &amp; Passkeys
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'faculty-auth' ? 'on' : ''}
-              onClick={() => setActiveTab('faculty-auth')}
-            >
-              Faculty Logins
-            </button>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="admin-btn admin-btn-outline"
-            onClick={() => {
-              loadStats()
-              loadVersions()
-              loadSubstitutions()
-            }}
-            title="Refresh dashboard data"
-          >
-            <RefreshIcon size={15} />
-            <span>Refresh</span>
-          </button>
-          <Link to="/admin/generate" className="admin-btn">
-            <SparklesIcon size={16} />
-            <span>Generate timetable</span>
-          </Link>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="admin-btn admin-btn-outline"
-            title="Sign out of Admin Dashboard"
-          >
-            <LogOutIcon size={15} />
-            <span>Sign out</span>
-          </button>
-        </div>
-      </div>
+      {/* Shared Admin Top Navigation Bar */}
+      <AdminHeader
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        onRefresh={() => {
+          loadStats()
+          loadVersions()
+          loadSubstitutions()
+        }}
+      />
 
       {assignSuccessNotice && (
         <div
           style={{
             padding: 12,
-            background: '#E3F3DE',
-            border: '1px solid #B8E3B0',
+            background: '#ECFDF5',
+            border: '1px solid #A7F3D0',
             borderRadius: 8,
             fontSize: 13,
-            color: '#0B5446',
+            color: '#065F46',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -447,7 +380,7 @@ export default function AdminDashboard() {
           <button
             type="button"
             onClick={() => setAssignSuccessNotice(null)}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#0B5446' }}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#065F46' }}
           >
             <XIcon size={14} />
           </button>
@@ -501,7 +434,7 @@ export default function AdminDashboard() {
               </div>
 
               {subsLoading ? (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: '#555B66' }}>
+                <div style={{ padding: '24px 0', textAlign: 'center', color: '#57534E' }}>
                   Loading live substitution requests...
                 </div>
               ) : (() => {
@@ -513,7 +446,7 @@ export default function AdminDashboard() {
 
                 if (filteredSubs.length === 0) {
                   return (
-                    <div style={{ padding: '24px 0', textAlign: 'center', color: '#555B66' }}>
+                    <div style={{ padding: '24px 0', textAlign: 'center', color: '#57534E' }}>
                       <InboxIcon size={28} style={{ opacity: 0.35, margin: '0 auto 8px' }} />
                       <div style={{ fontWeight: 500 }}>
                         {subFilter === 'active'
@@ -553,7 +486,7 @@ export default function AdminDashboard() {
                           <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                               <div>
-                                <b style={{ color: '#1B1D22', fontSize: 14 }}>{sub.requester_name}</b>{' '}
+                                <b style={{ color: '#1C1917', fontSize: 14 }}>{sub.requester_name}</b>{' '}
                                 {sub.reason && <span className="admin-mu">· {sub.reason}</span>}
                               </div>
                               <span
@@ -591,11 +524,8 @@ export default function AdminDashboard() {
                                     setSelectedFacultyId(sub.candidates[0]?.faculty_id ?? '')
                                     setAssignError(null)
                                   }}
-                                  className="admin-btn admin-btn-sm"
+                                  className={`admin-btn admin-btn-sm ${isAssigned ? 'admin-btn-outline' : 'admin-btn-primary'}`}
                                   style={{
-                                    background: isAssigned ? '#ffffff' : '#4F46E5',
-                                    color: isAssigned ? '#1B1D22' : '#ffffff',
-                                    border: isAssigned ? '1px solid #D0D3D9' : 'none',
                                     fontSize: 12,
                                     height: 28,
                                     padding: '0 10px',
@@ -726,7 +656,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="admin-version-card" style={{ background: '#F2F2F4' }}>
+                <div className="admin-version-card" style={{ background: '#F5F5F0', border: '1px solid #E7E5E4' }}>
                   <div className="admin-mu">Active timetable</div>
                   <b>No published version</b>
                   <div className="admin-mu admin-m" style={{ marginTop: 4 }}>
@@ -748,7 +678,7 @@ export default function AdminDashboard() {
               )}
 
               <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                <Link to="/admin/generate" className="admin-btn" style={{ flex: 1 }}>
+                <Link to="/admin/generate" className="admin-btn admin-btn-primary" style={{ flex: 1 }}>
                   Generate
                 </Link>
                 {latestDraft && (
@@ -816,13 +746,13 @@ export default function AdminDashboard() {
 
               <button
                 type="button"
-                onClick={() => setActiveTab('access')}
+                onClick={() => handleTabChange('access')}
                 style={{
                   display: 'block',
                   width: '100%',
                   textAlign: 'left',
                   marginTop: 14,
-                  color: '#1B1D22',
+                  color: '#1C1917',
                   fontWeight: 500,
                   fontSize: 13,
                   background: 'transparent',
@@ -852,15 +782,15 @@ export default function AdminDashboard() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 marginBottom: 16,
-                borderBottom: '1px solid #E3E4E8',
+                borderBottom: '1px solid #E7E5E4',
                 paddingBottom: 10,
               }}
             >
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1B1D22', margin: 0 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1C1917', margin: 0 }}>
                   Admin Force Assign Teacher
                 </h3>
-                <div style={{ fontSize: 12, color: '#555B66', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: '#57534E', marginTop: 2 }}>
                   {assignModalReq.course_code} · {assignModalReq.section_name} ({DAY_NAMES[assignModalReq.day_of_week]} Period {assignModalReq.period})
                 </div>
               </div>
@@ -879,26 +809,26 @@ export default function AdminDashboard() {
             <div
               style={{
                 padding: '12px 14px',
-                background: '#F7F7F8',
+                background: '#F5F5F0',
                 borderRadius: 8,
                 marginBottom: 16,
                 fontSize: 13,
-                border: '1px solid #E3E4E8',
+                border: '1px solid #E7E5E4',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ color: '#555B66' }}>Requested by:</span>
-                <strong style={{ color: '#1B1D22' }}>{assignModalReq.requester_name}</strong>
+                <span style={{ color: '#57534E' }}>Requested by:</span>
+                <strong style={{ color: '#1C1917' }}>{assignModalReq.requester_name}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ color: '#555B66' }}>Time slot:</span>
+                <span style={{ color: '#57534E' }}>Time slot:</span>
                 <span>
                   {assignModalReq.starts_at}–{assignModalReq.ends_at}
                 </span>
               </div>
               {assignModalReq.assigned_name && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#555B66' }}>Current substitute:</span>
+                  <span style={{ color: '#57534E' }}>Current substitute:</span>
                   <span className="admin-tag assigned">{assignModalReq.assigned_name}</span>
                 </div>
               )}
@@ -908,11 +838,11 @@ export default function AdminDashboard() {
               <div
                 style={{
                   padding: 10,
-                  background: '#FFF1F2',
-                  border: '1px solid #FECDD3',
+                  background: '#FEF2F2',
+                  border: '1px solid #FECACA',
                   borderRadius: 6,
                   fontSize: 12,
-                  color: '#9F1239',
+                  color: '#991B1B',
                   marginBottom: 14,
                 }}
               >
@@ -941,8 +871,8 @@ export default function AdminDashboard() {
                             padding: '8px 12px',
                             borderRadius: 6,
                             cursor: 'pointer',
-                            border: isSelected ? '2px solid #4F46E5' : '1px solid #E3E4E8',
-                            background: isSelected ? '#EEF2FF' : '#ffffff',
+                            border: isSelected ? '2px solid #FFB900' : '1px solid #E7E5E4',
+                            background: isSelected ? '#FFFBEB' : '#ffffff',
                             transition: 'all 0.15s ease',
                           }}
                         >
@@ -953,7 +883,7 @@ export default function AdminDashboard() {
                               checked={isSelected}
                               onChange={() => setSelectedFacultyId(c.faculty_id)}
                             />
-                            <span style={{ fontWeight: isSelected ? 600 : 500, fontSize: 13, color: '#1B1D22' }}>
+                            <span style={{ fontWeight: isSelected ? 600 : 500, fontSize: 13, color: '#1C1917' }}>
                               {c.faculty_name}
                             </span>
                           </div>
@@ -996,7 +926,7 @@ export default function AdminDashboard() {
                       )
                     })}
                 </select>
-                <div style={{ fontSize: 11, color: '#68707D', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: '#78716C', marginTop: 4 }}>
                   Admin override allows assigning any qualified or available faculty member directly.
                 </div>
               </div>
@@ -1006,7 +936,7 @@ export default function AdminDashboard() {
                   display: 'flex',
                   justifyContent: 'flex-end',
                   gap: 10,
-                  borderTop: '1px solid #E3E4E8',
+                  borderTop: '1px solid #E7E5E4',
                   paddingTop: 14,
                 }}
               >
@@ -1022,7 +952,7 @@ export default function AdminDashboard() {
                   type="submit"
                   disabled={assigningBusy || !selectedFacultyId}
                   className="admin-btn admin-btn-primary"
-                  style={{ background: '#4F46E5', color: '#ffffff' }}
+                  style={{ background: '#FFB900', color: '#1C1917' }}
                 >
                   <UsersIcon size={14} />
                   <span>{assigningBusy ? 'Assigning…' : 'Confirm Assignment'}</span>

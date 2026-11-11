@@ -119,8 +119,8 @@ export default function Login() {
               width: 52,
               height: 52,
               borderRadius: '12px',
-              background: mode === 'admin' ? '#0f172a' : 'var(--primary-600, #2563eb)',
-              color: '#ffffff',
+              background: mode === 'admin' ? '#292524' : '#FFB900',
+              color: mode === 'admin' ? '#FFB900' : '#1C1917',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -144,7 +144,7 @@ export default function Login() {
           <div
             style={{
               display: 'flex',
-              background: '#f1f5f9',
+              background: '#F5F5F0',
               padding: '4px',
               borderRadius: '10px',
               marginBottom: '1.5rem',
@@ -171,8 +171,8 @@ export default function Login() {
                 gap: '0.4rem',
                 transition: 'all 0.15s ease',
                 background: mode === 'student' ? '#ffffff' : 'transparent',
-                color: mode === 'student' ? 'var(--primary-700, #1d4ed8)' : '#64748b',
-                boxShadow: mode === 'student' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+                color: mode === 'student' ? 'var(--primary-600)' : '#78716C',
+                boxShadow: mode === 'student' ? '0 2px 4px rgba(28,25,23,0.06)' : 'none',
               }}
             >
               <KeyIcon size={15} />
@@ -199,8 +199,8 @@ export default function Login() {
                 gap: '0.4rem',
                 transition: 'all 0.15s ease',
                 background: mode === 'faculty' ? '#ffffff' : 'transparent',
-                color: mode === 'faculty' ? 'var(--primary-700, #1d4ed8)' : '#64748b',
-                boxShadow: mode === 'faculty' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+                color: mode === 'faculty' ? 'var(--primary-600)' : '#78716C',
+                boxShadow: mode === 'faculty' ? '0 2px 4px rgba(28,25,23,0.06)' : 'none',
               }}
             >
               <UsersIcon size={15} />
@@ -223,7 +223,7 @@ export default function Login() {
         {mode === 'student' && (
           <form onSubmit={handleStudentAccess} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
             <div>
-              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#44403C' }}>
                 Section Code
               </label>
               <input
@@ -242,7 +242,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#44403C' }}>
                 Section Passkey
               </label>
               <input
@@ -283,7 +283,7 @@ export default function Login() {
         {mode === 'faculty' && (
           <form onSubmit={handleUserAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
             <div>
-              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#44403C' }}>
                 Faculty Email Address
               </label>
               <input
@@ -299,7 +299,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+              <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#44403C' }}>
                 Password
               </label>
               <input
@@ -331,12 +331,12 @@ export default function Login() {
           <div>
             <div
               style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                background: '#FAFAF9',
+                border: '1px solid #E7E5E4',
                 borderRadius: '8px',
                 padding: '0.6rem 0.85rem',
                 fontSize: '0.78rem',
-                color: '#475569',
+                color: '#57534E',
                 marginBottom: '1rem',
                 lineHeight: 1.4,
               }}
@@ -410,11 +410,11 @@ export default function Login() {
             style={{
               marginTop: '1.75rem',
               paddingTop: '1rem',
-              borderTop: '1px solid var(--border-light, #f1f5f9)',
+              borderTop: '1px solid var(--border-light, #F5F5F0)',
               textAlign: 'center',
             }}
           >
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+            <span style={{ fontSize: '0.75rem', color: '#A8A29E' }}>
               Institutional staff?{' '}
               <button
                 type="button"
@@ -429,7 +429,7 @@ export default function Login() {
                   border: 'none',
                   padding: 0,
                   fontSize: '0.75rem',
-                  color: '#64748b',
+                  color: '#78716C',
                   textDecoration: 'underline',
                   cursor: 'pointer',
                 }}

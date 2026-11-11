@@ -69,11 +69,11 @@ export default function PenaltiesPage() {
           style={{
             marginTop: 4,
             padding: 12,
-            background: '#FFF1F2',
-            border: '1px solid #FECDD3',
+            background: '#FEF2F2',
+            border: '1px solid #FECACA',
             borderRadius: 8,
             fontSize: 13,
-            color: '#9F1239',
+            color: '#991B1B',
           }}
         >
           <b>Error loading penalties:</b> {error}
@@ -95,7 +95,7 @@ export default function PenaltiesPage() {
                 className={`admin-conflict-box ${count >= 3 ? 'highlight' : ''}`}
               >
                 <b>{count}</b>
-                <span style={{ fontWeight: 600, color: '#1B1D22', fontSize: 14 }}>{name}</span>
+                <span style={{ fontWeight: 600, color: '#1C1917', fontSize: 14 }}>{name}</span>
                 <span style={{ fontSize: 12, marginTop: 4 }}>
                   {count >= 3 ? 'Flagged for departmental review' : 'Minor refusal infraction'}
                 </span>
@@ -103,7 +103,7 @@ export default function PenaltiesPage() {
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '24px 0', color: '#555B66', fontSize: 13 }}>
+          <div style={{ textAlign: 'center', padding: '24px 0', color: '#57534E', fontSize: 13 }}>
             {loading ? 'Analyzing penalty records…' : 'No penalties recorded yet. High faculty responsiveness!'}
           </div>
         )}
@@ -119,7 +119,7 @@ export default function PenaltiesPage() {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #E3E4E8', color: '#555B66' }}>
+              <tr style={{ borderBottom: '1px solid #E7E5E4', color: '#57534E' }}>
                 <th style={{ padding: '10px 12px', fontWeight: 600 }}>Timestamp</th>
                 <th style={{ padding: '10px 12px', fontWeight: 600 }}>Faculty Member</th>
                 <th style={{ padding: '10px 12px', fontWeight: 600 }}>Course</th>
@@ -128,12 +128,12 @@ export default function PenaltiesPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} style={{ borderBottom: '1px solid #F0F1F3' }}>
+                <tr key={r.id} style={{ borderBottom: '1px solid #EDEBE9' }}>
                   <td style={{ padding: '12px', whiteSpace: 'nowrap' }} className="admin-m admin-mu">
                     <ClockIcon size={13} style={{ marginRight: 4, display: 'inline' }} />
                     {new Date(r.created_at).toLocaleString()}
                   </td>
-                  <td style={{ padding: '12px', fontWeight: 600, color: '#1B1D22' }}>
+                  <td style={{ padding: '12px', fontWeight: 600, color: '#1C1917' }}>
                     {r.faculty_name}
                   </td>
                   <td style={{ padding: '12px' }}>
@@ -149,7 +149,7 @@ export default function PenaltiesPage() {
 
               {rows.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', padding: '36px 12px', color: '#555B66' }}>
+                  <td colSpan={4} style={{ textAlign: 'center', padding: '36px 12px', color: '#57534E' }}>
                     No individual penalty incidents logged.
                   </td>
                 </tr>

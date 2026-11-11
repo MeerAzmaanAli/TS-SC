@@ -270,10 +270,15 @@ export default function WeeklyGrid({
                       )}
                       {e.batch != null && (
                         <span
-                          className={`badge ${
-                            e.batch === 1 ? 'badge-primary' : e.batch === 2 ? 'badge-info' : 'badge-purple'
-                          }`}
-                          style={{ fontSize: '0.625rem', padding: '0.1rem 0.4rem', fontWeight: 700 }}
+                          className="badge"
+                          style={{
+                            fontSize: '0.625rem',
+                            padding: '0.1rem 0.4rem',
+                            fontWeight: 700,
+                            background: e.batch === 1 ? '#292524' : '#F5F5F0',
+                            color: e.batch === 1 ? '#FAFAF9' : '#1C1917',
+                            border: '1px solid #D6D3D1',
+                          }}
                           title={`Lab Batch ${e.batch}`}
                         >
                           B{e.batch}
@@ -281,8 +286,14 @@ export default function WeeklyGrid({
                       )}
                       {e.is_elective && (
                         <span
-                          className="badge badge-purple"
-                          style={{ fontSize: '0.625rem', padding: '0.1rem 0.35rem' }}
+                          className="badge"
+                          style={{
+                            fontSize: '0.625rem',
+                            padding: '0.1rem 0.35rem',
+                            background: '#F5F5F0',
+                            color: '#1C1917',
+                            border: '1px solid #D6D3D1',
+                          }}
                         >
                           Elective
                         </span>
@@ -322,7 +333,7 @@ export default function WeeklyGrid({
                               <span
                                 style={{
                                   fontSize: '0.65rem',
-                                  color: '#64748b',
+                                  color: '#78716C',
                                   textDecoration: 'line-through',
                                   paddingLeft: '0.2rem',
                                 }}
@@ -372,7 +383,7 @@ export default function WeeklyGrid({
                               </span>
                             )}
                             {e.faculty_name && (
-                              <span style={{ fontSize: '0.65rem', color: '#64748b', paddingLeft: '0.2rem' }}>
+                              <span style={{ fontSize: '0.65rem', color: '#78716C', paddingLeft: '0.2rem' }}>
                                 Orig: {e.faculty_name}
                               </span>
                             )}
@@ -383,9 +394,9 @@ export default function WeeklyGrid({
                               className="meta-chip faculty"
                               style={{
                                 fontWeight: 600,
-                                color: 'var(--primary-700)',
-                                backgroundColor: 'var(--primary-50)',
-                                border: '1px solid var(--primary-200)',
+                                color: '#1C1917',
+                                backgroundColor: '#F5F5F0',
+                                border: '1px solid #D6D3D1',
                               }}
                             >
                               <UsersIcon size={11} />
@@ -530,9 +541,9 @@ export default function WeeklyGrid({
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '5px',
-                        backgroundColor: e.can_request === false ? '#f1f5f9' : e.is_advance ? '#ede9fe' : '#ffffff',
-                        color: e.can_request === false ? '#94a3b8' : e.is_advance ? '#5b21b6' : 'inherit',
-                        border: e.can_request === false ? '1px solid #e2e8f0' : e.is_advance ? '1px solid #c4b5fd' : '1px solid #cbd5e1',
+                        backgroundColor: e.can_request === false ? '#F5F5F0' : e.is_advance ? '#FFFBEB' : '#ffffff',
+                        color: e.can_request === false ? '#A8A29E' : e.is_advance ? '#92400E' : 'inherit',
+                        border: e.can_request === false ? '1px solid #E7E5E4' : e.is_advance ? '1px solid #FDE68A' : '1px solid #D6D3D1',
                         borderRadius: '5px',
                         fontWeight: 600,
                         cursor: e.can_request === false ? 'not-allowed' : 'pointer',
@@ -546,7 +557,7 @@ export default function WeeklyGrid({
                           : 'Dispatch peer substitution request for this session'
                       }
                     >
-                      <UsersIcon size={12} style={{ color: e.can_request === false ? '#94a3b8' : e.is_advance ? '#7c3aed' : 'var(--primary-600)' }} />
+                      <UsersIcon size={12} style={{ color: e.can_request === false ? '#A8A29E' : e.is_advance ? '#92400E' : '#1C1917' }} />
                       <span>{e.is_advance ? 'Advance Sub' : 'Request Sub'}</span>
                     </button>
                   )}
@@ -579,10 +590,10 @@ export default function WeeklyGrid({
                     P{inc.priority}
                   </span>
                 </div>
-                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.8rem' }}>
+                <div style={{ fontWeight: 700, color: '#1C1917', fontSize: '0.8rem' }}>
                   {inc.course_code} · {inc.section_name}
                 </div>
-                <div style={{ color: '#475569', fontSize: '0.72rem' }}>
+                <div style={{ color: '#57534E', fontSize: '0.72rem' }}>
                   From: <strong>{inc.requester_name}</strong> · {inc.room_name}
                 </div>
                 <div style={{ display: 'flex', gap: '5px', marginTop: '3px' }}>
@@ -759,16 +770,16 @@ export default function WeeklyGrid({
             marginTop: '1.75rem',
             background: '#ffffff',
             borderRadius: '10px',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #E7E5E4',
             overflow: 'hidden',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            boxShadow: '0 1px 3px rgba(28,25,23,0.04)',
           }}
         >
           <div
             style={{
               padding: '0.85rem 1.25rem',
-              background: '#f8fafc',
-              borderBottom: '1px solid #e2e8f0',
+              background: '#FAFAF9',
+              borderBottom: '1px solid #E7E5E4',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -777,12 +788,12 @@ export default function WeeklyGrid({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <BookOpenIcon size={16} style={{ color: '#2563eb' }} />
-              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b' }}>
+              <BookOpenIcon size={16} style={{ color: '#92400E' }} />
+              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#292524' }}>
                 Course &amp; Faculty Roster
               </span>
             </div>
-            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+            <span style={{ fontSize: '0.8rem', color: '#78716C' }}>
               {items.length} Course{items.length === 1 ? '' : 's'} assigned to this section
             </span>
           </div>
@@ -790,12 +801,12 @@ export default function WeeklyGrid({
           <div className="table-responsive">
             <table className="table" style={{ width: '100%', fontSize: '0.875rem', margin: 0 }}>
               <thead>
-                <tr style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
-                  <th style={{ padding: '0.65rem 1.25rem', width: '140px', color: '#475569', fontWeight: 600 }}>Course Code</th>
-                  <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Course Name</th>
-                  <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Faculty Name</th>
-                  <th style={{ padding: '0.65rem 1rem', width: '130px', textAlign: 'center', color: '#475569', fontWeight: 600 }}>Sessions/Week</th>
-                  <th style={{ padding: '0.65rem 1.25rem', width: '140px', textAlign: 'right', color: '#475569', fontWeight: 600 }}>Classroom / Lab</th>
+                <tr style={{ background: '#ffffff', borderBottom: '1px solid #E7E5E4', textAlign: 'left' }}>
+                  <th style={{ padding: '0.65rem 1.25rem', width: '140px', color: '#57534E', fontWeight: 600 }}>Course Code</th>
+                  <th style={{ padding: '0.65rem 1rem', color: '#57534E', fontWeight: 600 }}>Course Name</th>
+                  <th style={{ padding: '0.65rem 1rem', color: '#57534E', fontWeight: 600 }}>Faculty Name</th>
+                  <th style={{ padding: '0.65rem 1rem', width: '130px', textAlign: 'center', color: '#57534E', fontWeight: 600 }}>Sessions/Week</th>
+                  <th style={{ padding: '0.65rem 1.25rem', width: '140px', textAlign: 'right', color: '#57534E', fontWeight: 600 }}>Classroom / Lab</th>
                 </tr>
               </thead>
               <tbody>
@@ -806,8 +817,8 @@ export default function WeeklyGrid({
                     <tr
                       key={it.course_code + idx}
                       style={{
-                        borderBottom: '1px solid #f1f5f9',
-                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fcfdfe',
+                        borderBottom: '1px solid #F5F5F0',
+                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#FAFAF9',
                         verticalAlign: 'middle',
                       }}
                     >
@@ -816,8 +827,8 @@ export default function WeeklyGrid({
                           style={{
                             display: 'inline-block',
                             padding: '2px 8px',
-                            background: '#eff6ff',
-                            color: '#1d4ed8',
+                            background: '#FEF3C7',
+                            color: '#1C1917',
                             borderRadius: '4px',
                             fontWeight: 700,
                             fontSize: '0.8rem',
@@ -827,7 +838,7 @@ export default function WeeklyGrid({
                           {it.course_code}
                         </span>
                       </td>
-                      <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: '#1e293b' }}>
+                      <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: '#292524' }}>
                         {it.course_name}
                         {it.is_elective && (
                           <span
@@ -849,13 +860,13 @@ export default function WeeklyGrid({
                         {facList.length > 0 ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             {facList.map((fName, fIdx) => (
-                              <span key={fIdx} style={{ color: '#0f172a', fontWeight: 500 }}>
+                              <span key={fIdx} style={{ color: '#1C1917', fontWeight: 500 }}>
                                 {fName}
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <span style={{ color: '#94a3b8' }}>—</span>
+                          <span style={{ color: '#A8A29E' }}>—</span>
                         )}
                       </td>
                       <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
@@ -863,8 +874,8 @@ export default function WeeklyGrid({
                           style={{
                             display: 'inline-block',
                             padding: '2px 8px',
-                            background: '#f1f5f9',
-                            color: '#334155',
+                            background: '#F5F5F0',
+                            color: '#44403C',
                             borderRadius: '12px',
                             fontWeight: 600,
                             fontSize: '0.78rem',
@@ -873,7 +884,7 @@ export default function WeeklyGrid({
                           {it.totalSessions} hrs/wk
                         </span>
                       </td>
-                      <td style={{ padding: '0.65rem 1.25rem', textAlign: 'right', color: '#475569', fontSize: '0.825rem' }}>
+                      <td style={{ padding: '0.65rem 1.25rem', textAlign: 'right', color: '#57534E', fontSize: '0.825rem' }}>
                         {roomList.length > 0 ? roomList.join(', ') : '—'}
                       </td>
                     </tr>
@@ -923,16 +934,16 @@ export default function WeeklyGrid({
           marginTop: '1.75rem',
           background: '#ffffff',
           borderRadius: '10px',
-          border: '1px solid #e2e8f0',
+          border: '1px solid #E7E5E4',
           overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          boxShadow: '0 1px 3px rgba(28,25,23,0.04)',
         }}
       >
         <div
           style={{
             padding: '0.85rem 1.25rem',
-            background: '#f8fafc',
-            borderBottom: '1px solid #e2e8f0',
+            background: '#FAFAF9',
+            borderBottom: '1px solid #E7E5E4',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -942,11 +953,11 @@ export default function WeeklyGrid({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <BookOpenIcon size={16} style={{ color: '#059669' }} />
-            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b' }}>
+            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#292524' }}>
               Assigned Courses, Sections &amp; Classrooms
             </span>
           </div>
-          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+          <span style={{ fontSize: '0.8rem', color: '#78716C' }}>
             {facItems.length} Teaching Assignment{facItems.length === 1 ? '' : 's'}
           </span>
         </div>
@@ -954,12 +965,12 @@ export default function WeeklyGrid({
         <div className="table-responsive">
           <table className="table" style={{ width: '100%', fontSize: '0.875rem', margin: 0 }}>
             <thead>
-              <tr style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
-                <th style={{ padding: '0.65rem 1.25rem', width: '140px', color: '#475569', fontWeight: 600 }}>Course Code</th>
-                <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Course Name</th>
-                <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Assigned Section(s)</th>
-                <th style={{ padding: '0.65rem 1rem', color: '#475569', fontWeight: 600 }}>Classroom / Lab</th>
-                <th style={{ padding: '0.65rem 1.25rem', width: '130px', textAlign: 'right', color: '#475569', fontWeight: 600 }}>Total Load</th>
+              <tr style={{ background: '#ffffff', borderBottom: '1px solid #E7E5E4', textAlign: 'left' }}>
+                <th style={{ padding: '0.65rem 1.25rem', width: '140px', color: '#57534E', fontWeight: 600 }}>Course Code</th>
+                <th style={{ padding: '0.65rem 1rem', color: '#57534E', fontWeight: 600 }}>Course Name</th>
+                <th style={{ padding: '0.65rem 1rem', color: '#57534E', fontWeight: 600 }}>Assigned Section(s)</th>
+                <th style={{ padding: '0.65rem 1rem', color: '#57534E', fontWeight: 600 }}>Classroom / Lab</th>
+                <th style={{ padding: '0.65rem 1.25rem', width: '130px', textAlign: 'right', color: '#57534E', fontWeight: 600 }}>Total Load</th>
               </tr>
             </thead>
             <tbody>
@@ -970,8 +981,8 @@ export default function WeeklyGrid({
                   <tr
                     key={it.course_code + idx}
                     style={{
-                      borderBottom: '1px solid #f1f5f9',
-                      backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fcfdfe',
+                      borderBottom: '1px solid #F5F5F0',
+                      backgroundColor: idx % 2 === 0 ? '#ffffff' : '#FAFAF9',
                       verticalAlign: 'middle',
                     }}
                   >
@@ -991,7 +1002,7 @@ export default function WeeklyGrid({
                         {it.course_code}
                       </span>
                     </td>
-                    <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: '#1e293b' }}>
+                    <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: '#292524' }}>
                       {it.course_name}
                       {it.is_elective && (
                         <span
@@ -1018,8 +1029,8 @@ export default function WeeklyGrid({
                               style={{
                                 display: 'inline-block',
                                 padding: '1px 6px',
-                                background: '#f1f5f9',
-                                color: '#334155',
+                                background: '#F5F5F0',
+                                color: '#44403C',
                                 borderRadius: '4px',
                                 fontSize: '0.75rem',
                                 fontWeight: 600,
@@ -1030,10 +1041,10 @@ export default function WeeklyGrid({
                           ))}
                         </div>
                       ) : (
-                        <span style={{ color: '#94a3b8' }}>—</span>
+                        <span style={{ color: '#A8A29E' }}>—</span>
                       )}
                     </td>
-                    <td style={{ padding: '0.65rem 1rem', color: '#334155', fontWeight: 500 }}>
+                    <td style={{ padding: '0.65rem 1rem', color: '#44403C', fontWeight: 500 }}>
                       {roomList.length > 0 ? (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {roomList.map((r, rIdx) => (
@@ -1042,9 +1053,9 @@ export default function WeeklyGrid({
                               style={{
                                 display: 'inline-block',
                                 padding: '1px 6px',
-                                background: '#f8fafc',
-                                border: '1px solid #e2e8f0',
-                                color: '#1e293b',
+                                background: '#FAFAF9',
+                                border: '1px solid #E7E5E4',
+                                color: '#292524',
                                 borderRadius: '4px',
                                 fontSize: '0.75rem',
                                 fontWeight: 600,
@@ -1055,7 +1066,7 @@ export default function WeeklyGrid({
                           ))}
                         </div>
                       ) : (
-                        <span style={{ color: '#94a3b8' }}>—</span>
+                        <span style={{ color: '#A8A29E' }}>—</span>
                       )}
                     </td>
                     <td style={{ padding: '0.65rem 1.25rem', textAlign: 'right' }}>
@@ -1063,8 +1074,8 @@ export default function WeeklyGrid({
                         style={{
                           display: 'inline-block',
                           padding: '2px 8px',
-                          background: '#f1f5f9',
-                          color: '#334155',
+                          background: '#F5F5F0',
+                          color: '#44403C',
                           borderRadius: '12px',
                           fontWeight: 600,
                           fontSize: '0.78rem',

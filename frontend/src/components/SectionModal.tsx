@@ -330,7 +330,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
             style={{
               display: 'flex',
               gap: 8,
-              backgroundColor: '#f1f5f9',
+              backgroundColor: '#F5F5F0',
               padding: 4,
               borderRadius: 8,
               marginBottom: '1.25rem',
@@ -446,9 +446,9 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
           <div
             style={{
               fontSize: '0.75rem',
-              color: '#475569',
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              color: '#57534E',
+              backgroundColor: '#FAFAF9',
+              border: '1px solid #E7E5E4',
               padding: '6px 12px',
               borderRadius: 6,
               marginBottom: '1rem',
@@ -654,7 +654,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
                   marginBottom: 6,
                 }}
               >
-                <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: '#334155' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: '#44403C' }}>
                   Generated Sections Plan ({bulkPreview.length} sections)
                 </span>
                 <span className="badge badge-primary">
@@ -664,7 +664,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
 
               <div
                 style={{
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #E7E5E4',
                   borderRadius: 6,
                   overflow: 'hidden',
                   maxHeight: 180,
@@ -672,7 +672,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
                 }}
               >
                 <table style={{ width: '100%', fontSize: '0.8125rem', borderCollapse: 'collapse' }}>
-                  <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>
+                  <thead style={{ backgroundColor: '#FAFAF9', borderBottom: '1px solid #E7E5E4', color: '#57534E' }}>
                     <tr>
                       <th style={{ padding: '6px 10px', textAlign: 'left' }}>Section Name</th>
                       <th style={{ padding: '6px 10px', textAlign: 'left' }}>Code</th>
@@ -683,10 +683,10 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
                   </thead>
                   <tbody>
                     {bulkPreview.map((item, idx) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <tr key={idx} style={{ borderBottom: '1px solid #F5F5F0' }}>
                         <td style={{ padding: '6px 10px', fontWeight: 600 }}>{item.name}</td>
                         <td style={{ padding: '6px 10px', fontFamily: 'monospace' }}>{item.code}</td>
-                        <td style={{ padding: '6px 10px', fontFamily: 'monospace', color: '#4338ca' }}>{item.passkey}</td>
+                        <td style={{ padding: '6px 10px', fontFamily: 'monospace', color: '#1C1917', fontWeight: 600 }}>{item.passkey}</td>
                         <td style={{ padding: '6px 10px', textAlign: 'center' }}>
                           <span className="badge badge-neutral">{item.strength} students</span>
                         </td>
@@ -695,7 +695,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
                     ))}
                     {bulkPreview.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ padding: '16px', textAlign: 'center', color: '#94a3b8' }}>
+                        <td colSpan={5} style={{ padding: '16px', textAlign: 'center', color: '#A8A29E' }}>
                           Enter student count above to calculate sections.
                         </td>
                       </tr>

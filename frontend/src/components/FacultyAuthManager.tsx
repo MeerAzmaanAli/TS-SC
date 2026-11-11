@@ -184,7 +184,7 @@ export default function FacultyAuthManager() {
       >
         <div>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, fontSize: '1.25rem' }}>
-            <ShieldIcon size={22} style={{ color: 'var(--primary, #2563eb)' }} />
+            <ShieldIcon size={22} style={{ color: 'var(--primary-600)' }} />
             Faculty User Authentication Manager
           </h2>
           <p className="text-muted" style={{ margin: '0.25rem 0 0', fontSize: '0.875rem' }}>
@@ -197,11 +197,11 @@ export default function FacultyAuthManager() {
           <div
             style={{
               fontSize: '0.825rem',
-              background: '#F4F5F8',
+              background: '#F5F5F0',
               padding: '6px 12px',
               borderRadius: 6,
               fontWeight: 500,
-              color: '#333741',
+              color: '#44403C',
             }}
           >
             Active Logins: <strong>{activeAuthCount}</strong> / {facultyList.length}
@@ -256,7 +256,7 @@ export default function FacultyAuthManager() {
         <div className="table-responsive">
           <table className="table" style={{ width: '100%', fontSize: '0.875rem' }}>
             <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color, #e2e8f0)' }}>
+              <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                 <th style={{ padding: '0.6rem 0.75rem' }}>Faculty Member</th>
                 <th style={{ padding: '0.6rem 0.75rem' }}>Login Email</th>
                 <th style={{ padding: '0.6rem 0.75rem' }}>Department</th>
@@ -269,7 +269,7 @@ export default function FacultyAuthManager() {
               {filtered.map((f) => (
                 <tr
                   key={f.faculty_id}
-                  style={{ borderBottom: '1px solid var(--border-color, #f1f5f9)', verticalAlign: 'middle' }}
+                  style={{ borderBottom: '1px solid var(--border-subtle)', verticalAlign: 'middle' }}
                 >
                   <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600 }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -278,9 +278,9 @@ export default function FacultyAuthManager() {
                     </span>
                   </td>
                   <td style={{ padding: '0.6rem 0.75rem' }}>
-                    <span style={{ fontFamily: 'monospace', color: '#1E293B' }}>{f.email}</span>
+                    <span style={{ fontFamily: 'monospace', color: '#1C1917' }}>{f.email}</span>
                   </td>
-                  <td style={{ padding: '0.6rem 0.75rem', color: '#475569' }}>
+                  <td style={{ padding: '0.6rem 0.75rem', color: '#57534E' }}>
                     {f.department_name}
                   </td>
                   <td style={{ padding: '0.6rem 0.75rem' }}>
@@ -306,15 +306,15 @@ export default function FacultyAuthManager() {
                           gap: 4,
                           padding: '3px 8px',
                           fontSize: '0.75rem',
-                          background: '#F1F5F9',
-                          color: '#64748B',
+                          background: '#F5F5F0',
+                          color: '#78716C',
                         }}
                       >
                         No Auth Account
                       </span>
                     )}
                   </td>
-                  <td style={{ padding: '0.6rem 0.75rem', color: '#64748B', fontSize: '0.8rem' }}>
+                  <td style={{ padding: '0.6rem 0.75rem', color: '#78716C', fontSize: '0.8rem' }}>
                     {f.last_sign_in_at ? new Date(f.last_sign_in_at).toLocaleDateString() : '—'}
                   </td>
                   <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right' }}>
@@ -376,7 +376,7 @@ export default function FacultyAuthManager() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.1rem' }}>
-                <KeyIcon size={18} style={{ color: '#2563eb' }} />
+                <KeyIcon size={18} style={{ color: 'var(--primary-600)' }} />
                 <span>
                   {selectedFaculty.has_auth ? 'Reset Faculty Auth Password' : 'Create Faculty Login Account'}
                 </span>
@@ -384,20 +384,20 @@ export default function FacultyAuthManager() {
               <button
                 type="button"
                 onClick={closeModal}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#78716C' }}
               >
                 <XIcon size={18} />
               </button>
             </div>
 
-            <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: '#64748B' }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: '#78716C' }}>
               Setting credentials for <strong>{selectedFaculty.name}</strong> ({selectedFaculty.department_name}).
               The faculty member will use this email and password to log in at <code>/login</code>.
             </p>
 
             <form onSubmit={handleProvision}>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: 4, color: '#334155' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: 4, color: '#44403C' }}>
                   Faculty Login Email
                 </label>
                 <input
@@ -412,7 +412,7 @@ export default function FacultyAuthManager() {
 
               <div style={{ marginBottom: 18 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#44403C' }}>
                     Password (min 6 characters)
                   </label>
                   <button
@@ -425,10 +425,11 @@ export default function FacultyAuthManager() {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#2563eb',
+                      color: 'var(--primary-600)',
                       fontSize: '0.75rem',
                       cursor: 'pointer',
                       padding: 0,
+                      fontWeight: 600,
                     }}
                   >
                     Generate Random
@@ -443,7 +444,7 @@ export default function FacultyAuthManager() {
                   className="input"
                   style={{ width: '100%', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontFamily: 'monospace' }}
                 />
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block', marginTop: 4 }}>
+                <span style={{ fontSize: '0.75rem', color: '#78716C', display: 'block', marginTop: 4 }}>
                   This password will be immediately active (no email confirmation needed).
                 </span>
               </div>

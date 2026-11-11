@@ -6,7 +6,7 @@
 
 -- Update check constraint on substitution_requests status to support 'expired' and 'completed'
 alter table public.substitution_requests
-  drop constraint if exists substitution_requests_status_check;
+  drop constraint if exists substitustion_requests_status_check;
 
 alter table public.substitution_requests
   add constraint substitution_requests_status_check

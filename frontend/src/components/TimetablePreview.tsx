@@ -612,9 +612,9 @@ export default function TimetablePreview({
                 borderRadius: '8px',
                 background:
                   currentShift === 1
-                    ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)'
+                    ? 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)'
                     : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                border: currentShift === 1 ? '1.5px solid #bfdbfe' : '1.5px solid #bbf7d0',
+                border: currentShift === 1 ? '1.5px solid #FDE68A' : '1.5px solid #bbf7d0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -631,17 +631,17 @@ export default function TimetablePreview({
                     letterSpacing: '0.5px',
                     padding: '0.35rem 0.75rem',
                     borderRadius: '6px',
-                    backgroundColor: currentShift === 1 ? '#2563eb' : '#16a34a',
-                    color: '#ffffff',
+                    backgroundColor: currentShift === 1 ? '#FFB900' : '#16a34a',
+                    color: currentShift === 1 ? '#1C1917' : '#ffffff',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                   }}
                 >
                   {currentShift === 1 ? 'SHIFT 1 (MORNING)' : 'SHIFT 2 (AFTERNOON)'}
                 </span>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1C1917' }}>
                   {currentShift === 1 ? '08:15 AM – 02:45 PM' : '10:15 AM – 04:45 PM'}
                 </span>
-                <span style={{ fontSize: '0.825rem', color: '#475569', fontWeight: 500 }}>
+                <span style={{ fontSize: '0.825rem', color: '#57534E', fontWeight: 500 }}>
                   • 6 Periods (1 Hour each) • Lunch: 12:15 PM – 12:45 PM
                 </span>
               </div>
@@ -649,11 +649,11 @@ export default function TimetablePreview({
                 style={{
                   fontSize: '0.8rem',
                   fontWeight: 700,
-                  color: currentShift === 1 ? '#1d4ed8' : '#15803d',
+                  color: currentShift === 1 ? '#92400E' : '#15803d',
                   backgroundColor: 'rgba(255,255,255,0.85)',
                   padding: '0.3rem 0.65rem',
                   borderRadius: '6px',
-                  border: currentShift === 1 ? '1px solid #bfdbfe' : '1px solid #bbf7d0',
+                  border: currentShift === 1 ? '1px solid #FDE68A' : '1px solid #bbf7d0',
                 }}
               >
                 {currentShift === 1
@@ -667,8 +667,8 @@ export default function TimetablePreview({
                 marginBottom: '1.25rem',
                 padding: '0.8rem 1.25rem',
                 borderRadius: '8px',
-                background: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
+                background: '#FAFAF9',
+                border: '1.5px solid #E7E5E4',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -680,10 +680,10 @@ export default function TimetablePreview({
                 <span className="badge badge-primary" style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
                   FACULTY COMBINED SCHEDULE
                 </span>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1C1917' }}>
                   08:15 AM – 04:45 PM
                 </span>
-                <span style={{ fontSize: '0.825rem', color: '#475569' }}>
+                <span style={{ fontSize: '0.825rem', color: '#57534E' }}>
                   • Spanning Shifts 1 & 2 • Common Lunch: 12:15 PM – 12:45 PM
                 </span>
               </div>

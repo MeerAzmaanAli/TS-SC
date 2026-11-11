@@ -111,10 +111,10 @@ export default function AcademicShiftManager() {
     <div className="admin-card" style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#1C1917', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>🕒 Academic Year Shift Timings</span>
           </h3>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748B' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#78716C' }}>
             Configure class timing shifts by student year. Scheduling engine will strictly allocate slots inside each year's active shift window.
           </p>
         </div>
@@ -123,8 +123,7 @@ export default function AcademicShiftManager() {
           type="button"
           onClick={handleSave}
           disabled={saving || loading}
-          className="admin-btn admin-btn-sm"
-          style={{ background: '#2563EB', color: '#fff', border: 'none', fontWeight: 600 }}
+          className="admin-btn admin-btn-primary admin-btn-sm"
         >
           {saving ? 'Saving...' : 'Save Shift Assignments'}
         </button>
@@ -145,22 +144,22 @@ export default function AcademicShiftManager() {
 
       {/* Timing Reference Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10, marginTop: 14 }}>
-        <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '10px 14px' }}>
+        <div style={{ background: '#FAFAF9', border: '1px solid #E7E5E4', borderRadius: 8, padding: '10px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 600, fontSize: 13, color: '#0F172A' }}>First Shift (Shift 1)</span>
-            <span style={{ fontSize: 11, background: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>08:15 – 14:45</span>
+            <span style={{ fontWeight: 600, fontSize: 13, color: '#1C1917' }}>First Shift (Shift 1)</span>
+            <span style={{ fontSize: 11, background: '#292524', color: '#FFB900', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>08:15 – 14:45</span>
           </div>
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#78716C', marginTop: 4 }}>
             Periods 1 to 6 • Lunch 12:15 to 12:45 • Default: 1st & 4th Years
           </div>
         </div>
 
-        <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '10px 14px' }}>
+        <div style={{ background: '#FAFAF9', border: '1px solid #E7E5E4', borderRadius: 8, padding: '10px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 600, fontSize: 13, color: '#0F172A' }}>Second Shift (Shift 2)</span>
+            <span style={{ fontWeight: 600, fontSize: 13, color: '#1C1917' }}>Second Shift (Shift 2)</span>
             <span style={{ fontSize: 11, background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>10:15 – 16:45</span>
           </div>
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#78716C', marginTop: 4 }}>
             Periods 3 to 8 • Lunch 12:15 to 12:45 • Default: 2nd & 3rd Years
           </div>
         </div>
@@ -170,7 +169,7 @@ export default function AcademicShiftManager() {
       <div style={{ marginTop: 14, overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
-            <tr style={{ background: '#F1F5F9', textAlign: 'left', color: '#475569', borderBottom: '1px solid #E2E8F0' }}>
+            <tr style={{ background: '#F5F5F0', textAlign: 'left', color: '#57534E', borderBottom: '1px solid #E7E5E4' }}>
               <th style={{ padding: '8px 12px', fontWeight: 600 }}>Academic Year</th>
               <th style={{ padding: '8px 12px', fontWeight: 600 }}>Assigned Shift</th>
               <th style={{ padding: '8px 12px', fontWeight: 600 }}>Operational Timing</th>
@@ -181,8 +180,8 @@ export default function AcademicShiftManager() {
             {shifts.map((s, idx) => {
               const isShift1 = s.shift === 1
               return (
-                <tr key={s.academic_year} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                  <td style={{ padding: '10px 12px', fontWeight: 600, color: '#1E293B' }}>
+                <tr key={s.academic_year} style={{ borderBottom: '1px solid #F5F5F0' }}>
+                  <td style={{ padding: '10px 12px', fontWeight: 600, color: '#1C1917' }}>
                     {yearNames[idx]}
                   </td>
                   <td style={{ padding: '10px 12px' }}>
@@ -192,22 +191,22 @@ export default function AcademicShiftManager() {
                       style={{
                         padding: '6px 10px',
                         borderRadius: 6,
-                        border: '1px solid #CBD5E1',
+                        border: '1px solid #D6D3D1',
                         fontSize: 13,
                         fontWeight: 500,
                         background: '#fff',
                         cursor: 'pointer',
-                        color: isShift1 ? '#1E40AF' : '#92400E',
+                        color: isShift1 ? '#1C1917' : '#92400E',
                       }}
                     >
                       <option value={1}>First Shift (08:15 – 14:45)</option>
                       <option value={2}>Second Shift (10:15 – 16:45)</option>
                     </select>
                   </td>
-                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                  <td style={{ padding: '10px 12px', color: '#57534E' }}>
                     {isShift1 ? '08:15 to 14:45 (Periods 1 to 6)' : '10:15 to 16:45 (Periods 3 to 8)'}
                   </td>
-                  <td style={{ padding: '10px 12px', color: '#64748B' }}>
+                  <td style={{ padding: '10px 12px', color: '#78716C' }}>
                     12:15 to 12:45
                   </td>
                 </tr>

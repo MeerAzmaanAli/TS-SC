@@ -135,7 +135,7 @@ export default function SectionPasskeyManager() {
         <div className="table-responsive">
           <table className="table" style={{ width: '100%', fontSize: '0.9rem' }}>
             <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color, #e2e8f0)' }}>
+              <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                 <th style={{ padding: '0.6rem 0.75rem' }}>Section</th>
                 <th style={{ padding: '0.6rem 0.75rem' }}>Student Section Code</th>
                 <th style={{ padding: '0.6rem 0.75rem' }}>Passkey</th>
@@ -148,7 +148,7 @@ export default function SectionPasskeyManager() {
               {filtered.map((sec) => (
                 <tr
                   key={sec.id}
-                  style={{ borderBottom: '1px solid var(--border-color, #f1f5f9)', verticalAlign: 'middle' }}
+                  style={{ borderBottom: '1px solid var(--border-subtle)', verticalAlign: 'middle' }}
                 >
                   <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600 }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -159,8 +159,8 @@ export default function SectionPasskeyManager() {
                   <td style={{ padding: '0.6rem 0.75rem' }}>
                     <code
                       style={{
-                        background: 'var(--code-bg, #eff6ff)',
-                        color: 'var(--primary, #1d4ed8)',
+                        background: 'var(--primary-50)',
+                        color: 'var(--primary-700)',
                         padding: '0.2rem 0.45rem',
                         borderRadius: '4px',
                         fontWeight: 600,
@@ -173,11 +173,11 @@ export default function SectionPasskeyManager() {
                   <td style={{ padding: '0.6rem 0.75rem' }}>
                     <code
                       style={{
-                        background: 'var(--code-bg, #f8fafc)',
-                        color: '#0f172a',
+                        background: '#FAFAF9',
+                        color: '#1C1917',
                         padding: '0.2rem 0.5rem',
                         borderRadius: '4px',
-                        border: '1px solid var(--border-color, #cbd5e1)',
+                        border: '1px solid var(--border-strong)',
                         fontWeight: 700,
                         letterSpacing: '0.06em',
                       }}
@@ -189,7 +189,7 @@ export default function SectionPasskeyManager() {
                     {sec.program?.name || 'B.Tech CSE'} (Sem {sec.semester})
                   </td>
                   <td style={{ padding: '0.6rem 0.75rem' }}>
-                    <span className="badge" style={{ background: '#f1f5f9', color: '#475569' }}>
+                    <span className="badge" style={{ background: '#F5F5F0', color: '#57534E' }}>
                       {sec.batch_count} {sec.batch_count > 1 ? 'Batches' : 'Batch'}
                     </span>
                   </td>

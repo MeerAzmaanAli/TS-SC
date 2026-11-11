@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+﻿import { supabase } from './supabase'
 import { SOLVER_URL } from './timetable'
 
 export interface RankedCandidate {
@@ -399,7 +399,7 @@ export async function createSubstitutionRequest(
         subject: emailSubject,
         body_html: `
           <div style="font-family: sans-serif; line-height: 1.6; color: #1f2937;">
-            <h2 style="color: #4f46e5;">${isAdvance ? 'Advance Substitution Request' : 'Same-Day Substitution Request'}</h2>
+            <h2 style="color: #FFB900;">${isAdvance ? 'Advance Substitution Request' : 'Same-Day Substitution Request'}</h2>
             <p>Dear <strong>${fac.name}</strong>,</p>
             <p><strong>${requesterName}</strong> has requested a substitute for their ${isAdvance ? 'upcoming' : 'today\'s'} lecture:</p>
             <ul>
@@ -412,7 +412,7 @@ export async function createSubstitutionRequest(
             </ul>
             <p>Please log in to your TS-SC portal to review and accept/decline this request.</p>
             <p style="margin-top: 24px;">
-              <a href="${typeof window !== 'undefined' ? window.location.origin : ''}/faculty" style="background-color: #4f46e5; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+              <a href="${typeof window !== 'undefined' ? window.location.origin : ''}/faculty" style="background-color: #FFB900; color: #1C1917; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold;">
                 Open Faculty Inbox
               </a>
             </p>
@@ -574,7 +574,7 @@ export async function tryFinaliseRequest(requestId: string): Promise<boolean> {
         subject: '[TS-SC] Substitute Assigned for Your Lecture',
         body_html: `
           <div style="font-family: sans-serif; line-height: 1.6; color: #1f2937;">
-            <h2 style="color: #4f46e5;">Substitute Confirmed</h2>
+            <h2 style="color: #FFB900;">Substitute Confirmed</h2>
             <p>Dear <strong>${requesterRes.data.name}</strong>,</p>
             <p>Good news! <strong>${winnerRes.data?.name ?? 'A colleague'}</strong> has accepted your substitution request and will conduct your lecture.</p>
           </div>

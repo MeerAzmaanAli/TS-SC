@@ -358,24 +358,24 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
                     <tr
                       onClick={() => toggleGroup(grp.key)}
                       style={{
-                        backgroundColor: '#f1f5f9',
+                        backgroundColor: '#F5F5F0',
                         cursor: 'pointer',
-                        borderTop: '2px solid #cbd5e1',
-                        borderBottom: '1px solid #e2e8f0',
+                        borderTop: '2px solid #D6D3D1',
+                        borderBottom: '1px solid #E7E5E4',
                         userSelect: 'none',
                       }}
                     >
                       <td
                         colSpan={displayFields.length + 1}
-                        style={{ padding: '0.65rem 1rem', fontWeight: 700, color: '#1e293b' }}
+                        style={{ padding: '0.65rem 1rem', fontWeight: 700, color: '#292524' }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'inline-block', width: 14 }}>
+                            <span style={{ fontSize: '0.8rem', color: '#78716C', display: 'inline-block', width: 14 }}>
                               {isCollapsed ? '▶' : '▼'}
                             </span>
                             <span style={{ fontSize: '1rem' }}>{grp.icon}</span>
-                            <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0f172a' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#1C1917' }}>
                               {grp.label}
                             </span>
                           </div>
@@ -386,7 +386,7 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
                               fontWeight: 700,
                               padding: '0.2rem 0.6rem',
                               backgroundColor: '#ffffff',
-                              border: '1px solid #cbd5e1',
+                              border: '1px solid #D6D3D1',
                             }}
                           >
                             {grp.rows.length} {grp.rows.length === 1 ? def.singular : def.label}

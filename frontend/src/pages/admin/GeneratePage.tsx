@@ -237,7 +237,7 @@ export default function GeneratePage() {
             <button
               onClick={handleGenerate}
               disabled={busy || solverOnline === false}
-              className="admin-btn"
+              className="admin-btn admin-btn-primary"
               style={{ width: '100%', minHeight: 46 }}
             >
               {busy ? (
@@ -259,16 +259,16 @@ export default function GeneratePage() {
                 style={{
                   marginTop: 16,
                   padding: 16,
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
+                  background: '#FAFAF9',
+                  border: '1px solid #E7E5E4',
                   borderRadius: 8,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#44403C' }}>
                     {progressStage}
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#4f46e5', fontFamily: 'monospace' }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#92400E', fontFamily: 'monospace' }}>
                     {progress}%
                   </span>
                 </div>
@@ -276,7 +276,7 @@ export default function GeneratePage() {
                   style={{
                     width: '100%',
                     height: 10,
-                    backgroundColor: '#e2e8f0',
+                    backgroundColor: '#E7E5E4',
                     borderRadius: 999,
                     overflow: 'hidden',
                   }}
@@ -285,13 +285,13 @@ export default function GeneratePage() {
                     style={{
                       height: '100%',
                       width: `${progress}%`,
-                      backgroundColor: progress >= 100 ? '#10b981' : '#4f46e5',
+                      backgroundColor: progress >= 100 ? '#10b981' : '#FFB900',
                       borderRadius: 999,
                       transition: 'width 0.25s ease-out',
                     }}
                   />
                 </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ marginTop: 8, fontSize: 11, color: '#78716C', display: 'flex', justifyContent: 'space-between' }}>
                   <span>Fast-Start / Asymptotic Solver Monitor</span>
                   <span>Stages: Allocation → CP-SAT Slots → Room Ingestion</span>
                 </div>
@@ -303,15 +303,15 @@ export default function GeneratePage() {
                 style={{
                   marginTop: 14,
                   padding: 12,
-                  background: '#FFF1F2',
-                  border: '1px solid #FECDD3',
+                  background: '#FEF2F2',
+                  border: '1px solid #FECACA',
                   borderRadius: 8,
                   fontSize: 13,
-                  color: '#9F1239',
+                  color: '#991B1B',
                 }}
               >
                 <b>Solver service not reachable.</b> Ensure the FastAPI solver microservice is running:
-                <div className="admin-m" style={{ marginTop: 6, background: '#ffffff', padding: '6px 10px', borderRadius: 6, border: '1px solid #FECDD3' }}>
+                <div className="admin-m" style={{ marginTop: 6, background: '#ffffff', padding: '6px 10px', borderRadius: 6, border: '1px solid #FECACA' }}>
                   uvicorn app.main:app --reload --port 8000
                 </div>
               </div>
@@ -322,11 +322,11 @@ export default function GeneratePage() {
                 style={{
                   marginTop: 14,
                   padding: 12,
-                  background: '#FFF1F2',
-                  border: '1px solid #FECDD3',
+                  background: '#FEF2F2',
+                  border: '1px solid #FECACA',
                   borderRadius: 8,
                   fontSize: 13,
-                  color: '#9F1239',
+                  color: '#991B1B',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
@@ -357,11 +357,11 @@ export default function GeneratePage() {
                 style={{
                   marginTop: 14,
                   padding: 14,
-                  background: '#E3F3DE',
-                  border: '1px solid #B8E3B0',
+                  background: '#ECFDF5',
+                  border: '1px solid #A7F3D0',
                   borderRadius: 8,
                   fontSize: 13,
-                  color: '#0B5446',
+                  color: '#065F46',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
@@ -370,7 +370,7 @@ export default function GeneratePage() {
                 </div>
                 <div style={{ marginTop: 4 }}>{result}</div>
                 <div style={{ marginTop: 10 }}>
-                  <Link to="/admin/versions" className="admin-btn admin-btn-sm" style={{ background: '#0B5446' }}>
+                  <Link to="/admin/versions" className="admin-btn admin-btn-primary admin-btn-sm">
                     <span>Open Conflict Inspector</span>
                     <ArrowRightIcon size={13} />
                   </Link>
@@ -389,9 +389,9 @@ export default function GeneratePage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ padding: 12, background: '#F7F7F8', borderRadius: 8 }}>
+              <div style={{ padding: 12, background: '#F5F5F0', borderRadius: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <CheckCircleIcon size={15} style={{ color: '#0B5446' }} />
+                  <CheckCircleIcon size={15} style={{ color: '#059669' }} />
                   <span>Zero Double-Booking (Hard)</span>
                 </div>
                 <div className="admin-mu" style={{ fontSize: 12, marginTop: 4 }}>
@@ -399,9 +399,9 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              <div style={{ padding: 12, background: '#F7F7F8', borderRadius: 8 }}>
+              <div style={{ padding: 12, background: '#F5F5F0', borderRadius: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <CheckCircleIcon size={15} style={{ color: '#0B5446' }} />
+                  <CheckCircleIcon size={15} style={{ color: '#059669' }} />
                   <span>Qualifications &amp; Lab Fitting (Hard)</span>
                 </div>
                 <div className="admin-mu" style={{ fontSize: 12, marginTop: 4 }}>
@@ -409,9 +409,9 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              <div style={{ padding: 12, background: '#F7F7F8', borderRadius: 8 }}>
+              <div style={{ padding: 12, background: '#F5F5F0', borderRadius: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <CheckCircleIcon size={15} style={{ color: '#0B5446' }} />
+                  <CheckCircleIcon size={15} style={{ color: '#059669' }} />
                   <span>Elective Slot Synchronizer (Hard)</span>
                 </div>
                 <div className="admin-mu" style={{ fontSize: 12, marginTop: 4 }}>
@@ -419,9 +419,9 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              <div style={{ padding: 12, background: '#F7F7F8', borderRadius: 8 }}>
+              <div style={{ padding: 12, background: '#F5F5F0', borderRadius: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <SparklesIcon size={15} style={{ color: '#4F46E5' }} />
+                  <SparklesIcon size={15} style={{ color: '#FFB900' }} />
                   <span>Gap &amp; Load Optimization (Soft)</span>
                 </div>
                 <div className="admin-mu" style={{ fontSize: 12, marginTop: 4 }}>

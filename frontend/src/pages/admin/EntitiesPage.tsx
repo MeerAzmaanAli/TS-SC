@@ -36,7 +36,7 @@ export default function EntitiesPage() {
           </div>
 
           {def && !adding && !editing && (
-            <button type="button" onClick={() => setAdding(true)} className="admin-btn admin-btn-sm">
+            <button type="button" onClick={() => setAdding(true)} className="admin-btn admin-btn-primary admin-btn-sm">
               <PlusIcon size={14} />
               <span>Add {def.singular}</span>
             </button>
@@ -51,7 +51,7 @@ export default function EntitiesPage() {
             overflowX: 'auto',
             paddingBottom: 10,
             marginBottom: 16,
-            borderBottom: '1px solid #E3E4E8',
+            borderBottom: '1px solid #E7E5E4',
           }}
         >
           {ENTITIES.map((e) => {

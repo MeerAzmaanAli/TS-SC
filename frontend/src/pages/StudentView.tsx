@@ -222,7 +222,7 @@ export default function StudentView() {
                 width: 48,
                 height: 48,
                 borderRadius: '10px',
-                background: '#1B1D22',
+                background: '#292524',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
@@ -234,7 +234,7 @@ export default function StudentView() {
             >
               TS
             </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem', color: '#0f172a' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem', color: '#1C1917' }}>
               Student Section View
             </h1>
             <p className="text-muted" style={{ fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>
@@ -251,7 +251,7 @@ export default function StudentView() {
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.4rem', color: '#334155' }}>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.4rem', color: '#44403C' }}>
                 Section Code
               </label>
               <input
@@ -270,7 +270,7 @@ export default function StudentView() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.4rem', color: '#334155' }}>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.4rem', color: '#44403C' }}>
                 Section Passkey
               </label>
               <input
@@ -290,7 +290,7 @@ export default function StudentView() {
             <button
               type="submit"
               disabled={authLoading}
-              className="admin-btn"
+              className="admin-btn admin-btn-primary"
               style={{
                 width: '100%',
                 minHeight: 44,
@@ -313,10 +313,10 @@ export default function StudentView() {
             style={{
               marginTop: '2rem',
               paddingTop: '1.25rem',
-              borderTop: '1px solid var(--border-color, #e2e8f0)',
+              borderTop: '1px solid var(--border-light)',
               textAlign: 'center',
               fontSize: '0.8rem',
-              color: 'var(--text-muted, #64748b)',
+              color: 'var(--text-muted)',
             }}
           >
             🔒 View-only section portal. No student accounts or email registrations required.
@@ -345,7 +345,7 @@ export default function StudentView() {
           </div>
 
           <div className="admin-cal-nav">
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#1B1D22', padding: '6px 12px', background: '#ffffff', borderRadius: 8, boxShadow: '0 0 0 1px #E3E4E8' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#1C1917', padding: '6px 12px', background: '#ffffff', borderRadius: 8, boxShadow: '0 0 0 1px #E7E5E4' }}>
               Section {section.name} · {section.program_name} (Sem {section.semester})
             </span>
           </div>
@@ -393,7 +393,7 @@ export default function StudentView() {
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '0.75rem',
-            background: 'var(--bg-secondary, #f8fafc)',
+            background: 'var(--bg-secondary, #FAFAF9)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -468,10 +468,10 @@ export default function StudentView() {
                   }}
                 >
                   <div>
-                    <span style={{ fontWeight: 700, color: '#0f172a', marginRight: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, color: '#1C1917', marginRight: '0.5rem' }}>
                       Period {sub.period} ({sub.start_time?.slice(0, 5)} - {sub.end_time?.slice(0, 5)})
                     </span>
-                    <span style={{ color: '#475569' }}>
+                    <span style={{ color: '#57534E' }}>
                       {sub.course_name} ({sub.course_code})
                     </span>
                   </div>
@@ -555,13 +555,13 @@ export default function StudentView() {
               gap: '0.75rem',
               padding: '0.65rem 1rem',
               marginBottom: '0.85rem',
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              background: '#FAFAF9',
+              border: '1px solid #E7E5E4',
               borderRadius: '8px',
               fontSize: '0.825rem',
             }}
           >
-            <span style={{ fontWeight: 700, color: '#334155' }}>
+            <span style={{ fontWeight: 700, color: '#44403C' }}>
               Today's Substitution Color Guide:
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
@@ -643,11 +643,11 @@ export default function StudentView() {
                 background:
                   section.shift === 2 || [3, 4, 5, 6].includes(section.semester)
                     ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)'
-                    : 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                    : 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
                 border:
                   section.shift === 2 || [3, 4, 5, 6].includes(section.semester)
                     ? '1.5px solid #bbf7d0'
-                    : '1.5px solid #bfdbfe',
+                    : '1.5px solid #FDE68A',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -664,20 +664,21 @@ export default function StudentView() {
                     padding: '0.35rem 0.75rem',
                     borderRadius: '6px',
                     backgroundColor:
-                      section.shift === 2 || [3, 4, 5, 6].includes(section.semester) ? '#16a34a' : '#2563eb',
-                    color: '#ffffff',
+                      section.shift === 2 || [3, 4, 5, 6].includes(section.semester) ? '#16a34a' : '#FFB900',
+                    color:
+                      section.shift === 2 || [3, 4, 5, 6].includes(section.semester) ? '#ffffff' : '#1C1917',
                   }}
                 >
                   {section.shift === 2 || [3, 4, 5, 6].includes(section.semester)
                     ? 'SHIFT 2 (AFTERNOON)'
                     : 'SHIFT 1 (MORNING)'}
                 </span>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1C1917' }}>
                   {section.shift === 2 || [3, 4, 5, 6].includes(section.semester)
                     ? '10:15 AM – 04:45 PM'
                     : '08:15 AM – 02:45 PM'}
                 </span>
-                <span style={{ fontSize: '0.825rem', color: '#475569' }}>
+                <span style={{ fontSize: '0.825rem', color: '#57534E' }}>
                   • 6 Periods (1 Hour each) • Lunch: 12:15 PM – 12:45 PM
                 </span>
               </div>

@@ -531,7 +531,7 @@ export default function FacultyView() {
               type="button"
               onClick={() => setActiveTab('inbox')}
               className="admin-btn admin-btn-sm"
-              style={{ background: '#4F46E5' }}
+              style={{ background: '#FFB900', color: '#1C1917' }}
             >
               <InboxIcon size={14} />
               <span>{incomingRequests.length} Pending Requests</span>
@@ -562,11 +562,11 @@ export default function FacultyView() {
         <div
           style={{
             padding: 12,
-            background: '#FFF1F2',
-            border: '1px solid #FECDD3',
+            background: '#FEF2F2',
+            border: '1px solid #FECACA',
             borderRadius: 8,
             fontSize: 13,
-            color: '#9F1239',
+            color: '#991B1B',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -581,11 +581,11 @@ export default function FacultyView() {
         <div
           style={{
             padding: 12,
-            background: '#E3F3DE',
-            border: '1px solid #B8E3B0',
+            background: '#ECFDF5',
+            border: '1px solid #A7F3D0',
             borderRadius: 8,
             fontSize: 13,
-            color: '#0B5446',
+            color: '#065F46',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -605,7 +605,7 @@ export default function FacultyView() {
             <div className="admin-panel" style={{ margin: 0 }}>
               <div className="admin-panel-hd">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <InboxIcon size={16} style={{ color: '#4F46E5' }} />
+                  <InboxIcon size={16} style={{ color: '#92400E' }} />
                   <h2>Incoming Coverage Requests</h2>
                 </div>
                 {incomingRequests.length > 0 && (
@@ -616,7 +616,7 @@ export default function FacultyView() {
               </div>
 
               {incomingRequests.length === 0 ? (
-                <div style={{ padding: '24px 16px', textAlign: 'center', color: '#68707D', fontSize: 13 }}>
+                <div style={{ padding: '24px 16px', textAlign: 'center', color: '#78716C', fontSize: 13 }}>
                   No incoming coverage requests from colleagues at this time.
                 </div>
               ) : (
@@ -640,8 +640,8 @@ export default function FacultyView() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
                             <div>
-                              <b style={{ color: '#1B1D22', fontSize: 13 }}>{inc.requester_name}</b>
-                              <div style={{ fontSize: 12, color: '#68707D', marginTop: 2 }}>
+                              <b style={{ color: '#1C1917', fontSize: 13 }}>{inc.requester_name}</b>
+                              <div style={{ fontSize: 12, color: '#78716C', marginTop: 2 }}>
                                 {inc.course_name} {inc.room_name ? `· ${inc.room_name}` : ''}
                               </div>
                             </div>
@@ -660,8 +660,8 @@ export default function FacultyView() {
                                 type="button"
                                 disabled={Boolean(busyIncomingId)}
                                 onClick={() => handleAcceptIncoming(inc.candidate_id, inc.request_id, inc.deadline)}
-                                className="admin-btn admin-btn-sm"
-                                style={{ background: '#0B5446', color: '#fff', padding: '0 10px', height: 28, fontSize: 12 }}
+                                className="admin-btn admin-btn-primary admin-btn-sm"
+                                style={{ padding: '0 10px', height: 28, fontSize: 12 }}
                               >
                                 <CheckCircleIcon size={13} />
                                 <span>{isBusy ? '...' : 'Accept'}</span>
@@ -702,7 +702,7 @@ export default function FacultyView() {
               <div className="admin-panel-hd">
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <SendIcon size={16} style={{ color: '#4F46E5' }} />
+                    <SendIcon size={16} style={{ color: '#FFB900' }} />
                     <h2>Outgoing Coverage Requests</h2>
                   </div>
                   <div style={{ display: 'inline-flex', gap: 6, marginTop: 6 }}>
@@ -740,7 +740,7 @@ export default function FacultyView() {
 
                 if (displayedOutgoing.length === 0) {
                   return (
-                    <div style={{ padding: '24px 16px', textAlign: 'center', color: '#68707D', fontSize: 13 }}>
+                    <div style={{ padding: '24px 16px', textAlign: 'center', color: '#78716C', fontSize: 13 }}>
                       {outgoingFilter === 'active'
                         ? 'No active coverage requests for today or upcoming lectures.'
                         : 'No past or expired coverage requests in history.'}
@@ -777,7 +777,7 @@ export default function FacultyView() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
                               <div>
-                                <b style={{ color: '#1B1D22', fontSize: 13 }}>{out.course_name}</b>
+                                <b style={{ color: '#1C1917', fontSize: 13 }}>{out.course_name}</b>
                                 {out.reason && (
                                   <div className="admin-mu" style={{ fontSize: 12, marginTop: 2 }}>
                                     Reason: {out.reason}
@@ -863,13 +863,13 @@ export default function FacultyView() {
               gap: '0.75rem',
               padding: '0.65rem 1rem',
               marginBottom: '0.85rem',
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              background: '#FAFAF9',
+              border: '1px solid #E7E5E4',
               borderRadius: '8px',
               fontSize: '0.825rem',
             }}
           >
-            <span style={{ fontWeight: 700, color: '#334155' }}>
+            <span style={{ fontWeight: 700, color: '#44403C' }}>
               Timetable Substitution Color Legend:
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
@@ -999,8 +999,8 @@ export default function FacultyView() {
                         : '4px solid #dc2626'
                       : canRequest
                       ? status.isAdvanceRequest
-                        ? '4px solid #7C3AED'
-                        : '4px solid var(--primary-500)'
+                        ? '4px solid #292524'
+                        : '4px solid #FFB900'
                       : undefined,
                   }}
                 >
@@ -1036,7 +1036,7 @@ export default function FacultyView() {
                             : 'Unfilled'}
                         </span>
                       ) : status.isAdvanceRequest ? (
-                        <span className="badge" style={{ fontSize: '0.7rem', background: '#EDE9FE', color: '#5B21B6', fontWeight: 700 }}>
+                        <span className="badge" style={{ fontSize: '0.7rem', background: '#FEF3C7', color: '#92400E', fontWeight: 700 }}>
                           📅 Advance Request
                         </span>
                       ) : status.isToday && !status.isPast ? (
@@ -1077,7 +1077,7 @@ export default function FacultyView() {
 
                     {/* Date + deadline row for eligible sessions */}
                     {canRequest && !existingSub && (
-                      <div style={{ fontSize: '0.74rem', color: status.isAdvanceRequest ? '#5B21B6' : 'var(--primary-700)', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: '0.74rem', color: status.isAdvanceRequest ? '#292524' : '#92400E', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
                         <ClockIcon size={12} />
                         <span>
                           {status.isAdvanceRequest ? '📅 ' : ''}
@@ -1113,7 +1113,7 @@ export default function FacultyView() {
                       className={`btn ${!existingSub && canRequest ? (status.isAdvanceRequest ? 'btn-secondary' : 'btn-primary') : 'btn-secondary'} btn-sm`}
                       style={{
                         width: '100%',
-                        ...(canRequest && status.isAdvanceRequest && !existingSub ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' } : {}),
+                        ...(canRequest && status.isAdvanceRequest && !existingSub ? { background: '#292524', color: '#FFB900', borderColor: '#292524' } : {}),
                       }}
                     >
                       <UsersIcon size={14} />
@@ -1175,7 +1175,7 @@ export default function FacultyView() {
                     </h3>
                     {modalStatus?.isEligible ? (
                       modalIsAdvance ? (
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#EDE9FE', color: '#5B21B6', padding: '2px 8px', borderRadius: 99 }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#292524', color: '#FFB900', padding: '2px 8px', borderRadius: 99 }}>
                           📅 Advance Request (Tomorrow)
                         </span>
                       ) : (
@@ -1203,9 +1203,9 @@ export default function FacultyView() {
               </div>
 
               {/* Lecture details block */}
-              <div style={{ padding: '0.75rem 1rem', background: modalIsAdvance ? '#F5F3FF' : 'var(--slate-50)', borderRadius: 'var(--radius-md)', marginBottom: '1rem', fontSize: '0.85rem', border: `1px solid ${modalIsAdvance ? '#DDD6FE' : 'var(--border-light)'}` }}>
+              <div style={{ padding: '0.75rem 1rem', background: modalIsAdvance ? '#FFFBEB' : 'var(--slate-50)', borderRadius: 'var(--radius-md)', marginBottom: '1rem', fontSize: '0.85rem', border: `1px solid ${modalIsAdvance ? '#FDE68A' : 'var(--border-light)'}` }}>
                 <div style={{ fontWeight: 700, color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <ClockIcon size={15} style={{ color: modalIsAdvance ? '#7C3AED' : 'var(--primary-600)' }} />
+                  <ClockIcon size={15} style={{ color: modalIsAdvance ? '#292524' : '#92400E' }} />
                   <span>
                     {DAYS[requestModalSession.time_slots?.day_of_week ?? 0]} · Period {requestModalSession.time_slots?.period}
                     {' '}({requestModalSession.time_slots?.starts_at.slice(0, 5)})
@@ -1219,7 +1219,7 @@ export default function FacultyView() {
                     📍 Location: {requestModalSession.rooms?.name}
                   </div>
                   {modalDeadlineStr && (
-                    <div style={{ fontSize: '0.78rem', color: modalIsAdvance ? '#5B21B6' : '#854d0e', fontWeight: 600, marginTop: 2 }}>
+                    <div style={{ fontSize: '0.78rem', color: modalIsAdvance ? '#292524' : '#854d0e', fontWeight: 600, marginTop: 2 }}>
                       ⏱ Candidates must respond by <strong>{modalDeadlineStr}</strong> on {modalIsAdvance ? 'the lecture date' : 'today'}
                     </div>
                   )}
@@ -1228,7 +1228,7 @@ export default function FacultyView() {
 
               {/* Advance request info banner */}
               {modalIsAdvance && (
-                <div style={{ padding: '0.6rem 0.9rem', background: '#EDE9FE', border: '1px solid #DDD6FE', borderRadius: 'var(--radius-md)', fontSize: '0.82rem', color: '#4C1D95', marginBottom: '1rem', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <div style={{ padding: '0.6rem 0.9rem', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-md)', fontSize: '0.82rem', color: '#92400E', marginBottom: '1rem', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   <span style={{ flexShrink: 0 }}>📅</span>
                   <span>
                     This is an <strong>advance substitution request</strong>. Colleagues will be notified immediately and can accept or decline before the lecture begins.
@@ -1277,7 +1277,7 @@ export default function FacultyView() {
                       !modalStatus?.isEligible
                         ? { opacity: 0.5, cursor: 'not-allowed' }
                         : modalIsAdvance
-                        ? { background: '#7C3AED', borderColor: '#7C3AED' }
+                        ? { background: '#292524', borderColor: '#292524', color: '#FFB900' }
                         : {}
                     }
                   >
