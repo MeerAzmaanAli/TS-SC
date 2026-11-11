@@ -144,6 +144,22 @@ async function publishedVersion(): Promise<{ id: string; institution_id: string 
   return data as { id: string; institution_id: string }
 }
 
+const MAX_P2_CANDIDATES = 4
+const MAX_P3_CANDIDATES = 4
+
+function capCandidatesByTier(candidates: RankedCandidate[]): RankedCandidate[] {
+  const p1 = candidates.filter((c) => c.priority === 1).sort((a, b) => a.weekly_load - b.weekly_load)
+  const p2 = candidates
+    .filter((c) => c.priority === 2)
+    .sort((a, b) => a.weekly_load - b.weekly_load)
+    .slice(0, MAX_P2_CANDIDATES)
+  const p3 = candidates
+    .filter((c) => c.priority === 3)
+    .sort((a, b) => a.weekly_load - b.weekly_load)
+    .slice(0, MAX_P3_CANDIDATES)
+  return [...p1, ...p2, ...p3]
+}
+
 async function rank(input: {
   requester_faculty_id: string
   section_faculty_ids: string[]
@@ -160,7 +176,8 @@ async function rank(input: {
   if (!res.ok) throw new Error(`Ranking failed (HTTP ${res.status})`)
   const text = await res.text()
   try {
-    return (JSON.parse(text) as { candidates: RankedCandidate[] }).candidates
+    const raw = (JSON.parse(text) as { candidates: RankedCandidate[] }).candidates
+    return capCandidatesByTier(raw)
   } catch {
     throw new Error(
       `Ranking failed: solver returned non-JSON (HTTP ${res.status}): ${text.slice(0, 300)}`,

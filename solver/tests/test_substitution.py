@@ -37,6 +37,31 @@ def test_requester_and_busy_excluded():
     assert "s2" in ids
 
 
+def test_tier_caps_all_p1_max_4_p2_max_4_p3():
+    p1_ids = [f"s{i}" for i in range(6)]
+    p2_ids = [f"c{i}" for i in range(8)]
+    p3_ids = [f"o{i}" for i in range(10)]
+    loads = {fid: 20 - idx for idx, fid in enumerate(p1_ids + p2_ids + p3_ids)}
+    ranked = rank_candidates(
+        requester_faculty_id="req",
+        section_faculty_ids=p1_ids,
+        course_faculty_ids=p2_ids,
+        busy_faculty_ids=set(),
+        all_faculty_ids=["req"] + p1_ids + p2_ids + p3_ids,
+        faculty_loads=loads,
+    )
+    p1_out = [c["faculty_id"] for c in ranked if c["priority"] == 1]
+    p2_out = [c["faculty_id"] for c in ranked if c["priority"] == 2]
+    p3_out = [c["faculty_id"] for c in ranked if c["priority"] == 3]
+
+    # All 6 P1 free faculty included
+    assert len(p1_out) == 6
+    # At most 4 P2 (lowest weekly load first -> c7, c6, c5, c4)
+    assert p2_out == ["c7", "c6", "c5", "c4"]
+    # At most 4 P3 (lowest weekly load first -> o9, o8, o7, o6)
+    assert p3_out == ["o9", "o8", "o7", "o6"]
+
+
 def test_resolve_picks_highest_priority():
     cands = [
         {"faculty_id": "o1", "priority": 3, "response": "accepted",

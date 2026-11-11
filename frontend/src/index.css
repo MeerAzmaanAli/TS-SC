@@ -1791,6 +1791,8 @@ a:hover {
   display: grid;
   grid-template-columns: 210px minmax(0, 1fr);
   gap: 16px;
+  max-height: 220px;
+  overflow-y: auto;
   border-bottom: 1px solid #F0F1F3;
   padding-bottom: 16px;
   margin-bottom: 16px;
@@ -1805,6 +1807,7 @@ a:hover {
 @media (max-width: 640px) {
   .admin-req-card {
     grid-template-columns: 1fr;
+    max-height: 320px;
   }
 }
 
@@ -1862,6 +1865,10 @@ a:hover {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-content: flex-start;
+  max-height: 112px;
+  overflow-y: auto;
+  padding-right: 4px;
   margin-top: 10px;
 }
 

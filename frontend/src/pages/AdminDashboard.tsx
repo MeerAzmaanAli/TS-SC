@@ -927,7 +927,7 @@ export default function AdminDashboard() {
                   <label className="form-label" style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
                     Select from contacted substitute candidates:
                   </label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto', paddingRight: 4 }}>
                     {assignModalReq.candidates.map((c) => {
                       const isSelected = selectedFacultyId === c.faculty_id
                       return (

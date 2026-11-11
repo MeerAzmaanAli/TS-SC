@@ -2,10 +2,10 @@
 
 Flow (user-defined):
   1. A faculty member raises a substitution request for one of their sessions.
-  2. Candidates are ranked:
-       P1 — faculty already teaching in that section AND free in the slot
-       P2 — faculty teaching the same course AND free in the slot
-       P3 — other faculty, free in the slot
+  2. Candidates are ranked and capped per tier:
+       P1 — every free faculty already teaching in that section
+       P2 — at most 4 free faculty teaching the same course (lowest weekly load first)
+       P3 — at most 4 other free faculty (lowest weekly load first)
      The requester and anyone busy in the slot are excluded.
   3. The request fans out to candidates with a deadline of 10 minutes after
      the lecture starts.
@@ -22,6 +22,10 @@ the FastAPI endpoints in main.py expose them over HTTP.
 from __future__ import annotations
 
 
+MAX_P2_CANDIDATES = 4
+MAX_P3_CANDIDATES = 4
+
+
 def rank_candidates(
     *,
     requester_faculty_id: str,
@@ -31,28 +35,34 @@ def rank_candidates(
     all_faculty_ids: list[str],
     faculty_loads: dict[str, int],
 ) -> list[dict]:
-    """Rank substitute candidates by compatibility (P1 > P2 > P3)."""
+    """Rank substitute candidates by compatibility (P1 > P2 > P3) with caps on P2/P3.
+
+    - P1: all free faculty teaching in the section
+    - P2: up to 4 free faculty teaching the same course (lowest load first)
+    - P3: up to 4 other free faculty (lowest load first)
+    """
     section_set = set(section_faculty_ids)
     course_set = set(course_faculty_ids)
-    ranked: list[dict] = []
+    p1: list[dict] = []
+    p2: list[dict] = []
+    p3: list[dict] = []
+
     for fid in all_faculty_ids:
         if fid == requester_faculty_id or fid in busy_faculty_ids:
             continue
+        load = faculty_loads.get(fid, 0)
         if fid in section_set:
-            priority = 1
+            p1.append({"faculty_id": fid, "priority": 1, "weekly_load": load})
         elif fid in course_set:
-            priority = 2
+            p2.append({"faculty_id": fid, "priority": 2, "weekly_load": load})
         else:
-            priority = 3
-        ranked.append(
-            {
-                "faculty_id": fid,
-                "priority": priority,
-                "weekly_load": faculty_loads.get(fid, 0),
-            }
-        )
-    ranked.sort(key=lambda c: (c["priority"], c["weekly_load"]))
-    return ranked
+            p3.append({"faculty_id": fid, "priority": 3, "weekly_load": load})
+
+    p1.sort(key=lambda c: c["weekly_load"])
+    p2.sort(key=lambda c: c["weekly_load"])
+    p3.sort(key=lambda c: c["weekly_load"])
+
+    return p1 + p2[:MAX_P2_CANDIDATES] + p3[:MAX_P3_CANDIDATES]
 
 
 def resolve(candidates: list[dict]) -> str | None:
