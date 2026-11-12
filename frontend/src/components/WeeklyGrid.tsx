@@ -531,7 +531,7 @@ export default function WeeklyGrid({
                           onRequestSubstitution(e)
                         }
                       }}
-                      className="btn btn-sm btn-secondary"
+                      className="btn btn-sm btn-secondary no-print"
                       style={{
                         marginTop: '0.4rem',
                         width: '100%',
@@ -569,6 +569,7 @@ export default function WeeklyGrid({
             {incomingForSlot.map((inc) => (
               <div
                 key={`${keyPrefix}${inc.candidate_id}`}
+                className="no-print"
                 style={{
                   padding: '0.55rem 0.65rem',
                   borderRadius: '7px',

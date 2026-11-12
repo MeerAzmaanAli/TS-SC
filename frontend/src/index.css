@@ -1630,6 +1630,8 @@ a:hover {
   gap: 20px;
   border-radius: 16px;
   margin: -1.5rem -1rem 1rem -1rem;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
@@ -1776,6 +1778,8 @@ a:hover {
   border-radius: 12px;
   box-shadow: 0 0 0 1px #E7E5E4;
   padding: 20px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .admin-panel-hd {
@@ -2149,5 +2153,284 @@ a:hover {
   }
   .timetable-responsive-mobile {
     display: block;
+  }
+}
+
+/* TimetablePreview Responsive Toolbar & Mobile Overflow Guard */
+.tt-entity-select,
+.tt-version-select {
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .admin-panel {
+    padding: 12px;
+  }
+
+  .tt-preview-card {
+    padding: 12px !important;
+  }
+
+  .tt-toolbar-controls {
+    width: 100%;
+  }
+
+  .tt-version-wrap {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .tt-version-select {
+    width: 100% !important;
+    flex: 1 1 100%;
+  }
+
+  .tt-year-print-group {
+    width: 100%;
+    padding-left: 0 !important;
+    border-left: none !important;
+    flex-wrap: wrap;
+  }
+
+  .tt-switcher-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 10px !important;
+    gap: 10px !important;
+  }
+
+  .tt-view-wrap {
+    width: 100%;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .tt-view-toggle {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 4px;
+  }
+
+  .tt-view-toggle .btn {
+    white-space: normal;
+    text-align: center;
+    justify-content: center;
+    padding: 0.45rem 0.5rem;
+    font-size: 0.78rem;
+    min-width: 0;
+  }
+
+  .tt-entity-picker {
+    width: 100% !important;
+    flex: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .tt-entity-select {
+    width: 100% !important;
+    flex: none !important;
+  }
+}
+
+
+/* ==========================================================================
+   Timetable Print Layout & Collective Year-Wise Printing
+   ========================================================================== */
+
+.tt-print-header,
+.tt-bulk-print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #1C1917 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print,
+  .top-navbar,
+  .mobile-nav-drawer,
+  .admin-cal-topbar,
+  .timetable-responsive-mobile {
+    display: none !important;
+  }
+
+  .timetable-responsive-desktop {
+    display: block !important;
+  }
+
+  .main-content,
+  .admin-cal-layout,
+  .admin-cal-wrapper,
+  .faculty-cal-wrapper,
+  .student-cal-wrapper {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    gap: 0 !important;
+  }
+
+  .admin-cal-cols,
+  .admin-cal-stack {
+    display: block !important;
+  }
+
+  .admin-panel,
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .tt-print-header {
+    display: block !important;
+    border: 1.5px solid #292524;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    background: #FAFAF9 !important;
+  }
+
+  .tt-print-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    border-bottom: 1px solid #D6D3D1;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .tt-print-eyebrow {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #57534E;
+  }
+
+  .tt-print-title {
+    margin: 2px 0 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #1C1917;
+  }
+
+  .tt-print-date {
+    font-size: 10px;
+    font-weight: 600;
+    color: #57534E;
+    white-space: nowrap;
+  }
+
+  .tt-print-meta-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+  }
+
+  .tt-print-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .tt-print-meta-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #78716C;
+  }
+
+  .tt-print-meta-val {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1C1917;
+  }
+
+  .timetable-container,
+  .timetable-grid-container,
+  .table-responsive {
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: 1px solid #D6D3D1 !important;
+  }
+
+  .timetable-table,
+  .timetable-grid {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: fixed;
+  }
+
+  .timetable-cell {
+    min-width: 0 !important;
+    height: auto !important;
+    padding: 4px !important;
+  }
+
+  .session-badge {
+    padding: 4px 5px !important;
+    box-shadow: none !important;
+  }
+
+  .session-code {
+    font-size: 10px !important;
+  }
+
+  .session-name {
+    font-size: 9px !important;
+  }
+
+  .session-meta,
+  .meta-chip {
+    font-size: 8.5px !important;
+  }
+
+  .tt-bulk-print-root {
+    display: block !important;
+  }
+
+  .tt-print-page {
+    page-break-after: always;
+    break-after: page;
+    padding-bottom: 6px;
+  }
+
+  .tt-print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  /* Keep breakdown table rows from splitting mid-row */
+  .tt-print-area tr,
+  .tt-print-page tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import WeeklyGrid, { GridEntry, IncomingRequestInfo } from '../components/WeeklyGrid'
+import TimetablePrintHeader from '../components/TimetablePrintHeader'
 import SubstitutionInbox from '../components/SubstitutionInbox'
 import {
   createSubstitutionRequest,
@@ -97,6 +98,7 @@ export default function FacultyView() {
     navigate('/login')
   }
   const [rows, setRows] = useState<Row[]>([])
+  const [facultyMeta, setFacultyMeta] = useState<{ name: string; email: string; departmentName?: string } | null>(null)
   const [dispatchedSubs, setDispatchedSubs] = useState<Map<string, DispatchedSub>>(new Map())
   const [outgoingRequests, setOutgoingRequests] = useState<OutgoingRequestInfo[]>([])
   const [coveringSubs, setCoveringSubs] = useState<CoveringSub[]>([])
@@ -131,6 +133,22 @@ export default function FacultyView() {
         return
       }
       const vId = ver.id
+
+      // 0. Fetch faculty profile & department name for print header
+      supabase
+        .from('faculty')
+        .select('name, email, departments(name)')
+        .eq('id', fId)
+        .maybeSingle()
+        .then(({ data: facData }: any) => {
+          if (facData) {
+            setFacultyMeta({
+              name: facData.name,
+              email: facData.email,
+              departmentName: facData.departments?.name ?? undefined,
+            })
+          }
+        })
 
       // 1. Fetch own teaching sessions
       const res = await supabase
@@ -180,7 +198,10 @@ export default function FacultyView() {
         const heldDate = ts?.day_of_week ? getHeldLectureDate(ts.day_of_week, s.created_at) : null
         const heldDateStr = heldDate ? toLocalDateString(heldDate) : null
 
-        if (s.timetable_entry_id) {
+        const isPastDay = ts?.day_of_week ? isSubstitutionDayPast(ts.day_of_week, s.created_at) : false
+
+        // Only overlay active (today or upcoming) substitutions onto the weekly timetable grid
+        if (s.timetable_entry_id && !isPastDay && !subMap.has(s.timetable_entry_id)) {
           subMap.set(s.timetable_entry_id, {
             id: s.id,
             timetable_entry_id: s.timetable_entry_id,
@@ -195,8 +216,6 @@ export default function FacultyView() {
           priority: c.priority,
           response: c.response,
         }))
-
-        const isPastDay = ts?.day_of_week ? isSubstitutionDayPast(ts.day_of_week, s.created_at) : false
 
         outList.push({
           id: s.id,
@@ -238,6 +257,9 @@ export default function FacultyView() {
       for (const c of (coveringData ?? []) as any[]) {
         const te = c.timetable_entries
         if (te && te.time_slots) {
+          // Reset covering slot once the lecture's day has ended
+          if (isSubstitutionDayPast(te.time_slots.day_of_week, c.created_at)) continue
+
           const heldDate = getHeldLectureDate(te.time_slots.day_of_week, c.created_at)
           const heldDateStr = heldDate ? toLocalDateString(heldDate) : null
 
@@ -548,6 +570,14 @@ export default function FacultyView() {
           </button>
           <button
             type="button"
+            className="admin-btn admin-btn-outline"
+            onClick={() => window.print()}
+            title="Print teaching timetable & course roster"
+          >
+            <span>Print</span>
+          </button>
+          <button
+            type="button"
             onClick={handleSignOut}
             className="admin-btn admin-btn-outline"
             title="Sign out of Faculty Portal"
@@ -560,6 +590,7 @@ export default function FacultyView() {
 
       {error && (
         <div
+          className="no-print"
           style={{
             padding: 12,
             background: '#FEF2F2',
@@ -579,6 +610,7 @@ export default function FacultyView() {
 
       {notice && (
         <div
+          className="no-print"
           style={{
             padding: 12,
             background: '#ECFDF5',
@@ -600,7 +632,7 @@ export default function FacultyView() {
       {activeTab === 'schedule' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Quick Overview Cards: Incoming Invitations & Outgoing Requests */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16 }}>
+          <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16 }}>
             {/* Incoming Coverage Requests Card */}
             <div className="admin-panel" style={{ margin: 0 }}>
               <div className="admin-panel-hd">
@@ -855,6 +887,7 @@ export default function FacultyView() {
 
           {/* Legend Guide */}
           <div
+            className="no-print"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -896,7 +929,7 @@ export default function FacultyView() {
           </div>
 
           <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <div className="card-header">
+            <div className="card-header no-print">
               <h2 className="card-title">
                 <CalendarIcon size={18} style={{ color: 'var(--primary-600)' }} />
                 <span>Weekly Teaching Schedule</span>
@@ -911,15 +944,24 @@ export default function FacultyView() {
               </div>
             </div>
 
-            <WeeklyGrid
-              entries={allGridEntries}
-              viewMode="faculty"
-              onRequestSubstitution={handleOpenRequestModal}
-              incomingRequests={incomingRequests}
-              onAcceptRequest={handleAcceptIncoming}
-              onRejectRequest={handleRejectIncoming}
-              actionBusyId={busyIncomingId}
-            />
+            <div className="tt-print-area">
+              <TimetablePrintHeader
+                mode="faculty"
+                facultyName={facultyMeta?.name}
+                facultyEmail={facultyMeta?.email}
+                departmentName={facultyMeta?.departmentName}
+              />
+
+              <WeeklyGrid
+                entries={allGridEntries}
+                viewMode="faculty"
+                onRequestSubstitution={handleOpenRequestModal}
+                incomingRequests={incomingRequests}
+                onAcceptRequest={handleAcceptIncoming}
+                onRejectRequest={handleRejectIncoming}
+                actionBusyId={busyIncomingId}
+              />
+            </div>
           </div>
         </div>
       )}

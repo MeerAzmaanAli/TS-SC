@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import WeeklyGrid, { GridEntry, SlotTimeInfo } from './WeeklyGrid'
+import TimetablePrintHeader from './TimetablePrintHeader'
 import {
   CalendarIcon,
   UsersIcon,
@@ -11,14 +12,18 @@ import {
 interface SectionItem {
   id: string
   name: string
+  code?: string
   semester?: number
   shift?: number
+  programName?: string
+  departmentName?: string
 }
 
 interface FacultyItem {
   id: string
   name: string
   email?: string
+  departmentName?: string
 }
 
 interface RawEntry {
@@ -98,6 +103,14 @@ export default function TimetablePreview({
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedPrintYear, setSelectedPrintYear] = useState<'1' | '2' | '3' | '4' | 'all'>('1')
+  const [printingYear, setPrintingYear] = useState<'1' | '2' | '3' | '4' | 'all' | null>(null)
+
+  useEffect(() => {
+    const handleAfterPrint = () => setPrintingYear(null)
+    window.addEventListener('afterprint', handleAfterPrint)
+    return () => window.removeEventListener('afterprint', handleAfterPrint)
+  }, [])
 
   // Sync if versionId prop changes
   useEffect(() => {
@@ -243,21 +256,43 @@ export default function TimetablePreview({
           }
         }
 
-        // Also fetch any sections or faculty from database in case some don't have entries yet
+        // Also fetch any sections or faculty from database in case some don't have entries yet, along with program/department metadata
         const [secAll, facAll, slotsAll] = await Promise.all([
-          supabase.from('sections').select('id, name, semester, shift').order('name').limit(50000),
-          supabase.from('faculty').select('id, name, email').order('name').limit(50000),
+          supabase
+            .from('sections')
+            .select('id, name, code, semester, shift, programs(name, departments(name))')
+            .order('name')
+            .limit(50000),
+          supabase
+            .from('faculty')
+            .select('id, name, email, departments(name)')
+            .order('name')
+            .limit(50000),
           supabase.from('time_slots').select('period, starts_at, ends_at').order('period').limit(50000),
         ])
 
         if (!secAll.error && secAll.data) {
-          for (const s of secAll.data) {
-            secMap.set(s.id, { id: s.id, name: s.name, semester: s.semester, shift: s.shift })
+          for (const s of secAll.data as any[]) {
+            const existing = secMap.get(s.id)
+            secMap.set(s.id, {
+              id: s.id,
+              name: s.name,
+              code: s.code ?? existing?.code,
+              semester: s.semester ?? existing?.semester,
+              shift: s.shift ?? existing?.shift,
+              programName: s.programs?.name ?? undefined,
+              departmentName: s.programs?.departments?.name ?? undefined,
+            })
           }
         }
         if (!facAll.error && facAll.data) {
-          for (const f of facAll.data) {
-            facMap.set(f.id, { id: f.id, name: f.name, email: f.email })
+          for (const f of facAll.data as any[]) {
+            facMap.set(f.id, {
+              id: f.id,
+              name: f.name,
+              email: f.email,
+              departmentName: f.departments?.name ?? undefined,
+            })
           }
         }
         if (!slotsAll.error && slotsAll.data) {
@@ -326,14 +361,70 @@ export default function TimetablePreview({
     }
   })
 
+  // Helper to build GridEntry[] for any section (used by both single view and Year-Wise collective print)
+  function buildSectionGridEntries(sec: SectionItem): { entries: GridEntry[]; shift: 1 | 2 } {
+    const secShift2 =
+      sec.shift === 2 || (sec.semester ? [3, 4, 5, 6].includes(sec.semester) : false)
+    const secRaw = entries.filter((e) => e.section_id === sec.id)
+    const mapped: GridEntry[] = secRaw.map((r) => {
+      let period = r.time_slots?.period ?? 0
+      if (secShift2 && period >= 3 && period <= 8) {
+        period = period - 2
+      }
+      return {
+        id: r.id,
+        day_of_week: r.time_slots?.day_of_week ?? 0,
+        period,
+        course_code: r.courses?.code ?? (r.is_elective ? 'GE' : '—'),
+        course_name: r.courses?.name ?? (r.is_elective ? 'Generic Elective (Institute Basket)' : '—'),
+        room_name: r.rooms?.name ?? (r.is_elective ? 'Elective Allocation' : '—'),
+        faculty_name: r.faculty?.name ?? (r.is_elective ? 'Elective Faculty' : '—'),
+        faculty_email: r.faculty?.email ?? '',
+        section_name: r.sections?.name ? `${r.sections.name}${r.batch ? ` (B${r.batch})` : ''}` : '',
+        is_elective: r.is_elective,
+        batch: r.batch,
+      }
+    })
+    return { entries: mapped, shift: secShift2 ? 2 : 1 }
+  }
+
+  function handleBulkPrintYear() {
+    setPrintingYear(selectedPrintYear)
+    setTimeout(() => {
+      window.print()
+    }, 80)
+  }
+
+  const bulkPrintSections =
+    printingYear === null
+      ? []
+      : sections
+          .filter((s) => {
+            if (printingYear === 'all') return true
+            const sem = s.semester ?? 0
+            if (!sem) return false
+            return Math.ceil(sem / 2) === Number(printingYear)
+          })
+          .filter((s) => entries.some((e) => e.section_id === s.id))
+          .sort((a, b) => {
+            const dCmp = (a.departmentName ?? '').localeCompare(b.departmentName ?? '')
+            if (dCmp !== 0) return dCmp
+            const pCmp = (a.programName ?? '').localeCompare(b.programName ?? '')
+            if (pCmp !== 0) return pCmp
+            const sCmp = (a.semester ?? 0) - (b.semester ?? 0)
+            if (sCmp !== 0) return sCmp
+            return a.name.localeCompare(b.name)
+          })
+
   // Calculate statistics for the active view
   const theoryCount = filteredRaw.filter((e) => !e.batch).length
   const labCount = filteredRaw.filter((e) => !!e.batch).length
 
   return (
-    <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-light)' }}>
+    <div className="card tt-preview-card" style={{ padding: '1.5rem', border: '1px solid var(--border-light)', minWidth: 0, maxWidth: '100%' }}>
       {/* Header & Controls Toolbar */}
       <div
+        className="no-print"
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -372,10 +463,10 @@ export default function TimetablePreview({
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div className="tt-toolbar-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', maxWidth: '100%' }}>
             {/* Version Selector (if enabled) */}
             {showVersionSelector && versions.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div className="tt-version-wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', maxWidth: '100%', minWidth: 0 }}>
                 <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--slate-600)' }}>Version:</span>
                 <select
                   value={activeVersionId ?? ''}
@@ -383,7 +474,7 @@ export default function TimetablePreview({
                     setActiveVersionId(e.target.value)
                     onVersionChange?.(e.target.value)
                   }}
-                  className="form-control"
+                  className="form-control tt-version-select"
                   style={{ width: 'auto', padding: '0.35rem 0.65rem', fontSize: '0.8125rem' }}
                 >
                   {versions.map((ver) => (
@@ -396,37 +487,81 @@ export default function TimetablePreview({
               </div>
             )}
 
-            {/* Print Button */}
+            {/* Print Current Schedule Button */}
             <button
-              onClick={() => window.print()}
+              type="button"
+              onClick={() => {
+                setPrintingYear(null)
+                setTimeout(() => window.print(), 30)
+              }}
               className="btn btn-secondary btn-sm"
-              title="Print schedule matrix"
+              title="Print current schedule & course-faculty roster"
             >
               <span>Print Schedule</span>
             </button>
+
+            {/* Year-Wise Collective Print Control */}
+            {sections.length > 0 && (
+              <div
+                className="tt-year-print-group"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  paddingLeft: '0.5rem',
+                  borderLeft: '1px solid var(--border-light)',
+                  maxWidth: '100%',
+                }}
+              >
+                <select
+                  value={selectedPrintYear}
+                  onChange={(e) => setSelectedPrintYear(e.target.value as '1' | '2' | '3' | '4' | 'all')}
+                  className="form-control"
+                  style={{ width: 'auto', maxWidth: '100%', padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}
+                  aria-label="Select academic year for collective printing"
+                >
+                  <option value="1">1st Year (Sem 1–2)</option>
+                  <option value="2">2nd Year (Sem 3–4)</option>
+                  <option value="3">3rd Year (Sem 5–6)</option>
+                  <option value="4">4th Year (Sem 7–8)</option>
+                  <option value="all">All Years</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={handleBulkPrintYear}
+                  className="btn btn-primary btn-sm"
+                  title="Print all section timetables & course rosters for the selected year in a single document"
+                >
+                  <span>Print Year-Wise TT</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
         {/* View Mode Switcher & Entity Selectors */}
         <div
+          className="tt-switcher-bar"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: '1rem',
+            gap: '0.85rem 1rem',
             background: 'var(--slate-50)',
             padding: '0.85rem 1rem',
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border-light)',
+            maxWidth: '100%',
+            minWidth: 0,
           }}
         >
           {/* Left: View Mode Toggle Tabs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="tt-view-wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', maxWidth: '100%', minWidth: 0 }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--slate-600)', textTransform: 'uppercase' }}>
               View By:
             </span>
-            <div style={{ display: 'inline-flex', padding: 2, backgroundColor: 'white', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+            <div className="tt-view-toggle" style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 2, padding: 2, backgroundColor: 'white', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)', maxWidth: '100%' }}>
               <button
                 type="button"
                 onClick={() => setViewMode('section')}
@@ -438,6 +573,7 @@ export default function TimetablePreview({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.4rem',
+                  flex: '1 1 auto',
                 }}
               >
                 <BookOpenIcon size={14} />
@@ -455,6 +591,7 @@ export default function TimetablePreview({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.4rem',
+                  flex: '1 1 auto',
                 }}
               >
                 <UsersIcon size={14} />
@@ -464,19 +601,21 @@ export default function TimetablePreview({
           </div>
 
           {/* Right: Entity Selection Dropdown & Pills */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <div className="tt-entity-picker" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', flex: '1 1 280px', minWidth: 0, maxWidth: '100%' }}>
             {viewMode === 'section' ? (
               <>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--slate-700)' }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--slate-700)', whiteSpace: 'nowrap' }}>
                   Select Section:
                 </span>
                 <select
                   value={selectedSectionId}
                   onChange={(e) => setSelectedSectionId(e.target.value)}
-                  className="form-control"
+                  className="form-control tt-entity-select"
                   style={{
                     width: 'auto',
-                    minWidth: 160,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    flex: '1 1 180px',
                     fontWeight: 600,
                     fontSize: '0.85rem',
                     padding: '0.4rem 0.75rem',
@@ -490,7 +629,7 @@ export default function TimetablePreview({
                 </select>
 
                 {/* Quick 1-click pills for sections */}
-                <div style={{ display: 'flex', gap: '0.35rem' }}>
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', maxWidth: '100%' }}>
                   {sections.slice(0, 5).map((sec) => (
                     <button
                       key={sec.id}
@@ -506,16 +645,18 @@ export default function TimetablePreview({
               </>
             ) : (
               <>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--slate-700)' }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--slate-700)', whiteSpace: 'nowrap' }}>
                   Select Faculty:
                 </span>
                 <select
                   value={selectedFacultyId}
                   onChange={(e) => setSelectedFacultyId(e.target.value)}
-                  className="form-control"
+                  className="form-control tt-entity-select"
                   style={{
                     width: 'auto',
-                    minWidth: 180,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    flex: '1 1 200px',
                     fontWeight: 600,
                     fontSize: '0.85rem',
                     padding: '0.4rem 0.75rem',
@@ -529,7 +670,7 @@ export default function TimetablePreview({
                 </select>
 
                 {/* Quick 1-click pills for faculty */}
-                <div style={{ display: 'flex', gap: '0.35rem' }}>
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', maxWidth: '100%' }}>
                   {facultyList.slice(0, 4).map((fac) => (
                     <button
                       key={fac.id}
@@ -556,13 +697,13 @@ export default function TimetablePreview({
             flexWrap: 'wrap',
             gap: '0.75rem',
             padding: '0.5rem 0.75rem',
-            backgroundColor: 'rgba(238, 242, 255, 0.45)',
-            border: '1px solid var(--primary-100)',
+            backgroundColor: '#FAFAF9',
+            border: '1px solid #E7E5E4',
             borderRadius: 'var(--radius-sm)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 800, color: 'var(--primary-800)', fontSize: '0.9rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 800, color: '#1C1917', fontSize: '0.9rem' }}>
               {viewMode === 'section'
                 ? `Section: ${selectedSection?.name ?? '—'}`
                 : `Instructor: ${selectedFaculty?.name ?? '—'}`}
@@ -606,6 +747,7 @@ export default function TimetablePreview({
           {/* Shift Banner above the Timetable Matrix */}
           {viewMode === 'section' ? (
             <div
+              className="no-print"
               style={{
                 marginBottom: '1.25rem',
                 padding: '0.9rem 1.25rem',
@@ -663,6 +805,7 @@ export default function TimetablePreview({
             </div>
           ) : (
             <div
+              className="no-print"
               style={{
                 marginBottom: '1.25rem',
                 padding: '0.8rem 1.25rem',
@@ -690,25 +833,78 @@ export default function TimetablePreview({
             </div>
           )}
 
-          <WeeklyGrid
-            entries={gridEntries}
-            viewMode={viewMode}
-            allPeriods={viewMode === 'section' ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 7, 8]}
-            slotTimes={
-              viewMode === 'section'
-                ? currentShift === 1
-                  ? SHIFT_1_TIMES
-                  : SHIFT_2_TIMES
-                : Object.keys(slotTimes).length > 0
-                ? slotTimes
-                : FACULTY_TIMES
-            }
-            emptyMessage={
-              viewMode === 'section'
-                ? `No sessions scheduled for Section ${selectedSection?.name ?? ''}`
-                : `No teaching periods assigned to ${selectedFaculty?.name ?? ''}`
-            }
-          />
+          <div className={printingYear !== null ? 'no-print' : 'tt-print-area'}>
+            <TimetablePrintHeader
+              mode={viewMode}
+              departmentName={
+                viewMode === 'section'
+                  ? selectedSection?.departmentName
+                  : selectedFaculty?.departmentName
+              }
+              programName={selectedSection?.programName}
+              semester={selectedSection?.semester}
+              sectionName={selectedSection?.name}
+              sectionCode={selectedSection?.code}
+              shift={selectedSection?.shift}
+              facultyName={selectedFaculty?.name}
+              facultyEmail={selectedFaculty?.email}
+            />
+
+            <WeeklyGrid
+              entries={gridEntries}
+              viewMode={viewMode}
+              allPeriods={viewMode === 'section' ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 7, 8]}
+              slotTimes={
+                viewMode === 'section'
+                  ? currentShift === 1
+                    ? SHIFT_1_TIMES
+                    : SHIFT_2_TIMES
+                  : Object.keys(slotTimes).length > 0
+                  ? slotTimes
+                  : FACULTY_TIMES
+              }
+              emptyMessage={
+                viewMode === 'section'
+                  ? `No sessions scheduled for Section ${selectedSection?.name ?? ''}`
+                  : `No teaching periods assigned to ${selectedFaculty?.name ?? ''}`
+              }
+            />
+          </div>
+
+          {/* Year-Wise Collective Print Document (visible only when printing) */}
+          {printingYear !== null && (
+            <div className="tt-bulk-print-root">
+              {bulkPrintSections.length === 0 ? (
+                <div className="tt-print-page">
+                  <p>No scheduled sections found for the selected academic year.</p>
+                </div>
+              ) : (
+                bulkPrintSections.map((sec) => {
+                  const built = buildSectionGridEntries(sec)
+                  return (
+                    <div key={sec.id} className="tt-print-page">
+                      <TimetablePrintHeader
+                        mode="section"
+                        departmentName={sec.departmentName}
+                        programName={sec.programName}
+                        semester={sec.semester}
+                        sectionName={sec.name}
+                        sectionCode={sec.code}
+                        shift={sec.shift}
+                      />
+                      <WeeklyGrid
+                        entries={built.entries}
+                        viewMode="section"
+                        allPeriods={[1, 2, 3, 4, 5, 6]}
+                        slotTimes={built.shift === 1 ? SHIFT_1_TIMES : SHIFT_2_TIMES}
+                        emptyMessage={`No sessions scheduled for Section ${sec.name}`}
+                      />
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

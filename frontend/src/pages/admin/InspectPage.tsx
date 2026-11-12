@@ -141,7 +141,7 @@ export default function InspectPage() {
           {selected ? (
             <>
               {/* Selected Version Audit Banner */}
-              <section className="admin-panel">
+              <section className="admin-panel no-print">
                 <div className="admin-panel-hd">
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -222,7 +222,7 @@ export default function InspectPage() {
 
               {/* Faculty Load Distribution */}
               {Object.keys(facultyLoads).length > 0 && (
-                <section className="admin-panel">
+                <section className="admin-panel no-print">
                   <div className="admin-panel-hd">
                     <h2>Faculty Teaching Load Balance</h2>
                     <span className="admin-mu admin-m">Weekly periods</span>
@@ -269,7 +269,7 @@ export default function InspectPage() {
 
               {/* Timetable Grid for Version */}
               <section className="admin-panel">
-                <div className="admin-panel-hd">
+                <div className="admin-panel-hd no-print">
                   <h2>Schedule Matrix ({selected.status.toUpperCase()} — {new Date(selected.created_at).toLocaleDateString()})</h2>
                 </div>
                 <TimetablePreview key={selected.id} versionId={selected.id} />
@@ -283,7 +283,7 @@ export default function InspectPage() {
         </div>
 
         {/* Right Sidebar: Versions List */}
-        <div className="admin-cal-stack">
+        <div className="admin-cal-stack no-print">
           <section className="admin-panel">
             <div className="admin-panel-hd">
               <h2>All Versions</h2>

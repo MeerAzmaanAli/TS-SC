@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import WeeklyGrid, { GridEntry } from '../components/WeeklyGrid'
+import TimetablePrintHeader from '../components/TimetablePrintHeader'
 import { SHIFT_1_TIMES, SHIFT_2_TIMES } from '../components/TimetablePreview'
-import { getHeldLectureDate, toLocalDateString } from '../lib/substitution'
+import { getHeldLectureDate, isSubstitutionDayPast, toLocalDateString } from '../lib/substitution'
 import {
   AlertCircleIcon,
   RefreshIcon,
@@ -19,6 +20,7 @@ interface SectionInfo {
   strength: number
   batch_count: number
   program_name: string
+  department_name?: string
   shift?: number
 }
 
@@ -42,6 +44,7 @@ interface TodaySubstitution {
   id: string
   entry_id?: string
   date: string
+  created_at?: string
   status: 'open' | 'assigned' | 'unfilled' | 'expired'
   period: number
   day_of_week: number
@@ -127,13 +130,17 @@ export default function StudentView() {
       // Success
       setSection(data.section)
       setHasPublishedTimetable(data.has_published_timetable)
-      const todaySubs: TodaySubstitution[] = data.today_substitutions || []
-      setTodaySubstitutions(todaySubs)
+      const rawSubs: TodaySubstitution[] = data.today_substitutions || []
+      // Exclude past-day substitutions so timetable slots & today's updates reset after the lecture day ends
+      const activeSubs = rawSubs.filter(
+        (sub) => !isSubstitutionDayPast(sub.day_of_week, sub.created_at ?? sub.date),
+      )
+      setTodaySubstitutions(activeSubs)
 
-      // Map today's substitutions strictly by exact timetable_entry_id
+      // Map active substitutions strictly by exact timetable_entry_id
       // to ensure a substitution ONLY highlights its specific scheduled lecture slot
       const subByEntryId = new Map<string, TodaySubstitution>()
-      for (const sub of todaySubs) {
+      for (const sub of activeSubs) {
         if (sub.entry_id) subByEntryId.set(sub.entry_id, sub)
       }
 
@@ -144,7 +151,7 @@ export default function StudentView() {
       const gridEntries: GridEntry[] = (data.entries || []).map((e: RawEntry) => {
         // Strictly match by exact entry ID
         const sub = subByEntryId.get(e.id) || null
-        const heldDate = sub ? getHeldLectureDate(e.day_of_week, sub.date) : null
+        const heldDate = sub ? getHeldLectureDate(e.day_of_week, sub.created_at ?? sub.date) : null
         const heldDateStr = heldDate ? toLocalDateString(heldDate) : sub?.date ?? null
 
         let period = e.period
@@ -384,7 +391,7 @@ export default function StudentView() {
       {/* Batch Selector Bar */}
       {section.batch_count > 1 && (
         <div
-          className="card"
+          className="card no-print"
           style={{
             padding: '0.75rem 1.25rem',
             marginBottom: '1.25rem',
@@ -425,25 +432,25 @@ export default function StudentView() {
       {/* Realtime Substitution Live Broadcast Banner */}
       {todaySubstitutions.length > 0 && (
         <div
-          className="card"
+          className="card no-print"
           style={{
             marginBottom: '1.5rem',
-            borderLeft: '4px solid #3b82f6',
-            background: '#eff6ff',
+            borderLeft: '4px solid #FFB900',
+            background: '#FFFBEB',
           }}
         >
           <h3
             style={{
               fontSize: '1rem',
               fontWeight: 700,
-              color: '#1e3a8a',
+              color: '#1C1917',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
               margin: '0 0 0.75rem',
             }}
           >
-            <ClockIcon size={18} />
+            <ClockIcon size={18} style={{ color: '#92400E' }} />
             <span>Today's Substitution &amp; Lecture Status Updates</span>
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -462,7 +469,7 @@ export default function StudentView() {
                     padding: '0.6rem 0.85rem',
                     borderRadius: '8px',
                     background: '#ffffff',
-                    border: '1px solid #bfdbfe',
+                    border: '1px solid #FDE68A',
                     flexWrap: 'wrap',
                     gap: '0.5rem',
                   }}
@@ -547,6 +554,7 @@ export default function StudentView() {
         /* Timetable Grid with Live Substitution Color Legend */
         <div style={{ marginBottom: '2rem' }}>
           <div
+            className="no-print"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -636,6 +644,7 @@ export default function StudentView() {
           {/* Shift Banner */}
           {section && (
             <div
+              className="no-print"
               style={{
                 marginBottom: '1rem',
                 padding: '0.85rem 1.25rem',
@@ -685,16 +694,29 @@ export default function StudentView() {
             </div>
           )}
 
-          <WeeklyGrid
-            entries={displayedEntries}
-            viewMode="section"
-            allPeriods={[1, 2, 3, 4, 5, 6]}
-            slotTimes={
-              section?.shift === 2 || (section?.semester ? [3, 4, 5, 6].includes(section.semester) : false)
-                ? SHIFT_2_TIMES
-                : SHIFT_1_TIMES
-            }
-          />
+          <div className="tt-print-area">
+            <TimetablePrintHeader
+              mode="section"
+              departmentName={section.department_name}
+              programName={section.program_name}
+              semester={section.semester}
+              sectionName={section.name}
+              sectionCode={section.code}
+              shift={section.shift}
+              batchLabel={selectedBatch === 'all' ? null : `Batch B${selectedBatch}`}
+            />
+
+            <WeeklyGrid
+              entries={displayedEntries}
+              viewMode="section"
+              allPeriods={[1, 2, 3, 4, 5, 6]}
+              slotTimes={
+                section?.shift === 2 || (section?.semester ? [3, 4, 5, 6].includes(section.semester) : false)
+                  ? SHIFT_2_TIMES
+                  : SHIFT_1_TIMES
+              }
+            />
+          </div>
         </div>
       )}
     </div>

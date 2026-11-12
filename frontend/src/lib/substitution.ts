@@ -1,4 +1,4 @@
-﻿import { supabase } from './supabase'
+import { supabase } from './supabase'
 import { SOLVER_URL } from './timetable'
 
 export interface RankedCandidate {
@@ -98,7 +98,12 @@ export function getLectureTemporalStatus(dayOfWeek: number, startsAt: string): {
  *   the lecture is held on Wednesday (today).
  */
 export function getHeldLectureDate(slotDayOfWeek: number, referenceCreatedAt?: string | Date | null): Date {
-  const ref = referenceCreatedAt ? new Date(referenceCreatedAt) : new Date()
+  let ref: Date
+  if (typeof referenceCreatedAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(referenceCreatedAt)) {
+    ref = new Date(`${referenceCreatedAt}T12:00:00`)
+  } else {
+    ref = referenceCreatedAt ? new Date(referenceCreatedAt) : new Date()
+  }
   const refDayOfWeek = ref.getDay() === 0 ? 7 : ref.getDay() // 1=Mon .. 7=Sun
 
   // Number of days between reference and target slot (0 if same day, 1 if next day, etc.)
