@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import WeeklyGrid, { GridEntry, IncomingRequestInfo } from '../components/WeeklyGrid'
 import TimetablePrintHeader from '../components/TimetablePrintHeader'
+import { FACULTY_TIMES } from '../components/TimetablePreview'
 import SubstitutionInbox from '../components/SubstitutionInbox'
 import {
   createSubstitutionRequest,
@@ -955,6 +956,9 @@ export default function FacultyView() {
               <WeeklyGrid
                 entries={allGridEntries}
                 viewMode="faculty"
+                allPeriods={[1, 2, 3, 4, 5, 6, 7, 8]}
+                slotTimes={FACULTY_TIMES}
+                highlightOngoing={true}
                 onRequestSubstitution={handleOpenRequestModal}
                 incomingRequests={incomingRequests}
                 onAcceptRequest={handleAcceptIncoming}

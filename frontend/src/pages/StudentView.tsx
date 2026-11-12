@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import WeeklyGrid, { GridEntry } from '../components/WeeklyGrid'
 import TimetablePrintHeader from '../components/TimetablePrintHeader'
-import { SHIFT_1_TIMES, SHIFT_2_TIMES } from '../components/TimetablePreview'
+import { SHIFT_1_TIMES, SHIFT_2_TIMES, FACULTY_TIMES } from '../components/TimetablePreview'
 import { getHeldLectureDate, isSubstitutionDayPast, toLocalDateString } from '../lib/substitution'
 import {
   AlertCircleIcon,
@@ -57,6 +57,13 @@ interface TodaySubstitution {
   deadline: string
 }
 
+interface PublicFacultyItem {
+  id: string
+  name: string
+  email: string | null
+  department_name?: string | null
+}
+
 const STORAGE_KEY = 'ts_sc_student_access'
 
 export default function StudentView() {
@@ -71,6 +78,17 @@ export default function StudentView() {
   const [hasPublishedTimetable, setHasPublishedTimetable] = useState(true)
   const [loadingSchedule, setLoadingSchedule] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState<number | 'all'>('all')
+
+  // Student Tab & Faculty Schedule Search state
+  const [studentTab, setStudentTab] = useState<'section' | 'faculty'>('section')
+  const [facultyList, setFacultyList] = useState<PublicFacultyItem[]>([])
+  const [facultyListLoading, setFacultyListLoading] = useState(false)
+  const [facultySearch, setFacultySearch] = useState('')
+  const [selectedFacultyId, setSelectedFacultyId] = useState('')
+  const [selectedFacultyMeta, setSelectedFacultyMeta] = useState<PublicFacultyItem | null>(null)
+  const [facultyEntries, setFacultyEntries] = useState<GridEntry[]>([])
+  const [facultyScheduleLoading, setFacultyScheduleLoading] = useState(false)
+  const [facultyError, setFacultyError] = useState<string | null>(null)
 
   // Check saved credentials on mount
   useEffect(() => {
@@ -207,6 +225,102 @@ export default function StudentView() {
     setTodaySubstitutions([])
     setPasskey('')
     setAuthError(null)
+    setStudentTab('section')
+  }
+
+  async function loadFacultyDirectory() {
+    if (facultyList.length > 0) return
+    setFacultyListLoading(true)
+    setFacultyError(null)
+    try {
+      const { data, error } = await supabase.rpc('get_student_faculty_list')
+      if (error) throw error
+      if (data?.success && Array.isArray(data.faculty)) {
+        setFacultyList(data.faculty as PublicFacultyItem[])
+      } else {
+        setFacultyError('Could not load faculty directory.')
+      }
+    } catch (err: any) {
+      setFacultyError(err.message || 'Failed to load faculty directory.')
+    } finally {
+      setFacultyListLoading(false)
+    }
+  }
+
+  async function loadFacultySchedule(facultyId: string) {
+    if (!facultyId) return
+    setSelectedFacultyId(facultyId)
+    setFacultyScheduleLoading(true)
+    setFacultyError(null)
+    try {
+      const { data, error } = await supabase.rpc('get_student_faculty_timetable', {
+        p_faculty_id: facultyId,
+      })
+      if (error) throw error
+      if (!data || !data.success) {
+        setFacultyError(data?.error || 'Could not load faculty timetable.')
+        setFacultyEntries([])
+        return
+      }
+      setSelectedFacultyMeta(data.faculty as PublicFacultyItem)
+      const activeSubs = ((data.substitutions || []) as any[]).filter(
+        (s) => !isSubstitutionDayPast(s.day_of_week, s.created_at),
+      )
+      const ownSubByEntry = new Map<string, any>()
+      const coveringEntries: GridEntry[] = []
+      for (const s of activeSubs) {
+        if (s.role === 'covering') {
+          coveringEntries.push({
+            id: `cov-${s.id}`,
+            day_of_week: s.day_of_week,
+            period: s.period,
+            course_code: s.course_code || 'GE',
+            course_name: s.course_name || 'Generic Elective',
+            room_name: s.room_name || '—',
+            section_name: s.section_name ? `${s.section_name}${s.batch ? ` (B${s.batch})` : ''}` : '',
+            is_elective: Boolean(s.is_elective),
+            batch: s.batch ?? null,
+            substitution: {
+              status: 'assigned',
+              requester_name: s.requester_name,
+              role: 'covering',
+              date: toLocalDateString(getHeldLectureDate(s.day_of_week, s.created_at)),
+            },
+          })
+        } else if (s.entry_id && !ownSubByEntry.has(s.entry_id)) {
+          ownSubByEntry.set(s.entry_id, s)
+        }
+      }
+
+      const ownMapped: GridEntry[] = ((data.entries || []) as any[]).map((e) => {
+        const sub = ownSubByEntry.get(e.id)
+        return {
+          id: e.id,
+          day_of_week: e.day_of_week,
+          period: e.period,
+          course_code: e.course_code || (e.is_elective ? 'GE' : '—'),
+          course_name: e.course_name || (e.is_elective ? 'Generic Elective' : '—'),
+          room_name: e.room_name || '—',
+          section_name: e.section_name ? `${e.section_name}${e.batch ? ` (B${e.batch})` : ''}` : '',
+          is_elective: Boolean(e.is_elective),
+          batch: e.batch ?? null,
+          substitution: sub
+            ? {
+                status: sub.status,
+                substitute_name: sub.substitute_name,
+                role: 'requester',
+                date: toLocalDateString(getHeldLectureDate(e.day_of_week, sub.created_at)),
+              }
+            : null,
+        }
+      })
+
+      setFacultyEntries([...ownMapped, ...coveringEntries])
+    } catch (err: any) {
+      setFacultyError(err.message || 'Failed to load faculty timetable.')
+    } finally {
+      setFacultyScheduleLoading(false)
+    }
   }
 
   // Filter entries by batch if selected
@@ -352,9 +466,23 @@ export default function StudentView() {
           </div>
 
           <div className="admin-cal-nav">
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#1C1917', padding: '6px 12px', background: '#ffffff', borderRadius: 8, boxShadow: '0 0 0 1px #E7E5E4' }}>
+            <button
+              type="button"
+              className={studentTab === 'section' ? 'on' : ''}
+              onClick={() => setStudentTab('section')}
+            >
               Section {section.name} · {section.program_name} (Sem {section.semester})
-            </span>
+            </button>
+            <button
+              type="button"
+              className={studentTab === 'faculty' ? 'on' : ''}
+              onClick={() => {
+                setStudentTab('faculty')
+                loadFacultyDirectory()
+              }}
+            >
+              Find Faculty
+            </button>
           </div>
         </div>
 
@@ -388,8 +516,141 @@ export default function StudentView() {
         </div>
       </div>
 
+      {/* ========================================== */}
+      {/* TAB 2: FACULTY SCHEDULE SEARCH & VIEW      */}
+      {/* ========================================== */}
+      {studentTab === 'faculty' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div className="card no-print" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.85rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1C1917', margin: 0 }}>
+                  Search Faculty Schedule
+                </h2>
+                <p className="text-muted" style={{ fontSize: '0.825rem', margin: '0.2rem 0 0' }}>
+                  Find any faculty member by name, department, or email to inspect their weekly timetable and free slots.
+                </p>
+              </div>
+              {selectedFacultyMeta && (
+                <span className="badge badge-primary" style={{ fontSize: '0.78rem' }}>
+                  Viewing: {selectedFacultyMeta.name}
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                className="input"
+                placeholder="Search faculty name, department, or email…"
+                value={facultySearch}
+                onChange={(e) => setFacultySearch(e.target.value)}
+                style={{ flex: '1 1 240px', minWidth: 0 }}
+              />
+              <select
+                className="select"
+                value={selectedFacultyId}
+                onChange={(e) => loadFacultySchedule(e.target.value)}
+                style={{ flex: '1 1 240px', minWidth: 0 }}
+                disabled={facultyListLoading}
+              >
+                <option value="">
+                  {facultyListLoading ? 'Loading faculty…' : 'Select a faculty member…'}
+                </option>
+                {facultyList
+                  .filter((f) => {
+                    const q = facultySearch.trim().toLowerCase()
+                    if (!q) return true
+                    return (
+                      f.name.toLowerCase().includes(q) ||
+                      (f.department_name ?? '').toLowerCase().includes(q) ||
+                      (f.email ?? '').toLowerCase().includes(q)
+                    )
+                  })
+                  .map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}{f.department_name ? ` — ${f.department_name}` : ''}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {facultySearch.trim() && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginTop: '0.85rem', maxHeight: 140, overflowY: 'auto' }}>
+                {facultyList
+                  .filter((f) => {
+                    const q = facultySearch.trim().toLowerCase()
+                    return (
+                      f.name.toLowerCase().includes(q) ||
+                      (f.department_name ?? '').toLowerCase().includes(q) ||
+                      (f.email ?? '').toLowerCase().includes(q)
+                    )
+                  })
+                  .slice(0, 12)
+                  .map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => loadFacultySchedule(f.id)}
+                      className={`btn btn-sm ${selectedFacultyId === f.id ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      <span>{f.name}</span>
+                      {f.department_name && (
+                        <span style={{ opacity: 0.75, fontSize: '0.72rem' }}>· {f.department_name}</span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            )}
+
+            {facultyError && (
+              <div className="alert alert-danger" style={{ marginTop: '0.85rem', marginBottom: 0 }}>
+                <AlertCircleIcon size={16} />
+                <span>{facultyError}</span>
+              </div>
+            )}
+          </div>
+
+          {facultyScheduleLoading ? (
+            <div className="card" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+              <RefreshIcon size={24} className="spin" style={{ margin: '0 auto 0.75rem', color: '#78716C' }} />
+              <p className="text-muted" style={{ margin: 0 }}>Loading faculty schedule…</p>
+            </div>
+          ) : selectedFacultyMeta ? (
+            <div className="tt-print-area">
+              <TimetablePrintHeader
+                mode="faculty"
+                facultyName={selectedFacultyMeta.name}
+                facultyEmail={selectedFacultyMeta.email}
+                departmentName={selectedFacultyMeta.department_name}
+              />
+
+              <WeeklyGrid
+                entries={facultyEntries}
+                viewMode="faculty"
+                allPeriods={[1, 2, 3, 4, 5, 6, 7, 8]}
+                slotTimes={FACULTY_TIMES}
+                highlightOngoing={true}
+                emptyMessage={`No teaching periods scheduled for ${selectedFacultyMeta.name}`}
+              />
+            </div>
+          ) : (
+            <div className="card no-print" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+              <UsersIcon size={32} style={{ color: '#A8A29E', margin: '0 auto 0.75rem' }} />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1C1917', marginBottom: '0.35rem' }}>
+                Select a Faculty Member
+              </h3>
+              <p className="text-muted" style={{ maxWidth: 420, margin: '0 auto', fontSize: '0.875rem' }}>
+                Search by name or department above to view any faculty member&apos;s weekly schedule, ongoing class, and assigned sections.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Batch Selector Bar */}
-      {section.batch_count > 1 && (
+      {studentTab === 'section' && section.batch_count > 1 && (
         <div
           className="card no-print"
           style={{
@@ -430,7 +691,7 @@ export default function StudentView() {
       )}
 
       {/* Realtime Substitution Live Broadcast Banner */}
-      {todaySubstitutions.length > 0 && (
+      {studentTab === 'section' && todaySubstitutions.length > 0 && (
         <div
           className="card no-print"
           style={{
@@ -540,7 +801,7 @@ export default function StudentView() {
         </div>
       )}
 
-      {!hasPublishedTimetable ? (
+      {studentTab === 'section' && (!hasPublishedTimetable ? (
         <div className="card" style={{ textAlign: 'center', padding: '3.5rem 1rem' }}>
           <AlertCircleIcon size={36} style={{ color: '#f59e0b', margin: '0 auto 1rem' }} />
           <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>
@@ -710,6 +971,7 @@ export default function StudentView() {
               entries={displayedEntries}
               viewMode="section"
               allPeriods={[1, 2, 3, 4, 5, 6]}
+              highlightOngoing={true}
               slotTimes={
                 section?.shift === 2 || (section?.semester ? [3, 4, 5, 6].includes(section.semester) : false)
                   ? SHIFT_2_TIMES
@@ -718,7 +980,7 @@ export default function StudentView() {
             />
           </div>
         </div>
-      )}
+      ))}
     </div>
   )
 }

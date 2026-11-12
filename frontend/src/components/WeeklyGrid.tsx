@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   MapPinIcon,
   UsersIcon,
@@ -74,6 +75,8 @@ export interface WeeklyGridProps {
   orientation?: 'responsive' | 'day-rows' | 'time-rows'
   /** Show Course-Faculty or Course-Section-Classroom breakdown table underneath the grid */
   showSummaryTable?: boolean
+  /** Highlight the currently ongoing day + period in the timetable matrix */
+  highlightOngoing?: boolean
 }
 
 const DAY_NAMES = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -112,6 +115,16 @@ function formatSubDate(dStr?: string | null): string {
   }
 }
 
+function parseMinutes(t?: string): number | null {
+  if (!t) return null
+  const parts = t.split(':')
+  if (parts.length < 2) return null
+  const h = parseInt(parts[0], 10)
+  const m = parseInt(parts[1], 10)
+  if (Number.isNaN(h) || Number.isNaN(m)) return null
+  return h * 60 + m
+}
+
 export default function WeeklyGrid({
   entries,
   viewMode,
@@ -126,7 +139,28 @@ export default function WeeklyGrid({
   actionBusyId,
   orientation = 'responsive',
   showSummaryTable = true,
+  highlightOngoing = false,
 }: WeeklyGridProps) {
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    if (!highlightOngoing) return
+    const timer = setInterval(() => setNow(new Date()), 30000)
+    return () => clearInterval(timer)
+  }, [highlightOngoing])
+
+  const todayDayOfWeek = now.getDay() === 0 ? 7 : now.getDay() // 1=Mon..7=Sun
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+
+  function isOngoingPeriod(p: number): boolean {
+    if (!highlightOngoing || !slotTimes) return false
+    const st = slotTimes[p]
+    if (!st?.starts_at || !st?.ends_at) return false
+    const startMin = parseMinutes(st.starts_at)
+    const endMin = parseMinutes(st.ends_at)
+    if (startMin === null || endMin === null) return false
+    return nowMinutes >= startMin && nowMinutes < endMin
+  }
   // Ensure the full standard school week (Monday to Friday, Periods 1 to 8) is shown by default
   const defaultDays = [1, 2, 3, 4, 5]
   const defaultPeriods = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -175,11 +209,18 @@ export default function WeeklyGrid({
     const slotEntries = cellMap.get(`${d}-${p}`) ?? []
     const incomingForSlot = incomingMap.get(`${d}-${p}`) ?? []
     const hasContent = slotEntries.length > 0 || incomingForSlot.length > 0
+    const isOngoingSlot = Boolean(highlightOngoing && d === todayDayOfWeek && isOngoingPeriod(p))
 
     return (
-      <td key={`${keyPrefix}${d}-${p}`} className={`timetable-cell ${hasContent ? 'has-session' : ''}`}>
+      <td
+        key={`${keyPrefix}${d}-${p}`}
+        className={`timetable-cell ${hasContent ? 'has-session' : ''} ${isOngoingSlot ? 'ongoing-slot' : ''}`}
+      >
         {hasContent ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', height: '100%' }}>
+            {isOngoingSlot && (
+              <span className="ongoing-now-pill no-print">● LIVE NOW</span>
+            )}
             {/* 1. Regular & Substituted Timetable Entries */}
             {slotEntries.map((e) => {
               const isCovering = e.substitution?.role === 'covering'
@@ -629,15 +670,20 @@ export default function WeeklyGrid({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--slate-400)',
+              color: isOngoingSlot ? '#92400E' : 'var(--slate-400)',
               fontSize: '0.75rem',
               borderRadius: 'var(--radius-sm)',
-              border: '1px dashed var(--slate-200)',
-              backgroundColor: 'rgba(248, 250, 252, 0.4)',
+              border: isOngoingSlot ? '1.5px dashed #FFB900' : '1px dashed var(--slate-200)',
+              backgroundColor: isOngoingSlot ? '#FFFBEB' : 'rgba(248, 250, 252, 0.4)',
             }}
           >
+            {isOngoingSlot && (
+              <span className="ongoing-now-pill no-print" style={{ alignSelf: 'center', marginBottom: 4 }}>
+                ● LIVE NOW
+              </span>
+            )}
             <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>—</span>
-            <span style={{ fontSize: '0.65rem', color: 'var(--slate-400)' }}>Free</span>
+            <span style={{ fontSize: '0.65rem', color: isOngoingSlot ? '#92400E' : 'var(--slate-400)' }}>Free</span>
           </div>
         )}
       </td>
@@ -656,9 +702,32 @@ export default function WeeklyGrid({
             </th>
             {periods.map((p) => {
               const time = slotTimes?.[p]
+              const isLivePeriod = isOngoingPeriod(p)
               return (
-                <th key={`${keyPrefix}th-${p}`} className="timetable-header-cell">
-                  <span className="th-title">Period {p}</span>
+                <th
+                  key={`${keyPrefix}th-${p}`}
+                  className={`timetable-header-cell ${isLivePeriod ? 'ongoing-col-header' : ''}`}
+                >
+                  <span className="th-title">
+                    Period {p}
+                    {isLivePeriod && (
+                      <span
+                        className="no-print"
+                        style={{
+                          marginLeft: 6,
+                          fontSize: '0.62rem',
+                          fontWeight: 800,
+                          padding: '1px 5px',
+                          borderRadius: 999,
+                          background: '#FFB900',
+                          color: '#1C1917',
+                          verticalAlign: 'middle',
+                        }}
+                      >
+                        NOW
+                      </span>
+                    )}
+                  </span>
                   {time?.starts_at ? (
                     <span className="th-time">
                       {formatTime(time.starts_at)}
@@ -673,15 +742,38 @@ export default function WeeklyGrid({
           </tr>
         </thead>
         <tbody>
-          {days.map((d) => (
-            <tr key={`${keyPrefix}tr-${d}`}>
-              <th className="timetable-day-header">
-                <div className="day-name">{DAY_SHORT[d] || `Day ${d}`}</div>
-                <div className="day-sub">{DAY_NAMES[d] || ''}</div>
-              </th>
-              {periods.map((p) => renderCell(d, p, keyPrefix))}
-            </tr>
-          ))}
+          {days.map((d) => {
+            const isToday = highlightOngoing && d === todayDayOfWeek
+            return (
+              <tr key={`${keyPrefix}tr-${d}`}>
+                <th className={`timetable-day-header ${isToday ? 'today-row-header' : ''}`}>
+                  <div className="day-name">
+                    {DAY_SHORT[d] || `Day ${d}`}
+                    {isToday && (
+                      <span
+                        className="no-print"
+                        style={{
+                          display: 'inline-block',
+                          marginLeft: 4,
+                          fontSize: '0.6rem',
+                          fontWeight: 800,
+                          padding: '1px 4px',
+                          borderRadius: 4,
+                          background: '#292524',
+                          color: '#FFB900',
+                          verticalAlign: 'middle',
+                        }}
+                      >
+                        TODAY
+                      </span>
+                    )}
+                  </div>
+                  <div className="day-sub">{DAY_NAMES[d] || ''}</div>
+                </th>
+                {periods.map((p) => renderCell(d, p, keyPrefix))}
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
@@ -697,21 +789,49 @@ export default function WeeklyGrid({
               <span className="th-title">TIME / DAY</span>
               <span className="th-sub">PERIOD</span>
             </th>
-            {days.map((d) => (
-              <th key={`${keyPrefix}th-day-${d}`} className="timetable-header-cell">
-                <span className="th-title">{DAY_SHORT[d] || `Day ${d}`}</span>
-                <span className="th-sub">{DAY_NAMES[d] || ''}</span>
-              </th>
-            ))}
+            {days.map((d) => {
+              const isToday = highlightOngoing && d === todayDayOfWeek
+              return (
+                <th
+                  key={`${keyPrefix}th-day-${d}`}
+                  className={`timetable-header-cell ${isToday ? 'today-row-header' : ''}`}
+                >
+                  <span className="th-title">{DAY_SHORT[d] || `Day ${d}`}</span>
+                  <span className="th-sub">{DAY_NAMES[d] || ''}</span>
+                </th>
+              )
+            })}
           </tr>
         </thead>
         <tbody>
           {periods.map((p) => {
             const time = slotTimes?.[p]
+            const isLivePeriod = isOngoingPeriod(p)
             return (
               <tr key={`${keyPrefix}tr-p-${p}`}>
-                <th className="timetable-day-header" style={{ width: 135, textAlign: 'left', padding: '0.65rem 0.75rem' }}>
-                  <div className="day-name" style={{ fontSize: '0.85rem' }}>Period {p}</div>
+                <th
+                  className={`timetable-day-header ${isLivePeriod ? 'ongoing-col-header' : ''}`}
+                  style={{ width: 135, textAlign: 'left', padding: '0.65rem 0.75rem' }}
+                >
+                  <div className="day-name" style={{ fontSize: '0.85rem' }}>
+                    Period {p}
+                    {isLivePeriod && (
+                      <span
+                        className="no-print"
+                        style={{
+                          marginLeft: 6,
+                          fontSize: '0.6rem',
+                          fontWeight: 800,
+                          padding: '1px 5px',
+                          borderRadius: 999,
+                          background: '#FFB900',
+                          color: '#1C1917',
+                        }}
+                      >
+                        NOW
+                      </span>
+                    )}
+                  </div>
                   {time?.starts_at ? (
                     <div className="day-sub" style={{ fontSize: '0.7rem', marginTop: 2 }}>
                       {formatTime(time.starts_at)} {time.ends_at && `- ${formatTime(time.ends_at)}`}

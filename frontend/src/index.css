@@ -2237,9 +2237,38 @@ a:hover {
 }
 
 
-/* ==========================================================================
-   Timetable Print Layout & Collective Year-Wise Printing
-   ========================================================================== */
+.timetable-cell.ongoing-slot {
+  background-color: #FFFBEB !important;
+  box-shadow: inset 0 0 0 2px #FFB900;
+}
+
+.timetable-header-cell.ongoing-col-header,
+.timetable-day-header.ongoing-col-header {
+  background-color: #FEF3C7 !important;
+  border-bottom: 2px solid #FFB900 !important;
+}
+
+.timetable-day-header.today-row-header,
+.timetable-header-cell.today-row-header {
+  background-color: #F5F5F0 !important;
+  box-shadow: inset 3px 0 0 #292524;
+}
+
+.ongoing-now-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #FFB900;
+  color: #1C1917;
+  align-self: flex-start;
+}
+
+/* Timetable Print Layout & Collective Year-Wise Printing */
 
 .tt-print-header,
 .tt-bulk-print-root {
