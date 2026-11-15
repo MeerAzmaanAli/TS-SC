@@ -472,8 +472,8 @@ export default function StudentView() {
   return (
     <div className="student-cal-wrapper">
       {/* Top Navigation & Fast Actions Bar */}
-      <div className="admin-cal-topbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <header className="admin-cal-topbar">
+        <div className="admin-cal-brand-wrap">
           <div style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div className="admin-cal-logo" title="Timetable Scheduler">
               TS
@@ -483,46 +483,46 @@ export default function StudentView() {
               <span>Student · {section.code}</span>
             </div>
           </div>
-
-          <div className="admin-cal-nav">
-            <button
-              type="button"
-              className={studentTab === 'section' ? 'on' : ''}
-              onClick={() => setStudentTab('section')}
-            >
-              Section {section.name} · {section.program_name} (Sem {section.semester})
-            </button>
-            <button
-              type="button"
-              className={studentTab === 'faculty' ? 'on' : ''}
-              onClick={() => {
-                setStudentTab('faculty')
-                loadFacultyDirectory()
-              }}
-            >
-              Find Faculty
-            </button>
-          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <nav className="admin-cal-nav" aria-label="Student Navigation">
           <button
             type="button"
-            className="admin-btn admin-btn-outline"
+            className={studentTab === 'section' ? 'on' : ''}
+            onClick={() => setStudentTab('section')}
+          >
+            Section {section.name} · {section.program_name} (Sem {section.semester})
+          </button>
+          <button
+            type="button"
+            className={studentTab === 'faculty' ? 'on' : ''}
+            onClick={() => {
+              setStudentTab('faculty')
+              loadFacultyDirectory()
+            }}
+          >
+            Find Faculty
+          </button>
+        </nav>
+
+        <div className="admin-cal-topbar-actions">
+          <button
+            type="button"
+            className="admin-btn admin-btn-outline admin-btn-sm"
             onClick={() => fetchSchedule(section.code, passkey, false)}
             disabled={loadingSchedule}
             title="Refresh timetable"
           >
-            <RefreshIcon size={15} className={loadingSchedule ? 'spin' : ''} />
-            <span>Refresh</span>
+            <RefreshIcon size={14} className={loadingSchedule ? 'spin' : ''} />
+            <span className="admin-btn-text">Refresh</span>
           </button>
           <button
             type="button"
-            className="admin-btn admin-btn-outline"
+            className="admin-btn admin-btn-outline admin-btn-sm"
             onClick={() => window.print()}
             title="Print or save schedule PDF"
           >
-            <span>Print</span>
+            <span className="admin-btn-text">Print</span>
           </button>
           <button
             type="button"
@@ -530,10 +530,10 @@ export default function StudentView() {
             onClick={handleSwitchSection}
             title="Switch Section"
           >
-            <span>Switch Section</span>
+            <span className="admin-btn-text">Switch Section</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {/* ========================================== */}
       {/* TAB 2: FACULTY SCHEDULE SEARCH & VIEW      */}

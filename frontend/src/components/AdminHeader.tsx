@@ -44,8 +44,8 @@ export default function AdminHeader({ activeTab, onTabChange, onRefresh }: Admin
   }
 
   return (
-    <div className="admin-cal-topbar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+    <header className="admin-cal-topbar">
+      <div className="admin-cal-brand-wrap">
         <Link to="/admin" className="admin-cal-brand" style={{ textDecoration: 'none' }}>
           <div className="admin-cal-logo" title="Timetable Scheduler & Smart Classroom">
             TS
@@ -55,60 +55,60 @@ export default function AdminHeader({ activeTab, onTabChange, onRefresh }: Admin
             <span>Admin</span>
           </div>
         </Link>
-
-        <div className="admin-cal-nav">
-          {renderTabButton('overview', 'Overview')}
-          <Link to="/admin/search" className={path === '/admin/search' ? 'on' : ''}>
-            Institutional Search
-          </Link>
-          {renderTabButton('shifts', 'Shifts & Timings')}
-          <Link to="/admin/timetable" className={path === '/admin/timetable' ? 'on' : ''}>
-            Timetables
-          </Link>
-          <Link to="/admin/generate" className={path === '/admin/generate' ? 'on' : ''}>
-            Generator
-          </Link>
-          <Link to="/admin/versions" className={path === '/admin/versions' ? 'on' : ''}>
-            Conflicts
-          </Link>
-          <Link to="/admin/penalties" className={path === '/admin/penalties' ? 'on' : ''}>
-            Substitutions
-          </Link>
-          <Link to="/admin/data" className={path.startsWith('/admin/data') ? 'on' : ''}>
-            Data
-          </Link>
-          {renderTabButton('access', 'Access & Passkeys')}
-          {renderTabButton('faculty-auth', 'Faculty Logins')}
-        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+      <nav className="admin-cal-nav" aria-label="Admin Navigation">
+        {renderTabButton('overview', 'Overview')}
+        <Link to="/admin/search" className={path === '/admin/search' ? 'on' : ''}>
+          Institutional Search
+        </Link>
+        {renderTabButton('shifts', 'Shifts & Timings')}
+        <Link to="/admin/timetable" className={path === '/admin/timetable' ? 'on' : ''}>
+          Timetables
+        </Link>
+        <Link to="/admin/generate" className={path === '/admin/generate' ? 'on' : ''}>
+          Generator
+        </Link>
+        <Link to="/admin/versions" className={path === '/admin/versions' ? 'on' : ''}>
+          Conflicts
+        </Link>
+        <Link to="/admin/penalties" className={path === '/admin/penalties' ? 'on' : ''}>
+          Substitutions
+        </Link>
+        <Link to="/admin/data" className={path.startsWith('/admin/data') ? 'on' : ''}>
+          Data
+        </Link>
+        {renderTabButton('access', 'Access & Passkeys')}
+        {renderTabButton('faculty-auth', 'Faculty Logins')}
+      </nav>
+
+      <div className="admin-cal-topbar-actions">
         {onRefresh && (
           <button
             type="button"
-            className="admin-btn admin-btn-outline"
+            className="admin-btn admin-btn-outline admin-btn-sm"
             onClick={onRefresh}
             title="Refresh dashboard data"
           >
-            <RefreshIcon size={15} />
-            <span>Refresh</span>
+            <RefreshIcon size={14} />
+            <span className="admin-btn-text">Refresh</span>
           </button>
         )}
-        <Link to="/admin/generate" className="admin-btn admin-btn-primary">
-          <SparklesIcon size={16} />
-          <span>Generate timetable</span>
+        <Link to="/admin/generate" className="admin-btn admin-btn-primary admin-btn-sm">
+          <SparklesIcon size={14} />
+          <span className="admin-btn-text">Generate timetable</span>
         </Link>
         <button
           type="button"
           onClick={handleSignOut}
-          className="admin-btn admin-btn-outline"
+          className="admin-btn admin-btn-outline admin-btn-sm"
           title="Sign out of Admin Dashboard"
         >
-          <LogOutIcon size={15} />
-          <span>Sign out</span>
+          <LogOutIcon size={14} />
+          <span className="admin-btn-text">Sign out</span>
         </button>
       </div>
-    </div>
+    </header>
   )
 }
 

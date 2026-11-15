@@ -1719,6 +1719,22 @@ a:hover {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-cal-brand-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.admin-cal-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .admin-cal-nav {
@@ -1757,6 +1773,193 @@ a:hover {
   color: #1C1917;
   font-weight: 600;
   box-shadow: inset 0 -2px 0 #FFB900, 0 0 0 1px #E7E5E4, 0 1px 2px rgba(28, 25, 23, 0.04);
+}
+
+@media (max-width: 992px) {
+  .admin-cal-topbar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "brand actions"
+      "nav nav";
+    gap: 10px 12px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-cal-brand-wrap {
+    grid-area: brand;
+    min-width: 0;
+  }
+
+  .admin-cal-topbar-actions {
+    grid-area: actions;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  .admin-cal-nav {
+    grid-area: nav;
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 2px 0 6px 0;
+    gap: 6px;
+  }
+
+  .admin-cal-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-cal-nav a,
+  .admin-cal-nav button {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .admin-cal-topbar-actions .admin-btn-text {
+    display: none;
+  }
+
+  .admin-cal-topbar-actions .admin-btn {
+    padding: 0 8px !important;
+    min-width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   Institutional 360° Search Mobile Optimization
+   ========================================================================== */
+
+.admin-search-container {
+  max-width: 1280px;
+  margin: 12px auto;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-search-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.admin-search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-search-result-card {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .admin-search-container {
+    padding: 0 4px !important;
+    margin: 6px auto !important;
+    gap: 12px !important;
+  }
+
+  .admin-search-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .admin-search-header-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .admin-search-pills-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .admin-search-pills {
+    width: 100% !important;
+  }
+
+  .admin-search-profile-card {
+    padding: 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .admin-search-profile-btn {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .admin-search-profile-btn a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .admin-search-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .admin-search-stat-card {
+    padding: 8px 10px !important;
+  }
+
+  .admin-search-panel-card {
+    padding: 12px 10px !important;
+  }
+
+  .admin-search-panel-hd {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+
+  .admin-search-results-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .admin-search-result-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    padding: 10px 12px !important;
+  }
 }
 
 .admin-btn {

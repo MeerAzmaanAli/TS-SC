@@ -171,7 +171,7 @@ export default function SearchPage() {
     let cancelled = false
     async function loadEntityDossier() {
       setLoadingDetails(true)
-      setActiveSubTab('matrix')
+      setActiveSubTab(selectedEntity!.type === 'course' ? 'courses' : 'matrix')
       const { type, id } = selectedEntity!
 
       try {
@@ -647,10 +647,10 @@ export default function SearchPage() {
       <AdminHeader />
 
       {/* Main Container */}
-      <div style={{ maxWidth: 1280, margin: '12px auto', padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="admin-search-container" style={{ maxWidth: 1280, margin: '12px auto', padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 14, width: '100%', boxSizing: 'border-box' }}>
         {/* Page Top Heading */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ minWidth: 0, flex: '1 1 260px' }}>
+        <div className="admin-search-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ minWidth: 0, flex: '1 1 60px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div
                 style={{
@@ -681,7 +681,7 @@ export default function SearchPage() {
             <button
               type="button"
               onClick={() => setSelectedEntity(null)}
-              className="admin-btn admin-btn-outline admin-btn-sm"
+              className="admin-btn admin-btn-outline admin-btn-sm admin-search-header-btn"
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0 }}
             >
               <XIcon size={14} />
@@ -712,6 +712,7 @@ export default function SearchPage() {
 
         {/* Universal Search & Category Filter Bar */}
         <div
+          className="admin-search-bar-wrap"
           style={{
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-light)',
@@ -742,6 +743,7 @@ export default function SearchPage() {
                 color: 'var(--text-primary)',
                 background: 'var(--bg-app)',
                 outline: 'none',
+                boxSizing: 'border-box',
                 transition: 'border-color 0.15s ease',
               }}
               onFocus={(e) => (e.target.style.borderColor = '#FFB900')}
@@ -771,6 +773,7 @@ export default function SearchPage() {
 
           {/* Category Filter Pills (Horizontal swipe on mobile) */}
           <div
+            className="admin-search-pills-bar"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -780,6 +783,7 @@ export default function SearchPage() {
             }}
           >
             <div
+              className="admin-search-pills"
               style={{
                 display: 'flex',
                 gap: 6,
@@ -852,6 +856,7 @@ export default function SearchPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* 1. Header Profile Card */}
             <div
+              className="admin-search-profile-card"
               style={{
                 background: 'var(--bg-surface)',
                 border: '1.5px solid #FFB900',
@@ -978,25 +983,27 @@ export default function SearchPage() {
               </div>
 
               {/* Right Action Button */}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', maxWidth: 220, flex: '1 1 auto' }}>
-                <Link
-                  to="/admin/timetable"
-                  className="admin-btn admin-btn-outline admin-btn-sm"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%' }}
-                >
-                  <CalendarIcon size={14} />
-                  <span>Open in Matrix</span>
-                </Link>
-              </div>
+              {selectedEntity.type !== 'course' && (
+                <div className="admin-search-profile-btn" style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', maxWidth: 220, flex: '1 1 auto' }}>
+                  <Link
+                    to="/admin/timetable"
+                    className="admin-btn admin-btn-outline admin-btn-sm"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%' }}
+                  >
+                    <CalendarIcon size={14} />
+                    <span>Open in Matrix</span>
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* 2. Key Metrics Row */}
             {selectedEntity.type === 'faculty' && facultyMetrics && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+              <div className="admin-search-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Weekly Teaching Load</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                       {facultyMetrics.weeklyHours}
                     </span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>/ {facultyMetrics.maxLoad}h</span>
@@ -1012,33 +1019,34 @@ export default function SearchPage() {
                   </div>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Assigned Courses</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {facultyMetrics.coursesCount}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Active subjects taught</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Sections Taught</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {facultyMetrics.sectionsCount}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Student class groups</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Substitution Records</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {facultyMetrics.subsCount}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Requests initiated/covered</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Penalty Incurred</span>
                   <span
+                    className="admin-search-stat-val"
                     style={{
                       fontSize: '1.25rem',
                       fontWeight: 800,
@@ -1055,42 +1063,42 @@ export default function SearchPage() {
             )}
 
             {selectedEntity.type === 'course' && courseMetrics && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+              <div className="admin-search-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Scheduled Sessions</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.totalSlots}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Total weekly periods</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Assigned Faculty</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.facultyCount}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Teachers scheduled</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Enrolled Sections</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.sectionsCount}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Classes studying</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Total Students</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.totalStudents}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Enrolled pupil count</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Substitutions Raised</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.subsCount}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Requests on record</span>
@@ -1099,42 +1107,43 @@ export default function SearchPage() {
             )}
 
             {selectedEntity.type === 'section' && sectionMetrics && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+              <div className="admin-search-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Weekly Class Periods</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {sectionMetrics.totalPeriods}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Class hours/week</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Curriculum Subjects</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {sectionMetrics.coursesCount}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Active courses</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Assigned Instructors</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {sectionMetrics.facultyCount}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Faculty teaching</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Class Strength</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                  <span className="admin-search-stat-val" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {sectionMetrics.strength}
                   </span>
                   <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Enrolled students</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                <div className="admin-search-stat-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
                   <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Passkey Status</span>
                   <span
+                    className="admin-search-stat-val"
                     style={{
                       fontSize: '0.95rem',
                       fontWeight: 800,
@@ -1153,6 +1162,7 @@ export default function SearchPage() {
 
             {/* 3. Sub-Tabs Header */}
             <div
+              className="admin-search-subtabs"
               style={{
                 borderBottom: '1px solid var(--border-light)',
                 display: 'flex',
@@ -1165,7 +1175,9 @@ export default function SearchPage() {
               }}
             >
               {[
-                { id: 'matrix', label: 'Weekly Timetable Matrix', icon: CalendarIcon },
+                ...(selectedEntity.type !== 'course'
+                  ? [{ id: 'matrix', label: 'Weekly Timetable Matrix', icon: CalendarIcon }]
+                  : []),
                 {
                   id: 'courses',
                   label:
@@ -1182,7 +1194,7 @@ export default function SearchPage() {
                     selectedEntity.type === 'faculty'
                       ? 'Classes & Sections'
                       : selectedEntity.type === 'course'
-                      ? 'Enrolled Sections'
+                      ? 'Enrolled Sections & Allocations'
                       : 'Faculty Roster',
                   icon: UsersIcon,
                 },
@@ -1236,12 +1248,11 @@ export default function SearchPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* SUBTAB 1: TIMETABLE MATRIX */}
-                {activeSubTab === 'matrix' && (
-                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                {activeSubTab === 'matrix' && selectedEntity.type !== 'course' && (
+                  <div className="admin-search-panel-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: 16 }}>
+                    <div className="admin-search-panel-hd" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 6 }}>
                       <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                         {selectedEntity.type === 'faculty' && 'Full Weekly Schedule Matrix'}
-                        {selectedEntity.type === 'course' && 'Course Schedule Allocations Across All Sections'}
                         {selectedEntity.type === 'section' && 'Section Weekly Class Schedule'}
                       </span>
                       <span className="admin-mu" style={{ fontSize: '0.75rem' }}>
@@ -1259,14 +1270,14 @@ export default function SearchPage() {
 
                 {/* SUBTAB 2: COURSES & QUALIFICATIONS */}
                 {activeSubTab === 'courses' && (
-                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
+                  <div className="admin-search-panel-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
                     {selectedEntity.type === 'faculty' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div>
                           <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                             Currently Assigned Teaching Courses
                           </h3>
-                          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="admin-search-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                             <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                               <thead>
                                 <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
@@ -1332,7 +1343,7 @@ export default function SearchPage() {
                         <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Faculty Instructors Assigned to this Course
                         </h3>
-                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <div className="admin-search-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                           <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
@@ -1372,7 +1383,7 @@ export default function SearchPage() {
                         <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Curriculum Courses Enrolled for this Section
                         </h3>
-                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <div className="admin-search-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                           <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
@@ -1413,13 +1424,13 @@ export default function SearchPage() {
 
                 {/* SUBTAB 3: CLASSES & SECTIONS / ROSTER */}
                 {activeSubTab === 'sections' && (
-                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
+                  <div className="admin-search-panel-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
                     {selectedEntity.type === 'faculty' && (
                       <div>
                         <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Class Sections Taught by this Faculty
                         </h3>
-                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <div className="admin-search-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                           <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
@@ -1457,7 +1468,7 @@ export default function SearchPage() {
                         <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Detailed Section &amp; Slot Schedule Allocations
                         </h3>
-                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <div className="admin-search-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                           <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
@@ -1494,7 +1505,7 @@ export default function SearchPage() {
                         <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Faculty Instructor Roster for this Class
                         </h3>
-                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <div className="admin-search-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                           <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
@@ -1533,14 +1544,14 @@ export default function SearchPage() {
 
                 {/* SUBTAB 4: SUBSTITUTIONS & PENALTIES AUDIT */}
                 {activeSubTab === 'substitutions' && (
-                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
+                  <div className="admin-search-panel-card" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 12, color: 'var(--text-primary)' }}>
                       Substitution Requests History
                     </h3>
                     {substitutions.length === 0 ? (
                       <p className="admin-mu" style={{ fontSize: '0.85rem' }}>No substitution records found for this entity.</p>
                     ) : (
-                      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 24 }}>
+                      <div className="admin-search-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 24 }}>
                         <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                           <thead>
                             <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
@@ -1617,7 +1628,7 @@ export default function SearchPage() {
                             <span>Clean Audit Record: Zero penalties recorded for this faculty member.</span>
                           </div>
                         ) : (
-                          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="admin-search-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                             <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                               <thead>
                                 <tr style={{ background: '#FEF2F2', textAlign: 'left', borderBottom: '1px solid #FECACA' }}>
@@ -1653,7 +1664,7 @@ export default function SearchPage() {
 
         {/* SECTION B: SEARCH RESULTS DIRECTORY (When no entity is selected or searching) */}
         {!selectedEntity && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
             {loadingMaster ? (
               <div style={{ padding: '4rem 1rem', textAlign: 'center', background: 'var(--bg-surface)', borderRadius: 12 }}>
                 <RefreshIcon size={28} style={{ animation: 'spin 1s linear infinite', color: '#FFB900' }} />
@@ -1665,7 +1676,7 @@ export default function SearchPage() {
               <>
                 {/* 1. FACULTY RESULTS */}
                 {(activeCategory === 'all' || activeCategory === 'faculty') && filteredResults.faculty.length > 0 && (
-                  <div>
+                  <div style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <UsersIcon size={18} />
                       <h2 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
@@ -1673,10 +1684,11 @@ export default function SearchPage() {
                       </h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
+                    <div className="admin-search-results-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 10, width: '100%', boxSizing: 'border-box' }}>
                       {filteredResults.faculty.slice(0, 30).map((f) => (
                         <div
                           key={f.id}
+                          className="admin-search-result-card"
                           onClick={() => setSelectedEntity({ type: 'faculty', id: f.id })}
                           style={{
                             background: 'var(--bg-surface)',
@@ -1687,6 +1699,11 @@ export default function SearchPage() {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
+                            minWidth: 0,
+                            maxWidth: '100%',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            overflow: 'hidden',
                             transition: 'all 0.15s ease',
                           }}
                           onMouseEnter={(e) => {
@@ -1698,7 +1715,7 @@ export default function SearchPage() {
                             e.currentTarget.style.boxShadow = 'none'
                           }}
                         >
-                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8 }}>
+                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8, overflow: 'hidden' }}>
                             <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {f.name}
                             </span>
@@ -1714,6 +1731,7 @@ export default function SearchPage() {
                             style={{
                               width: 30,
                               height: 30,
+                              minWidth: 30,
                               borderRadius: 6,
                               backgroundColor: 'var(--bg-app)',
                               border: '1px solid var(--border-light)',
@@ -1734,7 +1752,7 @@ export default function SearchPage() {
 
                 {/* 2. COURSES RESULTS */}
                 {(activeCategory === 'all' || activeCategory === 'course') && filteredResults.courses.length > 0 && (
-                  <div>
+                  <div style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <BookOpenIcon size={18} />
                       <h2 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
@@ -1742,10 +1760,11 @@ export default function SearchPage() {
                       </h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
+                    <div className="admin-search-results-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 10, width: '100%', boxSizing: 'border-box' }}>
                       {filteredResults.courses.slice(0, 30).map((c) => (
                         <div
                           key={c.id}
+                          className="admin-search-result-card"
                           onClick={() => setSelectedEntity({ type: 'course', id: c.id })}
                           style={{
                             background: 'var(--bg-surface)',
@@ -1756,6 +1775,11 @@ export default function SearchPage() {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
+                            minWidth: 0,
+                            maxWidth: '100%',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            overflow: 'hidden',
                             transition: 'all 0.15s ease',
                           }}
                           onMouseEnter={(e) => {
@@ -1767,13 +1791,13 @@ export default function SearchPage() {
                             e.currentTarget.style.boxShadow = 'none'
                           }}
                         >
-                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8, overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>
                               <span style={{ fontSize: '0.82rem', fontWeight: 800, fontFamily: 'monospace', color: '#92400E' }}>
                                 {c.code}
                               </span>
                               {c.is_elective && (
-                                <span style={{ fontSize: '0.62rem', background: '#FEF3C7', color: '#92400E', padding: '1px 4px', borderRadius: 3, fontWeight: 700 }}>
+                                <span style={{ fontSize: '0.62rem', background: '#FEF3C7', color: '#92400E', padding: '1px 4px', borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>
                                   ELECTIVE
                                 </span>
                               )}
@@ -1790,6 +1814,7 @@ export default function SearchPage() {
                             style={{
                               width: 30,
                               height: 30,
+                              minWidth: 30,
                               borderRadius: 6,
                               backgroundColor: 'var(--bg-app)',
                               border: '1px solid var(--border-light)',
@@ -1810,7 +1835,7 @@ export default function SearchPage() {
 
                 {/* 3. SECTION RESULTS */}
                 {(activeCategory === 'all' || activeCategory === 'section') && filteredResults.sections.length > 0 && (
-                  <div>
+                  <div style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <CalendarIcon size={18} />
                       <h2 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
@@ -1818,10 +1843,11 @@ export default function SearchPage() {
                       </h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
+                    <div className="admin-search-results-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 10, width: '100%', boxSizing: 'border-box' }}>
                       {filteredResults.sections.slice(0, 30).map((s) => (
                         <div
                           key={s.id}
+                          className="admin-search-result-card"
                           onClick={() => setSelectedEntity({ type: 'section', id: s.id })}
                           style={{
                             background: 'var(--bg-surface)',
@@ -1832,6 +1858,11 @@ export default function SearchPage() {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
+                            minWidth: 0,
+                            maxWidth: '100%',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            overflow: 'hidden',
                             transition: 'all 0.15s ease',
                           }}
                           onMouseEnter={(e) => {
@@ -1843,7 +1874,7 @@ export default function SearchPage() {
                             e.currentTarget.style.boxShadow = 'none'
                           }}
                         >
-                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8 }}>
+                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8, overflow: 'hidden' }}>
                             <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {s.name}
                             </span>
@@ -1859,6 +1890,7 @@ export default function SearchPage() {
                             style={{
                               width: 30,
                               height: 30,
+                              minWidth: 30,
                               borderRadius: 6,
                               backgroundColor: 'var(--bg-app)',
                               border: '1px solid var(--border-light)',

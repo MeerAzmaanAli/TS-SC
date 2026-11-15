@@ -649,8 +649,8 @@ export default function FacultyView() {
   return (
     <div className="faculty-cal-wrapper">
       {/* Top Navigation & Fast Actions Bar */}
-      <div className="admin-cal-topbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <header className="admin-cal-topbar">
+        <div className="admin-cal-brand-wrap">
           <div style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div className="admin-cal-logo" title="Timetable Scheduler">
               TS
@@ -660,43 +660,43 @@ export default function FacultyView() {
               <span>Faculty</span>
             </div>
           </div>
-
-          <div className="admin-cal-nav">
-            <button
-              type="button"
-              className={activeTab === 'schedule' ? 'on' : ''}
-              onClick={() => setActiveTab('schedule')}
-            >
-              Teaching Timetable
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'request' ? 'on' : ''}
-              onClick={() => setActiveTab('request')}
-            >
-              Request Coverage
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'inbox' ? 'on' : ''}
-              onClick={() => setActiveTab('inbox')}
-            >
-              Coverage Inbox {incomingRequests.length > 0 ? `(${incomingRequests.length})` : ''}
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'find-faculty' ? 'on' : ''}
-              onClick={() => {
-                setActiveTab('find-faculty')
-                loadColleagueDirectory()
-              }}
-            >
-              Find Faculty
-            </button>
-          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <nav className="admin-cal-nav" aria-label="Faculty Navigation">
+          <button
+            type="button"
+            className={activeTab === 'schedule' ? 'on' : ''}
+            onClick={() => setActiveTab('schedule')}
+          >
+            Teaching Timetable
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'request' ? 'on' : ''}
+            onClick={() => setActiveTab('request')}
+          >
+            Request Coverage
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'inbox' ? 'on' : ''}
+            onClick={() => setActiveTab('inbox')}
+          >
+            Coverage Inbox {incomingRequests.length > 0 ? `(${incomingRequests.length})` : ''}
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'find-faculty' ? 'on' : ''}
+            onClick={() => {
+              setActiveTab('find-faculty')
+              loadColleagueDirectory()
+            }}
+          >
+            Find Faculty
+          </button>
+        </nav>
+
+        <div className="admin-cal-topbar-actions">
           {incomingRequests.length > 0 && activeTab !== 'inbox' && (
             <button
               type="button"
@@ -705,37 +705,37 @@ export default function FacultyView() {
               style={{ background: '#FFB900', color: '#1C1917' }}
             >
               <InboxIcon size={14} />
-              <span>{incomingRequests.length} Pending Requests</span>
+              <span className="admin-btn-text">{incomingRequests.length} Pending</span>
             </button>
           )}
           <button
             type="button"
-            className="admin-btn admin-btn-outline"
+            className="admin-btn admin-btn-outline admin-btn-sm"
             onClick={loadData}
             title="Refresh teaching timetable"
           >
-            <RefreshIcon size={15} />
-            <span>Refresh</span>
+            <RefreshIcon size={14} />
+            <span className="admin-btn-text">Refresh</span>
           </button>
           <button
             type="button"
-            className="admin-btn admin-btn-outline"
+            className="admin-btn admin-btn-outline admin-btn-sm"
             onClick={() => window.print()}
             title="Print teaching timetable & course roster"
           >
-            <span>Print</span>
+            <span className="admin-btn-text">Print</span>
           </button>
           <button
             type="button"
             onClick={handleSignOut}
-            className="admin-btn admin-btn-outline"
+            className="admin-btn admin-btn-outline admin-btn-sm"
             title="Sign out of Faculty Portal"
           >
-            <LogOutIcon size={15} />
-            <span>Sign out</span>
+            <LogOutIcon size={14} />
+            <span className="admin-btn-text">Sign out</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {error && (
         <div
