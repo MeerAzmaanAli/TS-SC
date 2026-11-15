@@ -647,31 +647,33 @@ export default function SearchPage() {
       <AdminHeader />
 
       {/* Main Container */}
-      <div style={{ maxWidth: 1280, margin: '16px auto', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ maxWidth: 1280, margin: '12px auto', padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {/* Page Top Heading */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-          <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ minWidth: 0, flex: '1 1 260px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div
                 style={{
                   width: 32,
                   height: 32,
+                  minWidth: 32,
                   borderRadius: 8,
                   backgroundColor: 'var(--primary-100)',
                   color: 'var(--primary-800)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
                 <SearchIcon size={18} />
               </div>
-              <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                Institutional 360° Search &amp; Intelligence
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, lineHeight: 1.25 }}>
+                Institutional 360° Search
               </h1>
             </div>
-            <p className="admin-mu" style={{ fontSize: '0.85rem', margin: '4px 0 0 0' }}>
-              Search across faculty, courses, and student sections to inspect schedules, teaching assignments, contact details, and audit records.
+            <p className="admin-mu" style={{ fontSize: '0.8rem', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+              Search faculty, courses, and class sections to inspect schedules, teaching assignments, and audit logs.
             </p>
           </div>
 
@@ -680,10 +682,10 @@ export default function SearchPage() {
               type="button"
               onClick={() => setSelectedEntity(null)}
               className="admin-btn admin-btn-outline admin-btn-sm"
-              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0 }}
             >
               <XIcon size={14} />
-              <span>Back to Search Directory</span>
+              <span>Back to Directory</span>
             </button>
           )}
         </div>
@@ -692,18 +694,18 @@ export default function SearchPage() {
         {error && (
           <div
             style={{
-              padding: '12px 16px',
+              padding: '10px 14px',
               backgroundColor: '#FEF2F2',
               border: '1px solid #FECACA',
               borderRadius: 8,
               color: '#991B1B',
-              fontSize: '0.85rem',
+              fontSize: '0.825rem',
               display: 'flex',
               alignItems: 'center',
               gap: 8,
             }}
           >
-            <AlertCircleIcon size={18} />
+            <AlertCircleIcon size={16} />
             <span>{error}</span>
           </div>
         )}
@@ -714,29 +716,29 @@ export default function SearchPage() {
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-light)',
             borderRadius: 12,
-            padding: 16,
+            padding: '12px 14px',
             boxShadow: 'var(--shadow-sm)',
             display: 'flex',
             flexDirection: 'column',
-            gap: 12,
+            gap: 10,
           }}
         >
           {/* Search Input Row */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <div style={{ position: 'absolute', left: 14, color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
-              <SearchIcon size={18} />
+            <div style={{ position: 'absolute', left: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+              <SearchIcon size={16} />
             </div>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search faculty name/email, course code/name (e.g. CS201), or section (e.g. CSE-Y2-A)..."
+              placeholder="Search faculty name/email, course (CS201), section (CSE-Y2-A)..."
               style={{
                 width: '100%',
-                padding: '12px 42px 12px 42px',
+                padding: '10px 36px 10px 36px',
                 borderRadius: 8,
                 border: '1.5px solid var(--border-strong)',
-                fontSize: '0.95rem',
+                fontSize: '0.9rem',
                 color: 'var(--text-primary)',
                 background: 'var(--bg-app)',
                 outline: 'none',
@@ -751,7 +753,7 @@ export default function SearchPage() {
                 onClick={() => setSearchQuery('')}
                 style={{
                   position: 'absolute',
-                  right: 12,
+                  right: 10,
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
@@ -762,20 +764,38 @@ export default function SearchPage() {
                 }}
                 title="Clear search"
               >
-                <XIcon size={16} />
+                <XIcon size={15} />
               </button>
             )}
           </div>
 
-          {/* Category Filter Pills */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {/* Category Filter Pills (Horizontal swipe on mobile) */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                gap: 6,
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                maxWidth: '100%',
+                paddingBottom: 2,
+              }}
+            >
               {(
                 [
-                  { key: 'all', label: 'All Entities', count: facultyList.length + coursesList.length + sectionsList.length, icon: LayersIcon },
+                  { key: 'all', label: 'All', count: facultyList.length + coursesList.length + sectionsList.length, icon: LayersIcon },
                   { key: 'faculty', label: 'Faculty', count: facultyList.length, icon: UsersIcon },
                   { key: 'course', label: 'Courses', count: coursesList.length, icon: BookOpenIcon },
-                  { key: 'section', label: 'Class Sections', count: sectionsList.length, icon: CalendarIcon },
+                  { key: 'section', label: 'Sections', count: sectionsList.length, icon: CalendarIcon },
                 ] as const
               ).map(({ key, label, count, icon: IconComp }) => {
                 const isSelected = activeCategory === key
@@ -785,9 +805,9 @@ export default function SearchPage() {
                     type="button"
                     onClick={() => setActiveCategory(key)}
                     style={{
-                      padding: '6px 14px',
+                      padding: '5px 12px',
                       borderRadius: 6,
-                      fontSize: '0.8rem',
+                      fontSize: '0.78rem',
                       fontWeight: isSelected ? 700 : 500,
                       cursor: 'pointer',
                       border: isSelected ? '2px solid #FFB900' : '1px solid var(--border-light)',
@@ -796,18 +816,20 @@ export default function SearchPage() {
                       boxShadow: isSelected ? '0 0 0 1px #FFB900, 0 1px 3px rgba(255, 185, 0, 0.25)' : 'none',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 6,
+                      gap: 5,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    <IconComp size={14} />
+                    <IconComp size={13} />
                     <span>{label}</span>
                     <span
                       style={{
-                        fontSize: '0.7rem',
+                        fontSize: '0.68rem',
                         background: isSelected ? '#FEF3C7' : 'var(--bg-subtle)',
                         color: isSelected ? '#92400E' : 'var(--text-muted)',
-                        padding: '1px 6px',
+                        padding: '1px 5px',
                         borderRadius: 10,
                         fontWeight: 600,
                       }}
@@ -819,113 +841,135 @@ export default function SearchPage() {
               })}
             </div>
 
-            <span className="admin-mu" style={{ fontSize: '0.75rem' }}>
-              Showing {filteredResults.totalCount} matches across master directory
+            <span className="admin-mu" style={{ fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
+              {filteredResults.totalCount} matches
             </span>
           </div>
         </div>
 
         {/* SECTION A: DETAILED DOSSIER VIEW (When an entity is selected) */}
         {selectedEntity && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* 1. Header Profile Card */}
             <div
               style={{
                 background: 'var(--bg-surface)',
                 border: '1.5px solid #FFB900',
                 borderRadius: 12,
-                padding: '20px 24px',
+                padding: '16px',
                 boxShadow: '0 2px 8px rgba(255, 185, 0, 0.15)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
                 flexWrap: 'wrap',
-                gap: 16,
+                gap: 14,
               }}
             >
               {/* Left Identity Block */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flex: '1 1 260px', minWidth: 0 }}>
                 <div
                   style={{
-                    width: 54,
-                    height: 54,
-                    borderRadius: 12,
+                    width: 46,
+                    height: 46,
+                    minWidth: 46,
+                    borderRadius: 10,
                     backgroundColor: '#FEF3C7',
                     border: '2px solid #FFB900',
                     color: '#92400E',
-                    fontSize: '1.3rem',
+                    fontSize: '1.2rem',
                     fontWeight: 800,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    flexShrink: 0,
                   }}
                 >
                   {selectedEntity.type === 'faculty' ? (
                     activeFaculty?.name.charAt(0).toUpperCase() || 'F'
                   ) : selectedEntity.type === 'course' ? (
-                    <BookOpenIcon size={24} />
+                    <BookOpenIcon size={20} />
                   ) : (
-                    <CalendarIcon size={24} />
+                    <CalendarIcon size={20} />
                   )}
                 </div>
 
-                <div>
+                <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                    <h2
+                      style={{
+                        fontSize: '1.15rem',
+                        fontWeight: 800,
+                        margin: 0,
+                        color: 'var(--text-primary)',
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {selectedEntity.type === 'faculty' && activeFaculty?.name}
                       {selectedEntity.type === 'course' && `${activeCourse?.code} — ${activeCourse?.name}`}
                       {selectedEntity.type === 'section' && activeSection?.name}
                     </h2>
                     <span
                       style={{
-                        fontSize: '0.7rem',
+                        fontSize: '0.68rem',
                         fontWeight: 700,
-                        padding: '2px 8px',
+                        padding: '2px 7px',
                         borderRadius: 4,
                         textTransform: 'uppercase',
                         backgroundColor: '#FFB900',
                         color: '#1C1917',
+                        flexShrink: 0,
                       }}
                     >
                       {selectedEntity.type}
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginTop: 4,
+                      flexWrap: 'wrap',
+                      fontSize: '0.8rem',
+                      color: 'var(--text-secondary)',
+                      lineHeight: 1.4,
+                    }}
+                  >
                     {selectedEntity.type === 'faculty' && (
                       <>
-                        <span>✉ {activeFaculty?.email}</span>
+                        <span style={{ wordBreak: 'break-all' }}>✉ {activeFaculty?.email}</span>
                         <span>•</span>
                         <span>
                           🏛 {activeFaculty?.department_id ? departmentsMap.get(activeFaculty.department_id)?.name || 'Department' : 'General Faculty'}
                         </span>
                         <span>•</span>
-                        <span>Cap: {activeFaculty?.max_weekly_load || 24} hrs/week</span>
+                        <span>Cap: {activeFaculty?.max_weekly_load || 24}h/wk</span>
                       </>
                     )}
                     {selectedEntity.type === 'course' && (
                       <>
                         <span>Credits: {activeCourse?.credits ?? '—'}</span>
                         <span>•</span>
-                        <span>Semester: {activeCourse?.semester ?? '—'}</span>
+                        <span>Sem: {activeCourse?.semester ?? '—'}</span>
                         <span>•</span>
-                        <span>{activeCourse?.is_elective ? 'Generic Elective (Basket)' : 'Core Theory'}</span>
+                        <span>{activeCourse?.is_elective ? 'Generic Elective' : 'Core Theory'}</span>
                         <span>•</span>
                         <span>{activeCourse?.lab_required ? 'Lab Required' : 'Theory Only'}</span>
                       </>
                     )}
                     {selectedEntity.type === 'section' && (
                       <>
-                        <span>Year {activeSection?.academic_year} • Semester {activeSection?.semester}</span>
+                        <span>Y{activeSection?.academic_year} • Sem {activeSection?.semester}</span>
                         <span>•</span>
-                        <span>Strength: {activeSection?.strength} Students</span>
+                        <span>{activeSection?.strength} Students</span>
                         <span>•</span>
-                        <span>{activeSection?.batch_count} Lab Batches</span>
+                        <span>{activeSection?.batch_count} Batches</span>
                         <span>•</span>
                         <span>
                           {sectionMetrics?.shift === 2
-                            ? 'Shift 2 (10:15 – 16:45)'
-                            : 'Shift 1 (08:15 – 14:45)'}
+                            ? 'Shift 2 (10:15–16:45)'
+                            : 'Shift 1 (08:15–14:45)'}
                         </span>
                       </>
                     )}
@@ -934,30 +978,30 @@ export default function SearchPage() {
               </div>
 
               {/* Right Action Button */}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', maxWidth: 220, flex: '1 1 auto' }}>
                 <Link
                   to="/admin/timetable"
                   className="admin-btn admin-btn-outline admin-btn-sm"
-                  style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%' }}
                 >
                   <CalendarIcon size={14} />
-                  <span>Open in Timetable Matrix</span>
+                  <span>Open in Matrix</span>
                 </Link>
               </div>
             </div>
 
             {/* 2. Key Metrics Row */}
             {selectedEntity.type === 'faculty' && facultyMetrics && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Weekly Teaching Load</span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Weekly Teaching Load</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-                    <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                       {facultyMetrics.weeklyHours}
                     </span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>/ {facultyMetrics.maxLoad} hrs</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>/ {facultyMetrics.maxLoad}h</span>
                   </div>
-                  <div style={{ height: 6, background: 'var(--bg-subtle)', borderRadius: 3, marginTop: 8, overflow: 'hidden' }}>
+                  <div style={{ height: 5, background: 'var(--bg-subtle)', borderRadius: 3, marginTop: 6, overflow: 'hidden' }}>
                     <div
                       style={{
                         height: '100%',
@@ -968,35 +1012,35 @@ export default function SearchPage() {
                   </div>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Assigned Courses</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Assigned Courses</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {facultyMetrics.coursesCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Active subjects taught</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Active subjects taught</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Sections Taught</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Sections Taught</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {facultyMetrics.sectionsCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Student class groups</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Student class groups</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Substitution Records</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Substitution Records</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {facultyMetrics.subsCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Requests initiated/covered</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Requests initiated/covered</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Penalty Incurred</span>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Penalty Incurred</span>
                   <span
                     style={{
-                      fontSize: '1.4rem',
+                      fontSize: '1.25rem',
                       fontWeight: 800,
                       color: facultyMetrics.penaltiesCount > 0 ? '#DC2626' : 'var(--emerald-600)',
                       display: 'block',
@@ -1005,109 +1049,121 @@ export default function SearchPage() {
                   >
                     {facultyMetrics.penaltiesCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Audit non-responses</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Audit non-responses</span>
                 </div>
               </div>
             )}
 
             {selectedEntity.type === 'course' && courseMetrics && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Scheduled Sessions</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Scheduled Sessions</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.totalSlots}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Total weekly periods</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Total weekly periods</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Assigned Faculty</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Assigned Faculty</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.facultyCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Teachers scheduled</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Teachers scheduled</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Enrolled Sections</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Enrolled Sections</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.sectionsCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Classes studying subject</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Classes studying</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Total Students</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Total Students</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.totalStudents}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Enrolled pupil count</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Enrolled pupil count</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Substitutions Raised</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Substitutions Raised</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {courseMetrics.subsCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Requests on record</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Requests on record</span>
                 </div>
               </div>
             )}
 
             {selectedEntity.type === 'section' && sectionMetrics && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Weekly Class Periods</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Weekly Class Periods</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {sectionMetrics.totalPeriods}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Class hours/week</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Class hours/week</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Curriculum Subjects</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Curriculum Subjects</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {sectionMetrics.coursesCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Active courses</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Active courses</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Assigned Instructors</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Assigned Instructors</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {sectionMetrics.facultyCount}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Faculty teaching class</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Faculty teaching</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Class Strength</span>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Class Strength</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginTop: 4 }}>
                     {sectionMetrics.strength}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Enrolled students</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Enrolled students</span>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: 14 }}>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block' }}>Student Passkey Status</span>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px' }}>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block' }}>Passkey Status</span>
                   <span
                     style={{
-                      fontSize: '1rem',
+                      fontSize: '0.95rem',
                       fontWeight: 800,
                       color: passkeyInfo?.is_active ? 'var(--emerald-600)' : 'var(--text-muted)',
                       display: 'block',
-                      marginTop: 6,
+                      marginTop: 4,
+                      wordBreak: 'break-all',
                     }}
                   >
                     {passkeyInfo?.is_active ? `Active (${passkeyInfo.passkey_plain})` : 'Not Provisioned'}
                   </span>
-                  <span className="admin-mu" style={{ fontSize: '0.75rem' }}>Student view login</span>
+                  <span className="admin-mu" style={{ fontSize: '0.72rem' }}>Student login</span>
                 </div>
               </div>
             )}
 
             {/* 3. Sub-Tabs Header */}
-            <div style={{ borderBottom: '1px solid var(--border-light)', display: 'flex', gap: 8, marginTop: 8 }}>
+            <div
+              style={{
+                borderBottom: '1px solid var(--border-light)',
+                display: 'flex',
+                gap: 6,
+                marginTop: 8,
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                paddingBottom: 2,
+              }}
+            >
               {[
                 { id: 'matrix', label: 'Weekly Timetable Matrix', icon: CalendarIcon },
                 {
@@ -1146,13 +1202,15 @@ export default function SearchPage() {
                     type="button"
                     onClick={() => setActiveSubTab(id)}
                     style={{
-                      padding: '10px 16px',
+                      padding: '8px 12px',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
                       background: 'none',
                       border: 'none',
                       borderBottom: isActive ? '3px solid #FFB900' : '3px solid transparent',
                       color: isActive ? '#1C1917' : 'var(--text-secondary)',
                       fontWeight: isActive ? 700 : 500,
-                      fontSize: '0.85rem',
+                      fontSize: '0.8rem',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -1160,7 +1218,7 @@ export default function SearchPage() {
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    <SubIcon size={15} />
+                    <SubIcon size={14} />
                     <span>{label}</span>
                   </button>
                 )
@@ -1201,15 +1259,15 @@ export default function SearchPage() {
 
                 {/* SUBTAB 2: COURSES & QUALIFICATIONS */}
                 {activeSubTab === 'courses' && (
-                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: 20 }}>
+                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
                     {selectedEntity.type === 'faculty' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div>
-                          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
+                          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                             Currently Assigned Teaching Courses
                           </h3>
-                          <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                               <thead>
                                 <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                                   <th style={{ padding: '8px 12px' }}>Code</th>
@@ -1242,7 +1300,7 @@ export default function SearchPage() {
                         </div>
 
                         <div>
-                          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
+                          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                             Certified / Qualified Courses
                           </h3>
                           {qualifications.length === 0 ? (
@@ -1271,11 +1329,11 @@ export default function SearchPage() {
 
                     {selectedEntity.type === 'course' && (
                       <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Faculty Instructors Assigned to this Course
                         </h3>
-                        <div style={{ overflowX: 'auto' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                          <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                                 <th style={{ padding: '8px 12px' }}>Instructor</th>
@@ -1311,11 +1369,11 @@ export default function SearchPage() {
 
                     {selectedEntity.type === 'section' && (
                       <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Curriculum Courses Enrolled for this Section
                         </h3>
-                        <div style={{ overflowX: 'auto' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                          <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                                 <th style={{ padding: '8px 12px' }}>Code</th>
@@ -1355,14 +1413,14 @@ export default function SearchPage() {
 
                 {/* SUBTAB 3: CLASSES & SECTIONS / ROSTER */}
                 {activeSubTab === 'sections' && (
-                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: 20 }}>
+                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
                     {selectedEntity.type === 'faculty' && (
                       <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Class Sections Taught by this Faculty
                         </h3>
-                        <div style={{ overflowX: 'auto' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                          <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                                 <th style={{ padding: '8px 12px' }}>Section</th>
@@ -1396,11 +1454,11 @@ export default function SearchPage() {
 
                     {selectedEntity.type === 'course' && (
                       <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Detailed Section &amp; Slot Schedule Allocations
                         </h3>
-                        <div style={{ overflowX: 'auto' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                          <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                                 <th style={{ padding: '8px 12px' }}>Day &amp; Period</th>
@@ -1433,11 +1491,11 @@ export default function SearchPage() {
 
                     {selectedEntity.type === 'section' && (
                       <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
                           Faculty Instructor Roster for this Class
                         </h3>
-                        <div style={{ overflowX: 'auto' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                          <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                                 <th style={{ padding: '8px 12px' }}>Teacher Name</th>
@@ -1475,15 +1533,15 @@ export default function SearchPage() {
 
                 {/* SUBTAB 4: SUBSTITUTIONS & PENALTIES AUDIT */}
                 {activeSubTab === 'substitutions' && (
-                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: 20 }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: 'var(--text-primary)' }}>
+                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', borderRadius: 12, padding: '16px 14px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 12, color: 'var(--text-primary)' }}>
                       Substitution Requests History
                     </h3>
                     {substitutions.length === 0 ? (
                       <p className="admin-mu" style={{ fontSize: '0.85rem' }}>No substitution records found for this entity.</p>
                     ) : (
-                      <div style={{ overflowX: 'auto', marginBottom: 24 }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 24 }}>
+                        <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                           <thead>
                             <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                               <th style={{ padding: '8px 12px' }}>Date</th>
@@ -1538,7 +1596,7 @@ export default function SearchPage() {
                     {/* Faculty Incurred Penalties Section */}
                     {selectedEntity.type === 'faculty' && (
                       <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#DC2626' }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 12, color: '#DC2626' }}>
                           Incurred Penalty Records ({penalties.length})
                         </h3>
                         {penalties.length === 0 ? (
@@ -1559,8 +1617,8 @@ export default function SearchPage() {
                             <span>Clean Audit Record: Zero penalties recorded for this faculty member.</span>
                           </div>
                         ) : (
-                          <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                               <thead>
                                 <tr style={{ background: '#FEF2F2', textAlign: 'left', borderBottom: '1px solid #FECACA' }}>
                                   <th style={{ padding: '8px 12px' }}>Timestamp</th>
@@ -1615,7 +1673,7 @@ export default function SearchPage() {
                       </h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
                       {filteredResults.faculty.slice(0, 30).map((f) => (
                         <div
                           key={f.id}
@@ -1624,7 +1682,7 @@ export default function SearchPage() {
                             background: 'var(--bg-surface)',
                             border: '1px solid var(--border-light)',
                             borderRadius: 10,
-                            padding: '14px 16px',
+                            padding: '12px 14px',
                             cursor: 'pointer',
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -1640,22 +1698,22 @@ export default function SearchPage() {
                             e.currentTarget.style.boxShadow = 'none'
                           }}
                         >
-                          <div>
-                            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block' }}>
+                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8 }}>
+                            <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {f.name}
                             </span>
-                            <span className="admin-mu" style={{ fontSize: '0.8rem', display: 'block', marginTop: 2 }}>
+                            <span className="admin-mu" style={{ fontSize: '0.78rem', display: 'block', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {f.email}
                             </span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginTop: 4 }}>
-                              🏛 {f.department_id ? departmentsMap.get(f.department_id)?.name || 'Dept' : 'General Faculty'} • Cap: {f.max_weekly_load} hrs
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              🏛 {f.department_id ? departmentsMap.get(f.department_id)?.name || 'Dept' : 'General Faculty'} • Cap: {f.max_weekly_load}h
                             </span>
                           </div>
 
                           <div
                             style={{
-                              width: 32,
-                              height: 32,
+                              width: 30,
+                              height: 30,
                               borderRadius: 6,
                               backgroundColor: 'var(--bg-app)',
                               border: '1px solid var(--border-light)',
@@ -1663,6 +1721,7 @@ export default function SearchPage() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               color: 'var(--text-muted)',
+                              flexShrink: 0,
                             }}
                           >
                             <ArrowRightIcon size={14} />
@@ -1683,7 +1742,7 @@ export default function SearchPage() {
                       </h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
                       {filteredResults.courses.slice(0, 30).map((c) => (
                         <div
                           key={c.id}
@@ -1692,7 +1751,7 @@ export default function SearchPage() {
                             background: 'var(--bg-surface)',
                             border: '1px solid var(--border-light)',
                             borderRadius: 10,
-                            padding: '14px 16px',
+                            padding: '12px 14px',
                             cursor: 'pointer',
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -1708,29 +1767,29 @@ export default function SearchPage() {
                             e.currentTarget.style.boxShadow = 'none'
                           }}
                         >
-                          <div>
+                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'monospace', color: '#92400E' }}>
+                              <span style={{ fontSize: '0.82rem', fontWeight: 800, fontFamily: 'monospace', color: '#92400E' }}>
                                 {c.code}
                               </span>
                               {c.is_elective && (
-                                <span style={{ fontSize: '0.65rem', background: '#FEF3C7', color: '#92400E', padding: '1px 4px', borderRadius: 3, fontWeight: 700 }}>
+                                <span style={{ fontSize: '0.62rem', background: '#FEF3C7', color: '#92400E', padding: '1px 4px', borderRadius: 3, fontWeight: 700 }}>
                                   ELECTIVE
                                 </span>
                               )}
                             </div>
-                            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginTop: 2 }}>
+                            <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {c.name}
                             </span>
-                            <span className="admin-mu" style={{ fontSize: '0.75rem', display: 'block', marginTop: 4 }}>
+                            <span className="admin-mu" style={{ fontSize: '0.72rem', display: 'block', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               Sem {c.semester ?? '—'} • {c.credits ?? 0} Credits • {c.lab_required ? 'Lab Required' : 'Theory Only'}
                             </span>
                           </div>
 
                           <div
                             style={{
-                              width: 32,
-                              height: 32,
+                              width: 30,
+                              height: 30,
                               borderRadius: 6,
                               backgroundColor: 'var(--bg-app)',
                               border: '1px solid var(--border-light)',
@@ -1738,6 +1797,7 @@ export default function SearchPage() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               color: 'var(--text-muted)',
+                              flexShrink: 0,
                             }}
                           >
                             <ArrowRightIcon size={14} />
@@ -1758,7 +1818,7 @@ export default function SearchPage() {
                       </h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
                       {filteredResults.sections.slice(0, 30).map((s) => (
                         <div
                           key={s.id}
@@ -1767,7 +1827,7 @@ export default function SearchPage() {
                             background: 'var(--bg-surface)',
                             border: '1px solid var(--border-light)',
                             borderRadius: 10,
-                            padding: '14px 16px',
+                            padding: '12px 14px',
                             cursor: 'pointer',
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -1783,22 +1843,22 @@ export default function SearchPage() {
                             e.currentTarget.style.boxShadow = 'none'
                           }}
                         >
-                          <div>
-                            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block' }}>
+                          <div style={{ minWidth: 0, flex: 1, paddingRight: 8 }}>
+                            <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {s.name}
                             </span>
-                            <span className="admin-mu" style={{ fontSize: '0.8rem', display: 'block', marginTop: 2 }}>
+                            <span className="admin-mu" style={{ fontSize: '0.78rem', display: 'block', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               Year {s.academic_year} • Semester {s.semester}
                             </span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginTop: 4 }}>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               👥 {s.strength} Students • {s.batch_count} Batches • Shift {s.shift ?? (s.academic_year === 2 || s.academic_year === 3 ? 2 : 1)}
                             </span>
                           </div>
 
                           <div
                             style={{
-                              width: 32,
-                              height: 32,
+                              width: 30,
+                              height: 30,
                               borderRadius: 6,
                               backgroundColor: 'var(--bg-app)',
                               border: '1px solid var(--border-light)',
@@ -1806,6 +1866,7 @@ export default function SearchPage() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               color: 'var(--text-muted)',
+                              flexShrink: 0,
                             }}
                           >
                             <ArrowRightIcon size={14} />
