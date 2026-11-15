@@ -11,6 +11,7 @@ class Section(BaseModel):
     batch_count: int = 1
     shift: int = 1
     academic_year: Optional[int] = None
+    semester: Optional[int] = None
 
 
 class Course(BaseModel):
@@ -71,8 +72,8 @@ class GenerateRequest(BaseModel):
 class TimetableEntry(BaseModel):
     section_id: str
     course_id: str
-    faculty_id: str
-    room_id: str
+    faculty_id: Optional[str] = None
+    room_id: Optional[str] = None
     time_slot_id: str
     is_elective: bool = False
     batch: Optional[int] = None

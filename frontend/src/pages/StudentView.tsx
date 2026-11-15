@@ -107,14 +107,15 @@ export default function StudentView() {
     }
   }, [])
 
-  // Auto-refresh schedule periodically (every 15s) when a section is active
+  // Auto-refresh schedule periodically when a section is active and user is on the section tab
   useEffect(() => {
-    if (!sectionCode || !passkey) return
+    if (!sectionCode || !passkey || studentTab !== 'section') return
     const interval = setInterval(() => {
+      if (document.hidden) return
       fetchSchedule(sectionCode, passkey, true)
-    }, 15000)
+    }, 45000)
     return () => clearInterval(interval)
-  }, [sectionCode, passkey])
+  }, [sectionCode, passkey, studentTab])
 
   async function fetchSchedule(code: string, key: string, isSilent = false) {
     if (!isSilent) setAuthLoading(true)
@@ -183,8 +184,8 @@ export default function StudentView() {
           period,
           course_code: e.course_code || (e.is_elective ? 'GE' : '—'),
           course_name: e.course_name || (e.is_elective ? 'Generic Elective (Institute Basket)' : '—'),
-          room_name: e.room_name || (e.is_elective ? 'Elective Allocation' : '—'),
-          faculty_name: e.faculty_name || (e.is_elective ? 'Elective Faculty' : '—'),
+          room_name: e.room_name || (e.is_elective ? 'Generic Elective' : '—'),
+          faculty_name: e.is_elective ? '' : (e.faculty_name || '—'),
           is_elective: e.is_elective,
           batch: e.batch,
           substitution: sub
@@ -230,6 +231,19 @@ export default function StudentView() {
 
   async function loadFacultyDirectory() {
     if (facultyList.length > 0) return
+    try {
+      const cached = sessionStorage.getItem('ts_sc_faculty_dir')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setFacultyList(parsed as PublicFacultyItem[])
+          return
+        }
+      }
+    } catch {
+      // Ignore cache parse error and proceed to fetch
+    }
+
     setFacultyListLoading(true)
     setFacultyError(null)
     try {
@@ -237,6 +251,11 @@ export default function StudentView() {
       if (error) throw error
       if (data?.success && Array.isArray(data.faculty)) {
         setFacultyList(data.faculty as PublicFacultyItem[])
+        try {
+          sessionStorage.setItem('ts_sc_faculty_dir', JSON.stringify(data.faculty))
+        } catch {
+          // Ignore quota error if storage is full
+        }
       } else {
         setFacultyError('Could not load faculty directory.')
       }

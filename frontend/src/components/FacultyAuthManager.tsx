@@ -197,7 +197,7 @@ export default function FacultyAuthManager() {
           <div
             style={{
               fontSize: '0.825rem',
-              background: '#F5F5F0',
+              background: 'var(--bg-subtle)',
               padding: '6px 12px',
               borderRadius: 6,
               fontWeight: 500,
@@ -278,9 +278,9 @@ export default function FacultyAuthManager() {
                     </span>
                   </td>
                   <td style={{ padding: '0.6rem 0.75rem' }}>
-                    <span style={{ fontFamily: 'monospace', color: '#1C1917' }}>{f.email}</span>
+                    <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>{f.email}</span>
                   </td>
-                  <td style={{ padding: '0.6rem 0.75rem', color: '#57534E' }}>
+                  <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-secondary)' }}>
                     {f.department_name}
                   </td>
                   <td style={{ padding: '0.6rem 0.75rem' }}>
@@ -306,15 +306,15 @@ export default function FacultyAuthManager() {
                           gap: 4,
                           padding: '3px 8px',
                           fontSize: '0.75rem',
-                          background: '#F5F5F0',
-                          color: '#78716C',
+                          background: 'var(--bg-subtle)',
+                          color: 'var(--text-muted)',
                         }}
                       >
                         No Auth Account
                       </span>
                     )}
                   </td>
-                  <td style={{ padding: '0.6rem 0.75rem', color: '#78716C', fontSize: '0.8rem' }}>
+                  <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                     {f.last_sign_in_at ? new Date(f.last_sign_in_at).toLocaleDateString() : '—'}
                   </td>
                   <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right' }}>
@@ -384,13 +384,13 @@ export default function FacultyAuthManager() {
               <button
                 type="button"
                 onClick={closeModal}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#78716C' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
               >
                 <XIcon size={18} />
               </button>
             </div>
 
-            <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: '#78716C' }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               Setting credentials for <strong>{selectedFaculty.name}</strong> ({selectedFaculty.department_name}).
               The faculty member will use this email and password to log in at <code>/login</code>.
             </p>
@@ -444,7 +444,7 @@ export default function FacultyAuthManager() {
                   className="input"
                   style={{ width: '100%', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontFamily: 'monospace' }}
                 />
-                <span style={{ fontSize: '0.75rem', color: '#78716C', display: 'block', marginTop: 4 }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
                   This password will be immediately active (no email confirmation needed).
                 </span>
               </div>

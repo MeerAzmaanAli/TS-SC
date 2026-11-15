@@ -358,10 +358,10 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
                     <tr
                       onClick={() => toggleGroup(grp.key)}
                       style={{
-                        backgroundColor: '#F5F5F0',
+                        backgroundColor: 'var(--bg-subtle)',
                         cursor: 'pointer',
-                        borderTop: '2px solid #D6D3D1',
-                        borderBottom: '1px solid #E7E5E4',
+                        borderTop: '2px solid var(--border-strong)',
+                        borderBottom: '1px solid var(--border-light)',
                         userSelect: 'none',
                       }}
                     >
@@ -371,11 +371,11 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#78716C', display: 'inline-block', width: 14 }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'inline-block', width: 14 }}>
                               {isCollapsed ? '▶' : '▼'}
                             </span>
                             <span style={{ fontSize: '1rem' }}>{grp.icon}</span>
-                            <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#1C1917' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                               {grp.label}
                             </span>
                           </div>
@@ -385,8 +385,8 @@ export default function EntityTable({ def, onEdit, refreshKey }: Props) {
                               fontSize: '0.72rem',
                               fontWeight: 700,
                               padding: '0.2rem 0.6rem',
-                              backgroundColor: '#ffffff',
-                              border: '1px solid #D6D3D1',
+                              backgroundColor: 'var(--bg-surface)',
+                              border: '1px solid var(--border-strong)',
                             }}
                           >
                             {grp.rows.length} {grp.rows.length === 1 ? def.singular : def.label}

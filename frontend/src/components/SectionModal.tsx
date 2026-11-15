@@ -330,7 +330,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
             style={{
               display: 'flex',
               gap: 8,
-              backgroundColor: '#F5F5F0',
+              backgroundColor: 'var(--bg-subtle)',
               padding: 4,
               borderRadius: 8,
               marginBottom: '1.25rem',
@@ -446,9 +446,9 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
           <div
             style={{
               fontSize: '0.75rem',
-              color: '#57534E',
-              backgroundColor: '#FAFAF9',
-              border: '1px solid #E7E5E4',
+              color: 'var(--text-secondary)',
+              backgroundColor: 'var(--bg-app)',
+              border: '1px solid var(--border-light)',
               padding: '6px 12px',
               borderRadius: 6,
               marginBottom: '1rem',
@@ -664,7 +664,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
 
               <div
                 style={{
-                  border: '1px solid #E7E5E4',
+                  border: '1px solid var(--border-light)',
                   borderRadius: 6,
                   overflow: 'hidden',
                   maxHeight: 180,
@@ -672,7 +672,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
                 }}
               >
                 <table style={{ width: '100%', fontSize: '0.8125rem', borderCollapse: 'collapse' }}>
-                  <thead style={{ backgroundColor: '#FAFAF9', borderBottom: '1px solid #E7E5E4', color: '#57534E' }}>
+                  <thead style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-light)', color: 'var(--text-secondary)' }}>
                     <tr>
                       <th style={{ padding: '6px 10px', textAlign: 'left' }}>Section Name</th>
                       <th style={{ padding: '6px 10px', textAlign: 'left' }}>Code</th>
@@ -683,10 +683,10 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
                   </thead>
                   <tbody>
                     {bulkPreview.map((item, idx) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid #F5F5F0' }}>
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--bg-subtle)' }}>
                         <td style={{ padding: '6px 10px', fontWeight: 600 }}>{item.name}</td>
                         <td style={{ padding: '6px 10px', fontFamily: 'monospace' }}>{item.code}</td>
-                        <td style={{ padding: '6px 10px', fontFamily: 'monospace', color: '#1C1917', fontWeight: 600 }}>{item.passkey}</td>
+                        <td style={{ padding: '6px 10px', fontFamily: 'monospace', color: 'var(--text-primary)', fontWeight: 600 }}>{item.passkey}</td>
                         <td style={{ padding: '6px 10px', textAlign: 'center' }}>
                           <span className="badge badge-neutral">{item.strength} students</span>
                         </td>
@@ -695,7 +695,7 @@ export default function SectionModal({ initial, onSaved, onCancel }: Props) {
                     ))}
                     {bulkPreview.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ padding: '16px', textAlign: 'center', color: '#A8A29E' }}>
+                        <td colSpan={5} style={{ padding: '16px', textAlign: 'center', color: 'var(--text-subtle)' }}>
                           Enter student count above to calculate sections.
                         </td>
                       </tr>

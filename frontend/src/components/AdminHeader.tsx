@@ -58,6 +58,9 @@ export default function AdminHeader({ activeTab, onTabChange, onRefresh }: Admin
 
         <div className="admin-cal-nav">
           {renderTabButton('overview', 'Overview')}
+          <Link to="/admin/search" className={path === '/admin/search' ? 'on' : ''}>
+            Institutional Search
+          </Link>
           {renderTabButton('shifts', 'Shifts & Timings')}
           <Link to="/admin/timetable" className={path === '/admin/timetable' ? 'on' : ''}>
             Timetables

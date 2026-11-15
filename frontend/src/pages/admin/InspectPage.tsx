@@ -4,6 +4,7 @@ import AdminHeader from '../../components/AdminHeader'
 import {
   CheckCircleIcon,
   AlertCircleIcon,
+  TrashIcon,
 } from '../../components/Icons'
 import TimetablePreview from '../../components/TimetablePreview'
 
@@ -88,6 +89,53 @@ export default function InspectPage() {
     }
   }
 
+  async function handleDeleteVersion(version: Version) {
+    const isPublished = version.status === 'published'
+    const confirmPrompt = isPublished
+      ? `Permanently delete the OFFICIAL PUBLISHED timetable generated on ${new Date(version.created_at).toLocaleString()}?\n\nThis will permanently delete all its scheduled sessions and timetable entries from the database.`
+      : `Discard and permanently delete this draft timetable generated on ${new Date(version.created_at).toLocaleString()}?\n\nThis will remove all its entries from the database.`
+
+    if (!window.confirm(confirmPrompt)) return
+
+    setBusy(true)
+    setError(null)
+    setSuccessMsg(null)
+
+    try {
+      // 1. Attempt atomic stored procedure first if available
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc('admin_delete_timetable_version', {
+        p_version_id: version.id,
+      })
+
+      if (rpcErr) {
+        // Fallback: direct table delete (timetable_entries delete cascades)
+        const { error: delEntriesErr } = await supabase
+          .from('timetable_entries')
+          .delete()
+          .eq('version_id', version.id)
+        if (delEntriesErr) throw delEntriesErr
+
+        const { error: delVerErr } = await supabase
+          .from('timetable_versions')
+          .delete()
+          .eq('id', version.id)
+        if (delVerErr) throw delVerErr
+      } else if (rpcRes && !rpcRes.success) {
+        throw new Error(rpcRes.error || 'Failed to delete timetable version.')
+      }
+
+      setSuccessMsg('Timetable version and all its database entries have been permanently removed.')
+      if (selected?.id === version.id) {
+        setSelected(null)
+      }
+      await load()
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete timetable version.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const v = selected?.violations ?? {}
   const facultyLoads = (v.faculty_loads ?? {}) as Record<string, number>
 
@@ -147,7 +195,7 @@ export default function InspectPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <h2>
                         {selected.status === 'published' ? 'Official Published Timetable' : 'Draft Schedule'}{' '}
-                        <span style={{ fontSize: 14, fontWeight: 500, color: '#78716C' }}>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' }}>
                           ({new Date(selected.created_at).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
@@ -173,7 +221,7 @@ export default function InspectPage() {
                     </div>
                   </div>
 
-                  <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {selected.status === 'draft' && (
                       <button
                         type="button"
@@ -196,6 +244,22 @@ export default function InspectPage() {
                         <span>{busy ? 'Reverting…' : 'Revert to draft'}</span>
                       </button>
                     )}
+
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => handleDeleteVersion(selected)}
+                      className="admin-btn admin-btn-outline admin-btn-sm"
+                      style={{
+                        color: '#dc2626',
+                        borderColor: '#fca5a5',
+                        background: '#fff5f5',
+                      }}
+                      title="Permanently delete this timetable and clean all its scheduled entries from the database"
+                    >
+                      <TrashIcon size={14} />
+                      <span>{busy ? 'Deleting…' : 'Discard / Delete'}</span>
+                    </button>
                   </div>
                 </div>
 
@@ -240,7 +304,7 @@ export default function InspectPage() {
                         key={id}
                         style={{
                           padding: '8px 12px',
-                          background: '#F5F5F0',
+                          background: 'var(--bg-subtle)',
                           borderRadius: 8,
                           display: 'flex',
                           alignItems: 'center',
@@ -248,7 +312,7 @@ export default function InspectPage() {
                           boxShadow: '0 0 0 1px #E7E5E4',
                         }}
                       >
-                        <span className="admin-m" style={{ color: '#1C1917', fontWeight: 600 }}>
+                        <span className="admin-m" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
                           {facultyMap[id] || (id.length > 12 ? `Faculty #${id.slice(0, 6)}` : id)}
                         </span>
                         <span
@@ -301,7 +365,7 @@ export default function InspectPage() {
                       padding: 12,
                       borderRadius: 8,
                       cursor: 'pointer',
-                      background: isSelected ? '#FFFBEB' : '#FAFAF9',
+                      background: isSelected ? 'var(--primary-50)' : 'var(--bg-app)',
                       boxShadow: isSelected ? '0 0 0 2px #FFB900' : '0 0 0 1px #E7E5E4',
                       transition: 'all 0.15s ease',
                     }}
@@ -314,12 +378,37 @@ export default function InspectPage() {
                       >
                         {ver.status.toUpperCase()}
                       </span>
-                      <span className="admin-mu admin-m">
-                        {new Date(ver.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span className="admin-mu admin-m">
+                          {new Date(ver.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteVersion(ver)
+                          }}
+                          style={{
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#9CA3AF',
+                            cursor: 'pointer',
+                            padding: '2px 4px',
+                            borderRadius: 4,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                          title="Discard / Delete version"
+                          onMouseEnter={(e) => (e.currentTarget.style.color = '#DC2626')}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
+                        >
+                          <TrashIcon size={13} />
+                        </button>
+                      </div>
                     </div>
 
-                    <b style={{ display: 'block', marginTop: 6, fontSize: 13, color: '#1C1917' }}>
+                    <b style={{ display: 'block', marginTop: 6, fontSize: 13, color: 'var(--text-primary)' }}>
                       {ver.status === 'published' ? 'Official Published Timetable' : `Timetable Draft #${versions.length - versions.indexOf(ver)}`}
                     </b>
 
@@ -335,7 +424,7 @@ export default function InspectPage() {
               })}
 
               {versions.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '24px 0', color: '#57534E', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-secondary)', fontSize: 13 }}>
                   No timetable versions generated yet.
                 </div>
               )}

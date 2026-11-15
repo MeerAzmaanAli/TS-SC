@@ -6,7 +6,7 @@
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Color Palette — Stone & Crimson + Amber CTA (60-30-10) */
+  /* Color Palette — Stone + Amber CTA (60-30-10) */
   --slate-50: #FAFAF9;
   --slate-100: #F5F5F0;
   --slate-200: #E7E5E4;
@@ -96,13 +96,16 @@
 }
 
 /* Base Reset */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html, body {
+html,
+body {
   min-height: 100%;
   font-family: var(--font-sans);
   background-color: var(--bg-app);
@@ -114,7 +117,7 @@ html, body {
 
 /* Background Texture Accent */
 body {
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(255, 185, 0, 0.05) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(41, 37, 36, 0.03) 0px, transparent 50%);
   background-attachment: fixed;
@@ -694,7 +697,10 @@ a:hover {
   justify-content: space-between;
 }
 
-.form-control, .input, .select, .textarea {
+.form-control,
+.input,
+.select,
+.textarea {
   width: 100%;
   font-family: inherit;
   font-size: 0.875rem;
@@ -708,7 +714,10 @@ a:hover {
   outline: none;
 }
 
-.form-control:focus, .input:focus, .select:focus, .textarea:focus {
+.form-control:focus,
+.input:focus,
+.select:focus,
+.textarea:focus {
   border-color: var(--primary-500);
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
@@ -798,17 +807,20 @@ a:hover {
   min-width: 800px;
 }
 
-.timetable-grid th, .timetable-grid td {
+.timetable-grid th,
+.timetable-grid td {
   border-right: 1px solid var(--border-light);
   border-bottom: 1px solid var(--border-light);
   padding: 0.75rem;
 }
 
-.timetable-grid th:last-child, .timetable-grid td:last-child {
+.timetable-grid th:last-child,
+.timetable-grid td:last-child {
   border-right: none;
 }
 
-.timetable-grid tr:last-child td, .timetable-grid tr:last-child th {
+.timetable-grid tr:last-child td,
+.timetable-grid tr:last-child th {
   border-bottom: none;
 }
 
@@ -1075,31 +1087,88 @@ a:hover {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleUp {
-  from { transform: scale(0.96); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Utilities */
-.flex { display: flex; }
-.flex-col { display: flex; flex-direction: column; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.gap-1 { gap: 0.25rem; }
-.gap-2 { gap: 0.5rem; }
-.gap-3 { gap: 0.75rem; }
-.gap-4 { gap: 1rem; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-4 { margin-top: 1rem; }
-.mt-6 { margin-top: 1.5rem; }
-.mb-4 { margin-bottom: 1rem; }
-.text-sm { font-size: 0.875rem; }
-.text-muted { color: var(--text-muted); }
-.font-mono { font-family: var(--font-mono); }
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
 
 /* ==========================================================================
    Responsive Design & Breakpoints Suite
@@ -1140,6 +1209,7 @@ a:hover {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1218,6 +1288,7 @@ a:hover {
 
 /* Mobile & Small Tablet Breakpoint (<= 768px) */
 @media (max-width: 768px) {
+
   .desktop-nav,
   .desktop-only {
     display: none !important;
@@ -1263,7 +1334,7 @@ a:hover {
     width: 100%;
   }
 
-  .page-header-actions > * {
+  .page-header-actions>* {
     flex: 1 1 auto;
     text-align: center;
     justify-content: center;
@@ -2088,6 +2159,7 @@ a:hover {
 }
 
 @media (max-width: 768px) {
+
   .faculty-cal-wrapper,
   .student-cal-wrapper {
     padding: 16px 14px;
@@ -2151,6 +2223,7 @@ a:hover {
   .timetable-responsive-desktop {
     display: none;
   }
+
   .timetable-responsive-mobile {
     display: block;
   }

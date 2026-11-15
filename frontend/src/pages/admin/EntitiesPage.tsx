@@ -51,7 +51,7 @@ export default function EntitiesPage() {
             overflowX: 'auto',
             paddingBottom: 10,
             marginBottom: 16,
-            borderBottom: '1px solid #E7E5E4',
+            borderBottom: '1px solid var(--border-light)',
           }}
         >
           {ENTITIES.map((e) => {

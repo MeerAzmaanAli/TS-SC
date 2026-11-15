@@ -1,9 +1,10 @@
 import { supabase } from './supabase'
+import type { GenericElectiveConfigData } from '../components/GenericElectiveConfig'
 
 /** Shape expected by the solver's POST /generate (see solver/app/schemas.py). */
 export interface GenerateRequest {
   institution_id: string
-  sections: { id: string; strength: number; batch_count?: number; shift?: number }[]
+  sections: { id: string; strength: number; batch_count?: number; shift?: number; semester?: number }[]
   courses: { id: string; sessions_per_week: number; lab_required: boolean; is_elective: boolean }[]
   section_courses: { section_id: string; course_id: string; sessions_per_week: number | null }[]
   faculty: { id: string; max_weekly_load: number }[]
@@ -13,6 +14,14 @@ export interface GenerateRequest {
   elective_blocks: string[]
   weights: { gap: number; spread: number; load: number }
   time_limit_seconds: number
+}
+
+export interface BuildSnapshotResult {
+  snapshot: GenerateRequest
+  rawSections: { id: string; program_id?: string; semester?: number; strength: number; batch_count?: number; shift?: number }[]
+  electiveCourses: { id: string; code?: string; name?: string; semester?: number }[]
+  allSlots: { id: string; day_of_week: number; period: number }[]
+  geConfig: GenericElectiveConfigData
 }
 
 async function must<T>(
@@ -91,7 +100,7 @@ async function fetchCurriculumMappings(
 }
 
 /** Assemble the solver snapshot from current Supabase data (admin only). */
-export async function buildSnapshot(): Promise<GenerateRequest> {
+export async function buildSnapshot(geConfig?: GenericElectiveConfigData): Promise<BuildSnapshotResult> {
   const institutions = await must<{ id: string }[]>(
     supabase.from('institutions').select('id').limit(1),
     'institutions',
@@ -102,8 +111,8 @@ export async function buildSnapshot(): Promise<GenerateRequest> {
   const rawSections = await fetchSections()
   const [courses, section_courses, faculty, rooms, time_slots, blocks, constraints] =
     await Promise.all([
-      must<{ id: string; sessions_per_week: number; lab_required: boolean; is_elective: boolean }[]>(
-        supabase.from('courses').select('id, sessions_per_week, lab_required, is_elective').limit(50000),
+      must<{ id: string; code?: string; name?: string; semester?: number; sessions_per_week: number; lab_required: boolean; is_elective: boolean }[]>(
+        supabase.from('courses').select('id, code, name, semester, sessions_per_week, lab_required, is_elective').limit(50000),
         'courses',
       ),
       fetchCurriculumMappings(rawSections),
@@ -139,18 +148,77 @@ export async function buildSnapshot(): Promise<GenerateRequest> {
     }
   }
 
+  // Determine active GE configuration (auto-detect semesters if none provided)
+  const detectedElectiveSemesters = Array.from(
+    new Set(
+      courses
+        .filter((c) => c.is_elective && c.semester)
+        .map((c) => Number(c.semester))
+    )
+  ).sort((a, b) => a - b)
+
+  const activeGeConfig: GenericElectiveConfigData = geConfig ?? {
+    enabled: true,
+    semesters: detectedElectiveSemesters.length > 0 ? detectedElectiveSemesters : [3, 4, 5, 6, 7],
+    days: [4, 5],
+    shift1Periods: [5, 6],
+    shift2Periods: [7, 8],
+  }
+
+  let finalElectiveBlocks: string[] = []
+  if (activeGeConfig.enabled) {
+    const shift1Slots = time_slots
+      .filter((sl) => activeGeConfig.days.includes(sl.day_of_week) && activeGeConfig.shift1Periods.includes(sl.period))
+      .map((sl) => sl.id)
+
+    const shift2Slots = time_slots
+      .filter((sl) => activeGeConfig.days.includes(sl.day_of_week) && activeGeConfig.shift2Periods.includes(sl.period))
+      .map((sl) => sl.id)
+
+    finalElectiveBlocks = Array.from(new Set([...shift1Slots, ...shift2Slots]))
+  } else {
+    finalElectiveBlocks = blocks.map((b) => b.time_slot_id)
+  }
+
+  // Filter section_courses so only sections in activeGeConfig.semesters retain the elective linkage
+  const electiveCourseIds = new Set(courses.filter((c) => c.is_elective).map((c) => c.id))
+  const filteredSectionCourses = section_courses.filter((sc) => {
+    if (!electiveCourseIds.has(sc.course_id)) return true
+    if (!activeGeConfig.enabled) return false
+    const sec = rawSections.find((s) => s.id === sc.section_id)
+    if (!sec || !sec.semester) return true
+    return activeGeConfig.semesters.includes(Number(sec.semester))
+  })
+
   return {
-    institution_id,
-    sections: rawSections.map((s) => ({ id: s.id, strength: s.strength, batch_count: s.batch_count, shift: s.shift ?? 1 })),
-    courses,
-    section_courses,
-    faculty,
-    rooms,
-    time_slots,
-    qualifications: [],
-    elective_blocks: blocks.map((b) => b.time_slot_id),
-    weights,
-    time_limit_seconds: !import.meta.env.VITE_SOLVER_URL || import.meta.env.VITE_SOLVER_URL === '/api' ? 15 : 120,
+    snapshot: {
+      institution_id,
+      sections: rawSections.map((s) => ({
+        id: s.id,
+        strength: s.strength,
+        batch_count: s.batch_count,
+        shift: s.shift ?? 1,
+        semester: s.semester ?? 1,
+      })),
+      courses: courses.map((c) => ({
+        id: c.id,
+        sessions_per_week: c.sessions_per_week,
+        lab_required: c.lab_required,
+        is_elective: c.is_elective,
+      })),
+      section_courses: filteredSectionCourses,
+      faculty,
+      rooms,
+      time_slots,
+      qualifications: [],
+      elective_blocks: finalElectiveBlocks,
+      weights,
+      time_limit_seconds: !import.meta.env.VITE_SOLVER_URL || import.meta.env.VITE_SOLVER_URL === '/api' ? 15 : 120,
+    },
+    rawSections,
+    electiveCourses: courses.filter((c) => c.is_elective),
+    allSlots: time_slots,
+    geConfig: activeGeConfig,
   }
 }
 

@@ -25,6 +25,7 @@ import {
   AlertCircleIcon,
   ClockIcon,
   MapPinIcon,
+  SearchIcon,
   XIcon,
   RefreshIcon,
   LogOutIcon,
@@ -88,6 +89,13 @@ interface OutgoingRequestInfo {
   }[]
 }
 
+interface PublicFacultyItem {
+  id: string
+  name: string
+  email: string
+  department_name?: string | null
+}
+
 const DAYS = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 export default function FacultyView() {
@@ -108,17 +116,24 @@ export default function FacultyView() {
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [busyIncomingId, setBusyIncomingId] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'schedule' | 'request' | 'inbox'>('schedule')
+  const [activeTab, setActiveTab] = useState<'schedule' | 'request' | 'inbox' | 'find-faculty'>('schedule')
   const [requestModalSession, setRequestModalSession] = useState<Row | null>(null)
   const [requestReason, setRequestReason] = useState('')
   const [outgoingFilter, setOutgoingFilter] = useState<'active' | 'past'>('active')
 
+  // Find Faculty (Colleague Schedules) State
+  const [colleagueList, setColleagueList] = useState<PublicFacultyItem[]>([])
+  const [colleagueListLoading, setColleagueListLoading] = useState(false)
+  const [colleagueSearch, setColleagueSearch] = useState('')
+  const [selectedColleagueId, setSelectedColleagueId] = useState('')
+  const [selectedColleagueMeta, setSelectedColleagueMeta] = useState<PublicFacultyItem | null>(null)
+  const [colleagueEntries, setColleagueEntries] = useState<GridEntry[]>([])
+  const [colleagueScheduleLoading, setColleagueScheduleLoading] = useState(false)
+  const [colleagueError, setColleagueError] = useState<string | null>(null)
+
   const loadData = useCallback(async () => {
     if (!profile?.faculty_id) return
     const fId = profile.faculty_id
-
-    // Sweep open requests
-    sweepAllExpiredRequests().catch((err) => console.warn('Automatic sweep error:', err))
 
     try {
       const { data: ver, error: vErr } = await supabase
@@ -332,10 +347,20 @@ export default function FacultyView() {
     }
   }, [profile])
 
+  // Run sweep once on mount — separate from the data-refresh loop so it
+  // doesn't fire again on every accept/reject action or poll tick.
+  useEffect(() => {
+    if (!profile?.faculty_id) return
+    sweepAllExpiredRequests().catch((err) => console.warn('Mount sweep error:', err))
+  }, [profile?.faculty_id])
+
   useEffect(() => {
     loadData()
-    // Polling every 15 seconds to keep substitutions live
-    const interval = setInterval(loadData, 15000)
+    // Polling every 30 seconds when tab is active to keep substitutions live
+    const interval = setInterval(() => {
+      if (document.hidden) return
+      loadData()
+    }, 30000)
     return () => clearInterval(interval)
   }, [loadData])
 
@@ -436,6 +461,119 @@ export default function FacultyView() {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setBusyIncomingId(null)
+    }
+  }
+
+  async function loadColleagueDirectory() {
+    if (colleagueList.length > 0) return
+    try {
+      const cached = sessionStorage.getItem('ts_sc_faculty_dir')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setColleagueList(parsed as PublicFacultyItem[])
+          return
+        }
+      }
+    } catch {
+      /* ignore storage cache errors */
+    }
+
+    setColleagueListLoading(true)
+    setColleagueError(null)
+    try {
+      const { data, error: rpcErr } = await supabase.rpc('get_student_faculty_list')
+      if (rpcErr) throw rpcErr
+      if (data?.success && Array.isArray(data.faculty)) {
+        setColleagueList(data.faculty as PublicFacultyItem[])
+        try {
+          sessionStorage.setItem('ts_sc_faculty_dir', JSON.stringify(data.faculty))
+        } catch {
+          /* ignore */
+        }
+      } else {
+        setColleagueError('Could not load faculty directory.')
+      }
+    } catch (err: any) {
+      setColleagueError(err.message || 'Failed to load faculty directory.')
+    } finally {
+      setColleagueListLoading(false)
+    }
+  }
+
+  async function loadColleagueSchedule(facultyId: string) {
+    if (!facultyId) return
+    setSelectedColleagueId(facultyId)
+    setColleagueScheduleLoading(true)
+    setColleagueError(null)
+    try {
+      const { data, error: rpcErr } = await supabase.rpc('get_student_faculty_timetable', {
+        p_faculty_id: facultyId,
+      })
+      if (rpcErr) throw rpcErr
+      if (!data || !data.success) {
+        setColleagueError(data?.error || 'Could not load faculty timetable.')
+        setColleagueEntries([])
+        return
+      }
+      setSelectedColleagueMeta(data.faculty as PublicFacultyItem)
+      const activeSubs = ((data.substitutions || []) as any[]).filter(
+        (s) => !isSubstitutionDayPast(s.day_of_week, s.created_at)
+      )
+      const ownSubByEntry = new Map<string, any>()
+      const coveringEntries: GridEntry[] = []
+      for (const s of activeSubs) {
+        if (s.role === 'covering') {
+          coveringEntries.push({
+            id: `cov-${s.id}`,
+            day_of_week: s.day_of_week,
+            period: s.period,
+            course_code: s.course_code || 'GE',
+            course_name: s.course_name || 'Generic Elective',
+            room_name: s.room_name || '—',
+            section_name: s.section_name ? `${s.section_name}${s.batch ? ` (B${s.batch})` : ''}` : '',
+            is_elective: Boolean(s.is_elective),
+            batch: s.batch ?? null,
+            substitution: {
+              status: 'assigned',
+              requester_name: s.requester_name,
+              role: 'covering',
+              date: toLocalDateString(getHeldLectureDate(s.day_of_week, s.created_at)),
+            },
+          })
+        } else if (s.entry_id && !ownSubByEntry.has(s.entry_id)) {
+          ownSubByEntry.set(s.entry_id, s)
+        }
+      }
+
+      const ownMapped: GridEntry[] = ((data.entries || []) as any[]).map((e) => {
+        const sub = ownSubByEntry.get(e.id)
+        return {
+          id: e.id,
+          day_of_week: e.day_of_week,
+          period: e.period,
+          course_code: e.course_code || (e.is_elective ? 'GE' : '—'),
+          course_name: e.course_name || (e.is_elective ? 'Generic Elective' : '—'),
+          room_name: e.room_name || '—',
+          section_name: e.section_name ? `${e.section_name}${e.batch ? ` (B${e.batch})` : ''}` : '',
+          is_elective: Boolean(e.is_elective),
+          batch: e.batch ?? null,
+          substitution: sub
+            ? {
+                status: sub.status,
+                substitute_name: sub.substitute_name,
+                role: 'requester',
+                date: toLocalDateString(getHeldLectureDate(e.day_of_week, sub.created_at)),
+              }
+            : null,
+        }
+      })
+
+      setColleagueEntries([...ownMapped, ...coveringEntries])
+    } catch (err: any) {
+      setColleagueError(err.message || 'Failed to load faculty timetable.')
+    } finally {
+      setColleagueScheduleLoading(false)
     }
   }
 
@@ -544,6 +682,16 @@ export default function FacultyView() {
               onClick={() => setActiveTab('inbox')}
             >
               Coverage Inbox {incomingRequests.length > 0 ? `(${incomingRequests.length})` : ''}
+            </button>
+            <button
+              type="button"
+              className={activeTab === 'find-faculty' ? 'on' : ''}
+              onClick={() => {
+                setActiveTab('find-faculty')
+                loadColleagueDirectory()
+              }}
+            >
+              Find Faculty
             </button>
           </div>
         </div>
@@ -1191,6 +1339,159 @@ export default function FacultyView() {
       {activeTab === 'inbox' && (
         <div>
           {profile?.faculty_id && <SubstitutionInbox facultyId={profile.faculty_id} />}
+        </div>
+      )}
+
+      {/* Tab 4: Find Faculty (Colleague Timetables & Free Slots) */}
+      {activeTab === 'find-faculty' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div className="card no-print" style={{ padding: '1.25rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+                marginBottom: '0.85rem',
+              }}
+            >
+              <div>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1C1917', margin: 0 }}>
+                  Find Faculty &amp; Inspect Schedule
+                </h2>
+                <p className="text-muted" style={{ fontSize: '0.825rem', margin: '0.2rem 0 0' }}>
+                  Search any faculty colleague by name, department, or email to inspect their weekly teaching timetable, ongoing classes, and available free periods.
+                </p>
+              </div>
+              {selectedColleagueMeta && (
+                <span className="badge badge-primary" style={{ fontSize: '0.78rem' }}>
+                  Viewing: {selectedColleagueMeta.name}
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: '1 1 240px', minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                <SearchIcon size={16} style={{ position: 'absolute', left: 10, color: '#A8A29E' }} />
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Search faculty name, department, or email…"
+                  value={colleagueSearch}
+                  onChange={(e) => setColleagueSearch(e.target.value)}
+                  style={{ width: '100%', paddingLeft: 34 }}
+                />
+              </div>
+              <select
+                className="select"
+                value={selectedColleagueId}
+                onChange={(e) => loadColleagueSchedule(e.target.value)}
+                style={{ flex: '1 1 240px', minWidth: 0 }}
+                disabled={colleagueListLoading}
+              >
+                <option value="">
+                  {colleagueListLoading ? 'Loading faculty…' : 'Select a faculty member…'}
+                </option>
+                {colleagueList
+                  .filter((f) => {
+                    const q = colleagueSearch.trim().toLowerCase()
+                    if (!q) return true
+                    return (
+                      f.name.toLowerCase().includes(q) ||
+                      (f.department_name ?? '').toLowerCase().includes(q) ||
+                      (f.email ?? '').toLowerCase().includes(q)
+                    )
+                  })
+                  .map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                      {f.department_name ? ` — ${f.department_name}` : ''}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {colleagueSearch.trim() && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '0.45rem',
+                  marginTop: '0.85rem',
+                  maxHeight: 140,
+                  overflowY: 'auto',
+                }}
+              >
+                {colleagueList
+                  .filter((f) => {
+                    const q = colleagueSearch.trim().toLowerCase()
+                    return (
+                      f.name.toLowerCase().includes(q) ||
+                      (f.department_name ?? '').toLowerCase().includes(q) ||
+                      (f.email ?? '').toLowerCase().includes(q)
+                    )
+                  })
+                  .slice(0, 12)
+                  .map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => loadColleagueSchedule(f.id)}
+                      className={`btn btn-sm ${selectedColleagueId === f.id ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      <span>{f.name}</span>
+                      {f.department_name && (
+                        <span style={{ opacity: 0.75, fontSize: '0.72rem' }}>· {f.department_name}</span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            )}
+
+            {colleagueError && (
+              <div className="alert alert-danger" style={{ marginTop: '0.85rem', marginBottom: 0 }}>
+                <AlertCircleIcon size={16} />
+                <span>{colleagueError}</span>
+              </div>
+            )}
+          </div>
+
+          {colleagueScheduleLoading ? (
+            <div className="card" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+              <RefreshIcon size={24} className="spin" style={{ margin: '0 auto 0.75rem', color: '#78716C' }} />
+              <p className="text-muted" style={{ margin: 0 }}>Loading faculty schedule…</p>
+            </div>
+          ) : selectedColleagueMeta ? (
+            <div className="tt-print-area">
+              <TimetablePrintHeader
+                mode="faculty"
+                facultyName={selectedColleagueMeta.name}
+                facultyEmail={selectedColleagueMeta.email}
+                departmentName={selectedColleagueMeta.department_name}
+              />
+
+              <WeeklyGrid
+                entries={colleagueEntries}
+                viewMode="faculty"
+                allPeriods={[1, 2, 3, 4, 5, 6, 7, 8]}
+                slotTimes={FACULTY_TIMES}
+                highlightOngoing={true}
+                emptyMessage={`No teaching periods scheduled for ${selectedColleagueMeta.name}`}
+              />
+            </div>
+          ) : (
+            <div className="card no-print" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+              <UsersIcon size={32} style={{ color: '#A8A29E', margin: '0 auto 0.75rem' }} />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1C1917', marginBottom: '0.35rem' }}>
+                Select a Faculty Member
+              </h3>
+              <p className="text-muted" style={{ maxWidth: 420, margin: '0 auto', fontSize: '0.875rem' }}>
+                Search by name or department above to view any faculty colleague&apos;s weekly schedule, ongoing class, and available periods.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

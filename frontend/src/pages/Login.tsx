@@ -79,7 +79,9 @@ export default function Login() {
     setBusy(true)
 
     try {
-      const { data, error: rpcErr } = await supabase.rpc('get_section_timetable', {
+      // Lightweight passkey check — does NOT fetch the timetable.
+      // StudentView owns the full timetable fetch on its own mount.
+      const { data, error: rpcErr } = await supabase.rpc('verify_section_passkey', {
         p_code: sectionCode.trim(),
         p_passkey: passkey.trim(),
       })

@@ -1,22 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { AuthProvider, RequireRole, useAuth } from './lib/auth'
-import AdminDashboard from './pages/AdminDashboard'
-import EntitiesPage from './pages/admin/EntitiesPage'
-import GeneratePage from './pages/admin/GeneratePage'
-import InspectPage from './pages/admin/InspectPage'
-import PenaltiesPage from './pages/admin/PenaltiesPage'
-import TimetablePage from './pages/admin/TimetablePage'
-import FacultyView from './pages/FacultyView'
-import StudentView from './pages/StudentView'
-import Login from './pages/Login'
 import { isSupabaseConfigured } from './lib/supabase'
+
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const EntitiesPage = lazy(() => import('./pages/admin/EntitiesPage'))
+const GeneratePage = lazy(() => import('./pages/admin/GeneratePage'))
+const InspectPage = lazy(() => import('./pages/admin/InspectPage'))
+const PenaltiesPage = lazy(() => import('./pages/admin/PenaltiesPage'))
+const TimetablePage = lazy(() => import('./pages/admin/TimetablePage'))
+const SearchPage = lazy(() => import('./pages/admin/SearchPage'))
+const FacultyView = lazy(() => import('./pages/FacultyView'))
+const StudentView = lazy(() => import('./pages/StudentView'))
+const Login = lazy(() => import('./pages/Login'))
+
+function PageFallback() {
+  return (
+    <div style={{ maxWidth: 420, margin: '4rem auto', padding: '2rem 1.5rem', textAlign: 'center' }}>
+      <div className="card" style={{ padding: '2rem 1.5rem' }}>
+        <p className="text-muted" style={{ margin: 0, fontSize: '0.875rem' }}>Loading view…</p>
+      </div>
+    </div>
+  )
+}
 import {
   CalendarIcon,
   LayersIcon,
   SparklesIcon,
   AlertTriangleIcon,
   UsersIcon,
+  SearchIcon,
   LogOutIcon,
   BookOpenIcon,
   MenuIcon,
@@ -220,6 +233,12 @@ function Nav() {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/admin/search" className={`mobile-nav-link ${path === '/admin/search' ? 'active' : ''}`}>
+                    <SearchIcon size={18} />
+                    <span>Institutional Search</span>
+                  </Link>
+                </li>
+                <li>
                   <Link to="/admin/data" className={`mobile-nav-link ${path.startsWith('/admin/data') ? 'active' : ''}`}>
                     <BookOpenIcon size={18} />
                     <span>Entities &amp; Master Data</span>
@@ -330,75 +349,85 @@ export default function App() {
       <div className="app-layout">
         {!isLoginPage && <Nav />}
         <main className={isLoginPage ? '' : 'main-content'}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Home />} />
-            <Route
-              path="/admin"
-              element={
-                <RequireRole roles={['admin']}>
-                  <AdminDashboard />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/admin/data"
-              element={
-                <RequireRole roles={['admin']}>
-                  <EntitiesPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/admin/data/:entity"
-              element={
-                <RequireRole roles={['admin']}>
-                  <EntitiesPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/admin/generate"
-              element={
-                <RequireRole roles={['admin']}>
-                  <GeneratePage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/admin/versions"
-              element={
-                <RequireRole roles={['admin']}>
-                  <InspectPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/admin/timetable"
-              element={
-                <RequireRole roles={['admin']}>
-                  <TimetablePage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/admin/penalties"
-              element={
-                <RequireRole roles={['admin']}>
-                  <PenaltiesPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/faculty"
-              element={
-                <RequireRole roles={['faculty']}>
-                  <FacultyView />
-                </RequireRole>
-              }
-            />
-            <Route path="/student" element={<StudentView />} />
-          </Routes>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Home />} />
+              <Route
+                path="/admin"
+                element={
+                  <RequireRole roles={['admin']}>
+                    <AdminDashboard />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/admin/data"
+                element={
+                  <RequireRole roles={['admin']}>
+                    <EntitiesPage />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/admin/data/:entity"
+                element={
+                  <RequireRole roles={['admin']}>
+                    <EntitiesPage />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/admin/search"
+                element={
+                  <RequireRole roles={['admin']}>
+                    <SearchPage />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/admin/generate"
+                element={
+                  <RequireRole roles={['admin']}>
+                    <GeneratePage />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/admin/versions"
+                element={
+                  <RequireRole roles={['admin']}>
+                    <InspectPage />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/admin/timetable"
+                element={
+                  <RequireRole roles={['admin']}>
+                    <TimetablePage />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/admin/penalties"
+                element={
+                  <RequireRole roles={['admin']}>
+                    <PenaltiesPage />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/faculty"
+                element={
+                  <RequireRole roles={['faculty']}>
+                    <FacultyView />
+                  </RequireRole>
+                }
+              />
+              <Route path="/student" element={<StudentView />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </AuthProvider>

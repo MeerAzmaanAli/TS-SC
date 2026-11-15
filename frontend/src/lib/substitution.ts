@@ -152,17 +152,21 @@ async function publishedVersion(): Promise<{ id: string; institution_id: string 
 const MAX_P2_CANDIDATES = 4
 const MAX_P3_CANDIDATES = 4
 
+/** Single-pass bucket sort: iterate once, sort each tier, then cap P2 & P3. */
 function capCandidatesByTier(candidates: RankedCandidate[]): RankedCandidate[] {
-  const p1 = candidates.filter((c) => c.priority === 1).sort((a, b) => a.weekly_load - b.weekly_load)
-  const p2 = candidates
-    .filter((c) => c.priority === 2)
-    .sort((a, b) => a.weekly_load - b.weekly_load)
-    .slice(0, MAX_P2_CANDIDATES)
-  const p3 = candidates
-    .filter((c) => c.priority === 3)
-    .sort((a, b) => a.weekly_load - b.weekly_load)
-    .slice(0, MAX_P3_CANDIDATES)
-  return [...p1, ...p2, ...p3]
+  const p1: RankedCandidate[] = []
+  const p2: RankedCandidate[] = []
+  const p3: RankedCandidate[] = []
+  for (const c of candidates) {
+    if (c.priority === 1) p1.push(c)
+    else if (c.priority === 2) p2.push(c)
+    else p3.push(c)
+  }
+  const byLoad = (a: RankedCandidate, b: RankedCandidate) => a.weekly_load - b.weekly_load
+  p1.sort(byLoad)
+  p2.sort(byLoad)
+  p3.sort(byLoad)
+  return [...p1, ...p2.slice(0, MAX_P2_CANDIDATES), ...p3.slice(0, MAX_P3_CANDIDATES)]
 }
 
 async function rank(input: {
@@ -437,7 +441,8 @@ export async function sweepAllExpiredRequests(): Promise<number> {
   try {
     const { data: rpcRes, error: rpcErr } = await supabase.rpc('sweep_substitution_requests')
     if (!rpcErr && rpcRes && rpcRes.success) {
-      // Swept via Postgres RPC
+      // Swept via Postgres RPC — no client-side sweep needed
+      return rpcRes.expired_count ?? 0
     }
   } catch {
     /* Fallback to client sweep below */

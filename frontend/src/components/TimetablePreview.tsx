@@ -352,8 +352,8 @@ export default function TimetablePreview({
       period,
       course_code: r.courses?.code ?? (r.is_elective ? 'GE' : '—'),
       course_name: r.courses?.name ?? (r.is_elective ? 'Generic Elective (Institute Basket)' : '—'),
-      room_name: r.rooms?.name ?? (r.is_elective ? 'Elective Allocation' : '—'),
-      faculty_name: r.faculty?.name ?? (r.is_elective ? 'Elective Faculty' : '—'),
+      room_name: r.rooms?.name ?? (r.is_elective ? 'Generic Elective' : '—'),
+      faculty_name: r.faculty?.name ?? '',
       faculty_email: r.faculty?.email ?? '',
       section_name: r.sections?.name ? `${r.sections.name}${r.batch ? ` (B${r.batch})` : ''}` : '',
       is_elective: r.is_elective,
@@ -377,8 +377,8 @@ export default function TimetablePreview({
         period,
         course_code: r.courses?.code ?? (r.is_elective ? 'GE' : '—'),
         course_name: r.courses?.name ?? (r.is_elective ? 'Generic Elective (Institute Basket)' : '—'),
-        room_name: r.rooms?.name ?? (r.is_elective ? 'Elective Allocation' : '—'),
-        faculty_name: r.faculty?.name ?? (r.is_elective ? 'Elective Faculty' : '—'),
+        room_name: r.rooms?.name ?? (r.is_elective ? 'Generic Elective' : '—'),
+        faculty_name: r.faculty?.name ?? '',
         faculty_email: r.faculty?.email ?? '',
         section_name: r.sections?.name ? `${r.sections.name}${r.batch ? ` (B${r.batch})` : ''}` : '',
         is_elective: r.is_elective,
@@ -697,13 +697,13 @@ export default function TimetablePreview({
             flexWrap: 'wrap',
             gap: '0.75rem',
             padding: '0.5rem 0.75rem',
-            backgroundColor: '#FAFAF9',
-            border: '1px solid #E7E5E4',
+            backgroundColor: 'var(--bg-app)',
+            border: '1px solid var(--border-light)',
             borderRadius: 'var(--radius-sm)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <span style={{ fontWeight: 800, color: '#1C1917', fontSize: '0.9rem' }}>
+            <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
               {viewMode === 'section'
                 ? `Section: ${selectedSection?.name ?? '—'}`
                 : `Instructor: ${selectedFaculty?.name ?? '—'}`}
@@ -774,16 +774,16 @@ export default function TimetablePreview({
                     padding: '0.35rem 0.75rem',
                     borderRadius: '6px',
                     backgroundColor: currentShift === 1 ? '#FFB900' : '#16a34a',
-                    color: currentShift === 1 ? '#1C1917' : '#ffffff',
+                    color: currentShift === 1 ? 'var(--text-primary)' : 'var(--bg-surface)',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                   }}
                 >
                   {currentShift === 1 ? 'SHIFT 1 (MORNING)' : 'SHIFT 2 (AFTERNOON)'}
                 </span>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1C1917' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
                   {currentShift === 1 ? '08:15 AM – 02:45 PM' : '10:15 AM – 04:45 PM'}
                 </span>
-                <span style={{ fontSize: '0.825rem', color: '#57534E', fontWeight: 500 }}>
+                <span style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
                   • 6 Periods (1 Hour each) • Lunch: 12:15 PM – 12:45 PM
                 </span>
               </div>
@@ -791,11 +791,11 @@ export default function TimetablePreview({
                 style={{
                   fontSize: '0.8rem',
                   fontWeight: 700,
-                  color: currentShift === 1 ? '#92400E' : '#15803d',
+                  color: currentShift === 1 ? 'var(--primary-800)' : '#15803d',
                   backgroundColor: 'rgba(255,255,255,0.85)',
                   padding: '0.3rem 0.65rem',
                   borderRadius: '6px',
-                  border: currentShift === 1 ? '1px solid #FDE68A' : '1px solid #bbf7d0',
+                  border: currentShift === 1 ? '1px solid var(--primary-200)' : '1px solid #bbf7d0',
                 }}
               >
                 {currentShift === 1
@@ -810,7 +810,7 @@ export default function TimetablePreview({
                 marginBottom: '1.25rem',
                 padding: '0.8rem 1.25rem',
                 borderRadius: '8px',
-                background: '#FAFAF9',
+                background: 'var(--bg-app)',
                 border: '1.5px solid #E7E5E4',
                 display: 'flex',
                 alignItems: 'center',
@@ -823,10 +823,10 @@ export default function TimetablePreview({
                 <span className="badge badge-primary" style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
                   FACULTY COMBINED SCHEDULE
                 </span>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1C1917' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
                   08:15 AM – 04:45 PM
                 </span>
-                <span style={{ fontSize: '0.825rem', color: '#57534E' }}>
+                <span style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
                   • Spanning Shifts 1 & 2 • Common Lunch: 12:15 PM – 12:45 PM
                 </span>
               </div>

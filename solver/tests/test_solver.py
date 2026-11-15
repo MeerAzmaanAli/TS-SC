@@ -130,6 +130,25 @@ def test_elective_block_violation():
     assert "elective" in resp.message.lower() or "elective_blocks" in resp.causes
 
 
+def test_generic_electives_have_no_faculty_or_room():
+    from app.schemas import Course as C
+
+    req = _demo_request()
+    req.courses = [
+        C(id="cs501", sessions_per_week=2),
+        C(id="cs502", sessions_per_week=2),
+        C(id="cs503", sessions_per_week=2, is_elective=True),
+    ]
+    # Provide elective blocks covering 2 slots for each section
+    blocked_slot_ids = {req.time_slots[0].id, req.time_slots[1].id}
+    req.elective_blocks = list(blocked_slot_ids)
+    resp = solve(req)
+    assert resp.status == "ok"
+    # Verify that solver leaves elective blocks empty for regular core classes
+    for e in resp.entries:
+        assert e.time_slot_id not in blocked_slot_ids, f"Solver scheduled session in elective slot: {e.time_slot_id}"
+
+
 def test_parallel_lab_batches():
     """Verify institutional lab batch scheduling:
     - 60-student section divided into B1 and B2 (strength 30 each)

@@ -173,8 +173,8 @@ export default function SectionPasskeyManager() {
                   <td style={{ padding: '0.6rem 0.75rem' }}>
                     <code
                       style={{
-                        background: '#FAFAF9',
-                        color: '#1C1917',
+                        background: 'var(--bg-app)',
+                        color: 'var(--text-primary)',
                         padding: '0.2rem 0.5rem',
                         borderRadius: '4px',
                         border: '1px solid var(--border-strong)',
@@ -189,7 +189,7 @@ export default function SectionPasskeyManager() {
                     {sec.program?.name || 'B.Tech CSE'} (Sem {sec.semester})
                   </td>
                   <td style={{ padding: '0.6rem 0.75rem' }}>
-                    <span className="badge" style={{ background: '#F5F5F0', color: '#57534E' }}>
+                    <span className="badge" style={{ background: 'var(--bg-subtle)', color: 'var(--text-secondary)' }}>
                       {sec.batch_count} {sec.batch_count > 1 ? 'Batches' : 'Batch'}
                     </span>
                   </td>

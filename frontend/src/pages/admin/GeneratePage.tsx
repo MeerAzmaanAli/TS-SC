@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { buildSnapshot, SOLVER_URL } from '../../lib/timetable'
 import AdminHeader from '../../components/AdminHeader'
+import GenericElectiveConfig, { GenericElectiveConfigData } from '../../components/GenericElectiveConfig'
 import {
   SparklesIcon,
   CheckCircleIcon,
@@ -16,8 +17,8 @@ import AcademicShiftManager from '../../components/AcademicShiftManager'
 interface SolverEntry {
   section_id: string
   course_id: string
-  faculty_id: string
-  room_id: string
+  faculty_id?: string | null
+  room_id?: string | null
   time_slot_id: string
   is_elective: boolean
   batch?: number | null
@@ -33,6 +34,14 @@ export default function GeneratePage() {
 
   const [progress, setProgress] = useState(0)
   const [progressStage, setProgressStage] = useState('')
+
+  const [geConfig, setGeConfig] = useState<GenericElectiveConfigData>({
+    enabled: true,
+    semesters: [3, 4, 5, 6, 7],
+    days: [4, 5],
+    shift1Periods: [5, 6],
+    shift2Periods: [7, 8],
+  })
 
   useEffect(() => {
     checkHealth()
@@ -114,7 +123,8 @@ export default function GeneratePage() {
     setInfeasibleCauses([])
 
     try {
-      const snapshot = await buildSnapshot()
+      const { snapshot, rawSections, electiveCourses, allSlots, geConfig: activeGeConfig } =
+        await buildSnapshot(geConfig)
       let solverEndpoint = `${SOLVER_URL}/generate`
       let res: Response
       try {
@@ -146,7 +156,56 @@ export default function GeneratePage() {
       }
       if (data.status !== 'ok') throw new Error(data.message ?? 'Solver failed to produce a valid timetable.')
 
-      const entries = data.entries as SolverEntry[]
+      const solverEntries = (data.entries as SolverEntry[]) ?? []
+      const allEntries: SolverEntry[] = [...solverEntries]
+
+      // Post-process Generic Electives:
+      // Inject Generic Elective sessions for all sections in the selected semesters
+      // into the configured slots without assigning any faculty or classroom.
+      if (activeGeConfig.enabled && activeGeConfig.semesters.length > 0) {
+        for (const sec of rawSections) {
+          const sem = Number(sec.semester)
+          if (!activeGeConfig.semesters.includes(sem)) continue
+
+          // Find the matching elective course
+          const secCourseLink = snapshot.section_courses.find(
+            (sc) => sc.section_id === sec.id && electiveCourses.some((ec) => ec.id === sc.course_id)
+          )
+          let electiveCourse = secCourseLink
+            ? electiveCourses.find((ec) => ec.id === secCourseLink.course_id)
+            : undefined
+
+          if (!electiveCourse) {
+            electiveCourse = electiveCourses.find((ec) => Number(ec.semester) === sem)
+          }
+          if (!electiveCourse && electiveCourses.length > 0) {
+            electiveCourse = electiveCourses[0]
+          }
+          if (!electiveCourse) continue
+
+          // Determine target periods based on section academic shift
+          const shift = sec.shift ?? 1
+          const targetPeriods = shift === 2 ? activeGeConfig.shift2Periods : activeGeConfig.shift1Periods
+
+          // Find matching time slots
+          const targetSlots = allSlots.filter(
+            (sl) => activeGeConfig.days.includes(sl.day_of_week) && targetPeriods.includes(sl.period)
+          )
+
+          for (const slot of targetSlots) {
+            allEntries.push({
+              section_id: sec.id,
+              course_id: electiveCourse.id,
+              faculty_id: null,
+              room_id: null,
+              time_slot_id: slot.id,
+              is_elective: true,
+              batch: null,
+            })
+          }
+        }
+      }
+
       const { data: version, error: vErr } = await supabase
         .from('timetable_versions')
         .insert({
@@ -159,12 +218,12 @@ export default function GeneratePage() {
 
       if (vErr || !version) throw new Error(vErr?.message ?? 'Failed to create timetable version row.')
 
-      const rows = entries.map((e) => ({
+      const rows = allEntries.map((e) => ({
         version_id: version.id,
         section_id: e.section_id,
         course_id: e.course_id,
-        faculty_id: e.faculty_id,
-        room_id: e.room_id,
+        faculty_id: e.faculty_id || null,
+        room_id: e.room_id || null,
         time_slot_id: e.time_slot_id,
         is_elective: e.is_elective ?? false,
         batch: e.batch ?? null,
@@ -200,6 +259,7 @@ export default function GeneratePage() {
         {/* Left Column: Generator Controls */}
         <div className="admin-cal-stack">
           <AcademicShiftManager />
+          <GenericElectiveConfig value={geConfig} onChange={setGeConfig} disabled={busy} />
 
           <section className="admin-panel">
             <div className="admin-panel-hd">
@@ -259,8 +319,8 @@ export default function GeneratePage() {
                 style={{
                   marginTop: 16,
                   padding: 16,
-                  background: '#FAFAF9',
-                  border: '1px solid #E7E5E4',
+                  background: 'var(--bg-app)',
+                  border: '1px solid var(--border-light)',
                   borderRadius: 8,
                 }}
               >
@@ -268,7 +328,7 @@ export default function GeneratePage() {
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#44403C' }}>
                     {progressStage}
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#92400E', fontFamily: 'monospace' }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary-800)', fontFamily: 'monospace' }}>
                     {progress}%
                   </span>
                 </div>
@@ -276,7 +336,7 @@ export default function GeneratePage() {
                   style={{
                     width: '100%',
                     height: 10,
-                    backgroundColor: '#E7E5E4',
+                    backgroundColor: 'var(--border-light)',
                     borderRadius: 999,
                     overflow: 'hidden',
                   }}
@@ -291,7 +351,7 @@ export default function GeneratePage() {
                     }}
                   />
                 </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: '#78716C', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
                   <span>Fast-Start / Asymptotic Solver Monitor</span>
                   <span>Stages: Allocation → CP-SAT Slots → Room Ingestion</span>
                 </div>
@@ -311,7 +371,7 @@ export default function GeneratePage() {
                 }}
               >
                 <b>Solver service not reachable.</b> Ensure the FastAPI solver microservice is running:
-                <div className="admin-m" style={{ marginTop: 6, background: '#ffffff', padding: '6px 10px', borderRadius: 6, border: '1px solid #FECACA' }}>
+                <div className="admin-m" style={{ marginTop: 6, background: 'var(--bg-surface)', padding: '6px 10px', borderRadius: 6, border: '1px solid #FECACA' }}>
                   uvicorn app.main:app --reload --port 8000
                 </div>
               </div>
@@ -389,7 +449,7 @@ export default function GeneratePage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ padding: 12, background: '#F5F5F0', borderRadius: 8 }}>
+              <div style={{ padding: 12, background: 'var(--bg-subtle)', borderRadius: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <CheckCircleIcon size={15} style={{ color: '#059669' }} />
                   <span>Zero Double-Booking (Hard)</span>
@@ -399,7 +459,7 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              <div style={{ padding: 12, background: '#F5F5F0', borderRadius: 8 }}>
+              <div style={{ padding: 12, background: 'var(--bg-subtle)', borderRadius: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <CheckCircleIcon size={15} style={{ color: '#059669' }} />
                   <span>Qualifications &amp; Lab Fitting (Hard)</span>
@@ -409,7 +469,7 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              <div style={{ padding: 12, background: '#F5F5F0', borderRadius: 8 }}>
+              <div style={{ padding: 12, background: 'var(--bg-subtle)', borderRadius: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <CheckCircleIcon size={15} style={{ color: '#059669' }} />
                   <span>Elective Slot Synchronizer (Hard)</span>
@@ -419,7 +479,7 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              <div style={{ padding: 12, background: '#F5F5F0', borderRadius: 8 }}>
+              <div style={{ padding: 12, background: 'var(--bg-subtle)', borderRadius: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <SparklesIcon size={15} style={{ color: '#FFB900' }} />
                   <span>Gap &amp; Load Optimization (Soft)</span>

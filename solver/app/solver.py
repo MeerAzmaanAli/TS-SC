@@ -110,6 +110,9 @@ def _build_model(req: GenerateRequest, relax: frozenset[str]) -> _BuiltModel:
             raise ValueError(
                 f"section_courses references unknown section/course: {sc}"
             )
+        if crs.is_elective:
+            # Generic electives are reserved empty slots; populated separately post-solve
+            continue
         n = sc.sessions_per_week or crs.sessions_per_week
         b_count = max(1, getattr(sec, "batch_count", 1) or 1)
         if crs.lab_required and b_count > 1:
@@ -151,21 +154,17 @@ def _build_model(req: GenerateRequest, relax: frozenset[str]) -> _BuiltModel:
         2: {3, 4, 5, 6, 7, 8} if max_period >= 8 else set(range(1, max_period + 1)),
     }
 
-    sec_has_elective = {s.section_id for s in sessions if s.is_elective}
+    sec_has_elective = {
+        sc.section_id for sc in req.section_courses
+        if courses.get(sc.course_id) and courses[sc.course_id].is_elective
+    }
+    if sec_has_elective and not elective_blocks and _RELAX_ELECTIVES not in relax:
+        raise _InfeasibleNow("elective course has no reserved slot-blocks in section's shift")
 
     def allowed_slots(s: _Session) -> list[int]:
         sec_obj = sections.get(s.section_id)
         sec_shift = getattr(sec_obj, "shift", 1) or 1
         shift_periods = shift_allowed_periods.get(sec_shift, shift_allowed_periods[1])
-        if s.is_elective:
-            if _RELAX_ELECTIVES in relax:
-                return [i for i, t in enumerate(slots) if t.period in shift_periods]
-            block = [slot_idx[b] for b in elective_blocks if b in slot_idx and slots[slot_idx[b]].period in shift_periods]
-            if not block:
-                raise _InfeasibleNow(
-                    "elective course has no reserved slot-blocks in section's shift"
-                )
-            return block
         if _RELAX_ELECTIVES in relax:
             return [i for i, t in enumerate(slots) if t.period in shift_periods]
         # Only sections that have an elective course in their curriculum must reserve the elective block
@@ -210,17 +209,21 @@ def _build_model(req: GenerateRequest, relax: frozenset[str]) -> _BuiltModel:
     # ---- decision variables -------------------------------------------
     for si, s in enumerate(sessions):
         s_slots = allowed_slots(s)
-        s_fac = allowed_faculty(s)
-        s_rooms = allowed_rooms(s)
         for t in s_slots:
             built.slot_of[(si, t)] = model.NewBoolVar(f"slot_{si}_{t}")
-        for r in s_rooms:
-            built.room_of[(si, r)] = model.NewBoolVar(f"room_{si}_{r}")
-        for fi in s_fac:
-            built.fac_of[(si, fi)] = model.NewBoolVar(f"fac_{si}_{fi}")
         model.Add(sum(built.slot_of[(si, t)] for t in s_slots) == 1)
-        model.Add(sum(built.room_of[(si, r)] for r in s_rooms) == 1)
-        model.Add(sum(built.fac_of[(si, fi)] for fi in s_fac) == 1)
+
+        # Generic electives are open student-choice courses; no departmental faculty or room is booked
+        if not s.is_elective:
+            s_rooms = allowed_rooms(s)
+            for r in s_rooms:
+                built.room_of[(si, r)] = model.NewBoolVar(f"room_{si}_{r}")
+            model.Add(sum(built.room_of[(si, r)] for r in s_rooms) == 1)
+
+            s_fac = allowed_faculty(s)
+            for fi in s_fac:
+                built.fac_of[(si, fi)] = model.NewBoolVar(f"fac_{si}_{fi}")
+            model.Add(sum(built.fac_of[(si, fi)] for fi in s_fac) == 1)
 
     # ---- no double booking (section / room / faculty per slot) -----------
     _add_clash_constraints(model, built, slots, rooms, faculty, sections)
@@ -385,7 +388,8 @@ def _add_faculty_consistency_constraints(
     sessions = built.sessions
     sec_course_sessions: dict[tuple[str, str], list[int]] = {}
     for si, s in enumerate(sessions):
-        sec_course_sessions.setdefault((s.section_id, s.course_id), []).append(si)
+        if not s.is_elective:
+            sec_course_sessions.setdefault((s.section_id, s.course_id), []).append(si)
 
     for (sec_id, crs_id), sis in sec_course_sessions.items():
         if len(sis) <= 1:
@@ -417,7 +421,7 @@ def _add_theory_room_consistency_constraints(
     sessions = built.sessions
     sec_theory_sessions: dict[str, list[int]] = {}
     for si, s in enumerate(sessions):
-        if not s.lab_required:
+        if not s.lab_required and not s.is_elective:
             sec_theory_sessions.setdefault(s.section_id, []).append(si)
 
     # 1. Intra-section consistency: every theory session of a section uses the same room
@@ -678,10 +682,18 @@ def _solve_fast_institutional(req: GenerateRequest) -> Optional[GenerateResponse
         1: {5, 6},
         2: {7, 8},
     }
-    shift_elective_slot_ids = {
-        1: {sl.id for sl in req.time_slots if sl.day_of_week in (4, 5) and sl.period in {5, 6}},
-        2: {sl.id for sl in req.time_slots if sl.day_of_week in (4, 5) and sl.period in {7, 8}},
-    }
+    req_elec_set = set(req.elective_blocks)
+    if req_elec_set:
+        # Use exact admin-specified elective blocks filtered by shift period bounds
+        shift_elective_slot_ids = {
+            1: {sl.id for sl in req.time_slots if sl.id in req_elec_set and sl.period in {1, 2, 3, 4, 5, 6}},
+            2: {sl.id for sl in req.time_slots if sl.id in req_elec_set and sl.period in {3, 4, 5, 6, 7, 8}},
+        }
+    else:
+        shift_elective_slot_ids = {
+            1: {sl.id for sl in req.time_slots if sl.day_of_week in (4, 5) and sl.period in {5, 6}},
+            2: {sl.id for sl in req.time_slots if sl.day_of_week in (4, 5) and sl.period in {7, 8}},
+        }
     elective_blocks = shift_elective_slot_ids[1] | shift_elective_slot_ids[2]
 
     # -----------------------------------------------------------------
@@ -1115,26 +1127,8 @@ def _solve_fast_institutional(req: GenerateRequest) -> Optional[GenerateResponse
                 batch=None,
             ))
 
-    # Append Generic Electives into their dedicated reserved window
-    for sec_id, crs_id in sec_elective_course.items():
-        sec_shift = getattr(sec_map.get(sec_id), "shift", 1) or 1
-        sec_elec_slot_ids = shift_elective_slot_ids.get(sec_shift, shift_elective_slot_ids[1])
-        sec_elec_slots = [
-            sl.id for sl in req.time_slots
-            if sl.id in sec_elec_slot_ids
-        ]
-        elec_cand_facs = qual_map.get(crs_id, [])
-        elec_fac_id = elec_cand_facs[0] if elec_cand_facs else (req.faculty[0].id if req.faculty else "FAC-DEFAULT")
-        for sl_id in sec_elec_slots:
-            entries.append(TimetableEntry(
-                section_id=sec_id,
-                course_id=crs_id,
-                faculty_id=elec_fac_id,
-                room_id=sec_classroom[sec_id],
-                time_slot_id=sl_id,
-                is_elective=True,
-                batch=None,
-            ))
+    # Note: Generic Electives are post-processed and populated cleanly by the caller
+    # with no faculty or classroom assignment, keeping solver decoupled.
 
     # Compute actual faculty loads
     fac_loads = {}
@@ -1228,16 +1222,16 @@ def _response_from_solver(req, built: _BuiltModel, solver, wall_time: Optional[f
     for si, s in enumerate(built.sessions):
         t = next(ti for ti in range(len(slots)) if (si, ti) in built.slot_of
                  and solver.Value(built.slot_of[(si, ti)]) == 1)
-        r = next(ri for ri in range(len(rooms)) if (si, ri) in built.room_of
-                 and solver.Value(built.room_of[(si, ri)]) == 1)
-        fi = next(f for f in range(len(faculty)) if (si, f) in built.fac_of
-                  and solver.Value(built.fac_of[(si, f)]) == 1)
+        r = next((ri for ri in range(len(rooms)) if (si, ri) in built.room_of
+                  and solver.Value(built.room_of[(si, ri)]) == 1), None)
+        fi = next((f for f in range(len(faculty)) if (si, f) in built.fac_of
+                   and solver.Value(built.fac_of[(si, f)]) == 1), None)
         entries.append(
             TimetableEntry(
                 section_id=s.section_id,
                 course_id=s.course_id,
-                faculty_id=faculty[fi].id,
-                room_id=rooms[r].id,
+                faculty_id=faculty[fi].id if fi is not None else None,
+                room_id=rooms[r].id if r is not None else None,
                 time_slot_id=slots[t].id,
                 is_elective=s.is_elective,
                 batch=s.batch,

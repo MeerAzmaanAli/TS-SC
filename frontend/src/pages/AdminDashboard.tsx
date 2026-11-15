@@ -434,7 +434,7 @@ export default function AdminDashboard() {
               </div>
 
               {subsLoading ? (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: '#57534E' }}>
+                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   Loading live substitution requests...
                 </div>
               ) : (() => {
@@ -446,7 +446,7 @@ export default function AdminDashboard() {
 
                 if (filteredSubs.length === 0) {
                   return (
-                    <div style={{ padding: '24px 0', textAlign: 'center', color: '#57534E' }}>
+                    <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
                       <InboxIcon size={28} style={{ opacity: 0.35, margin: '0 auto 8px' }} />
                       <div style={{ fontWeight: 500 }}>
                         {subFilter === 'active'
@@ -486,7 +486,7 @@ export default function AdminDashboard() {
                           <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                               <div>
-                                <b style={{ color: '#1C1917', fontSize: 14 }}>{sub.requester_name}</b>{' '}
+                                <b style={{ color: 'var(--text-primary)', fontSize: 14 }}>{sub.requester_name}</b>{' '}
                                 {sub.reason && <span className="admin-mu">· {sub.reason}</span>}
                               </div>
                               <span
@@ -656,7 +656,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="admin-version-card" style={{ background: '#F5F5F0', border: '1px solid #E7E5E4' }}>
+                <div className="admin-version-card" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-light)' }}>
                   <div className="admin-mu">Active timetable</div>
                   <b>No published version</b>
                   <div className="admin-mu admin-m" style={{ marginTop: 4 }}>
@@ -752,7 +752,7 @@ export default function AdminDashboard() {
                   width: '100%',
                   textAlign: 'left',
                   marginTop: 14,
-                  color: '#1C1917',
+                  color: 'var(--text-primary)',
                   fontWeight: 500,
                   fontSize: 13,
                   background: 'transparent',
@@ -782,15 +782,15 @@ export default function AdminDashboard() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 marginBottom: 16,
-                borderBottom: '1px solid #E7E5E4',
+                borderBottom: '1px solid var(--border-light)',
                 paddingBottom: 10,
               }}
             >
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1C1917', margin: 0 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   Admin Force Assign Teacher
                 </h3>
-                <div style={{ fontSize: 12, color: '#57534E', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                   {assignModalReq.course_code} · {assignModalReq.section_name} ({DAY_NAMES[assignModalReq.day_of_week]} Period {assignModalReq.period})
                 </div>
               </div>
@@ -809,26 +809,26 @@ export default function AdminDashboard() {
             <div
               style={{
                 padding: '12px 14px',
-                background: '#F5F5F0',
+                background: 'var(--bg-subtle)',
                 borderRadius: 8,
                 marginBottom: 16,
                 fontSize: 13,
-                border: '1px solid #E7E5E4',
+                border: '1px solid var(--border-light)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ color: '#57534E' }}>Requested by:</span>
-                <strong style={{ color: '#1C1917' }}>{assignModalReq.requester_name}</strong>
+                <span style={{ color: 'var(--text-secondary)' }}>Requested by:</span>
+                <strong style={{ color: 'var(--text-primary)' }}>{assignModalReq.requester_name}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ color: '#57534E' }}>Time slot:</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Time slot:</span>
                 <span>
                   {assignModalReq.starts_at}–{assignModalReq.ends_at}
                 </span>
               </div>
               {assignModalReq.assigned_name && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#57534E' }}>Current substitute:</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>Current substitute:</span>
                   <span className="admin-tag assigned">{assignModalReq.assigned_name}</span>
                 </div>
               )}
@@ -871,8 +871,8 @@ export default function AdminDashboard() {
                             padding: '8px 12px',
                             borderRadius: 6,
                             cursor: 'pointer',
-                            border: isSelected ? '2px solid #FFB900' : '1px solid #E7E5E4',
-                            background: isSelected ? '#FFFBEB' : '#ffffff',
+                            border: isSelected ? '2px solid #FFB900' : '1px solid var(--border-light)',
+                            background: isSelected ? 'var(--primary-50)' : 'var(--bg-surface)',
                             transition: 'all 0.15s ease',
                           }}
                         >
@@ -883,7 +883,7 @@ export default function AdminDashboard() {
                               checked={isSelected}
                               onChange={() => setSelectedFacultyId(c.faculty_id)}
                             />
-                            <span style={{ fontWeight: isSelected ? 600 : 500, fontSize: 13, color: '#1C1917' }}>
+                            <span style={{ fontWeight: isSelected ? 600 : 500, fontSize: 13, color: 'var(--text-primary)' }}>
                               {c.faculty_name}
                             </span>
                           </div>
@@ -926,7 +926,7 @@ export default function AdminDashboard() {
                       )
                     })}
                 </select>
-                <div style={{ fontSize: 11, color: '#78716C', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
                   Admin override allows assigning any qualified or available faculty member directly.
                 </div>
               </div>
@@ -936,7 +936,7 @@ export default function AdminDashboard() {
                   display: 'flex',
                   justifyContent: 'flex-end',
                   gap: 10,
-                  borderTop: '1px solid #E7E5E4',
+                  borderTop: '1px solid var(--border-light)',
                   paddingTop: 14,
                 }}
               >
