@@ -50,16 +50,29 @@ async def proxy_to_solver(request: Request, path: str):
         req_headers = {
             k: v
             for k, v in request.headers.items()
-            if k.lower() not in ("host", "content-length")
+            if k.lower() not in ("host", "content-length", "accept-encoding")
         }
 
-        response = await client.request(
-            method=request.method,
-            url=target_url,
-            headers=req_headers,
-            content=body,
-            params=request.query_params,
-        )
+        try:
+            response = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=req_headers,
+                content=body,
+                params=request.query_params,
+            )
+        except httpx.TimeoutException:
+            return Response(
+                content='{"status": "error", "message": "Solver timed out after 45s"}',
+                status_code=504,
+                media_type="application/json",
+            )
+        except Exception as e:
+            return Response(
+                content=f'{{"status": "error", "message": "Gateway error connecting to solver: {str(e)}"}}',
+                status_code=502,
+                media_type="application/json",
+            )
 
         resp_headers = {
             k: v
@@ -71,6 +84,7 @@ async def proxy_to_solver(request: Request, path: str):
             content=response.content,
             status_code=response.status_code,
             headers=resp_headers,
+            media_type=response.headers.get("content-type", "application/json"),
         )
 
 

@@ -1,0 +1,312 @@
+"""
+Generate Compact UML Class Diagram for TS-SC
+Creates a professional, landscape-oriented, compact class diagram
+Dimensions: 1200x640 (aspect ratio ~1.875:1)
+Saves directly to docs/diagrams/diagram_2.png and replaces the overly tall version.
+"""
+
+import os
+import subprocess
+from PIL import Image
+
+DOCS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'docs'))
+DIAGRAMS_DIR = os.path.join(DOCS_DIR, 'diagrams')
+OUTPUT_PNG = os.path.join(DIAGRAMS_DIR, 'diagram_2.png')
+BACKUP_PNG = os.path.join(DIAGRAMS_DIR, 'diagram_2_original_tall.png')
+
+svg_code = """<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="660" viewBox="0 0 1240 660">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#4B5563"/>
+    </marker>
+    <marker id="diamond" viewBox="0 0 16 10" refX="14" refY="5" markerWidth="9" markerHeight="6" orient="auto-start-reverse">
+      <polygon points="0,5 7,1.5 14,5 7,8.5" fill="#1F2937"/>
+    </marker>
+    <marker id="diamond-open" viewBox="0 0 16 10" refX="14" refY="5" markerWidth="9" markerHeight="6" orient="auto-start-reverse">
+      <polygon points="0,5 7,1.5 14,5 7,8.5" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.5"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#F8FAFC"/>
+
+  <!-- ZONE LABELS -->
+  <text x="145" y="24" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle" letter-spacing="1">INSTITUTIONAL STRUCTURE</text>
+  <text x="440" y="24" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle" letter-spacing="1">ACADEMIC RESOURCES</text>
+  <text x="740" y="24" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle" letter-spacing="1">TIMETABLE CORE</text>
+  <text x="1050" y="24" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle" letter-spacing="1">DYNAMIC SUBSTITUTION</text>
+
+  <!-- ==================== COLUMN 1: STRUCTURE ==================== -->
+  
+  <!-- Department -->
+  <g transform="translate(40, 40)" filter="url(#shadow)">
+    <rect width="210" height="90" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 204,0 Q 210,0 210,6 L 210,26 L 0,26 Z" fill="#F1F5F9"/>
+    <line x1="0" y1="26" x2="210" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="105" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">Department</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="60" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String code</text>
+    <text x="12" y="76" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String name</text>
+  </g>
+
+  <!-- Program -->
+  <g transform="translate(40, 175)" filter="url(#shadow)">
+    <rect width="210" height="85" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 204,0 Q 210,0 210,6 L 210,26 L 0,26 Z" fill="#F1F5F9"/>
+    <line x1="0" y1="26" x2="210" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="105" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">Program</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="60" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID department_id</text>
+    <text x="12" y="76" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String name</text>
+  </g>
+
+  <!-- Section -->
+  <g transform="translate(40, 305)" filter="url(#shadow)">
+    <rect width="210" height="120" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 204,0 Q 210,0 210,6 L 210,26 L 0,26 Z" fill="#EFF6FF"/>
+    <line x1="0" y1="26" x2="210" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="105" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1E3A8A" text-anchor="middle">Section</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="59" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String code</text>
+    <text x="12" y="74" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String passkey</text>
+    <text x="12" y="89" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int semester</text>
+    <line x1="0" y1="96" x2="210" y2="96" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="111" font-family="Arial, sans-serif" font-size="10" font-style="italic" fill="#2563EB">+ rotatePasskey()</text>
+  </g>
+
+  <!-- AcademicShift -->
+  <g transform="translate(40, 470)" filter="url(#shadow)">
+    <rect width="210" height="85" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 204,0 Q 210,0 210,6 L 210,26 L 0,26 Z" fill="#F1F5F9"/>
+    <line x1="0" y1="26" x2="210" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="105" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">AcademicShift</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int shift_number</text>
+    <text x="12" y="60" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Time start_time</text>
+    <text x="12" y="76" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Time end_time</text>
+  </g>
+
+  <!-- ==================== COLUMN 2: RESOURCES ==================== -->
+
+  <!-- Faculty -->
+  <g transform="translate(335, 40)" filter="url(#shadow)">
+    <rect width="210" height="110" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 204,0 Q 210,0 210,6 L 210,26 L 0,26 Z" fill="#FDF4FF"/>
+    <line x1="0" y1="26" x2="210" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="105" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#701A75" text-anchor="middle">Faculty</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="59" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String name</text>
+    <text x="12" y="74" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String email</text>
+    <text x="12" y="89" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int max_weekly_load</text>
+    <text x="12" y="104" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int penalty_points</text>
+  </g>
+
+  <!-- Course -->
+  <g transform="translate(335, 185)" filter="url(#shadow)">
+    <rect width="210" height="110" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 204,0 Q 210,0 210,6 L 210,26 L 0,26 Z" fill="#F1F5F9"/>
+    <line x1="0" y1="26" x2="210" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="105" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">Course</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="59" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String code</text>
+    <text x="12" y="74" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String name</text>
+    <text x="12" y="89" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int credits (L-T-P)</text>
+    <text x="12" y="104" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Boolean is_lab</text>
+  </g>
+
+  <!-- Room -->
+  <g transform="translate(335, 330)" filter="url(#shadow)">
+    <rect width="210" height="95" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 204,0 Q 210,0 210,6 L 210,26 L 0,26 Z" fill="#F1F5F9"/>
+    <line x1="0" y1="26" x2="210" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="105" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">Room</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="60" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String name</text>
+    <text x="12" y="76" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String room_type</text>
+    <text x="12" y="91" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int capacity</text>
+  </g>
+
+  <!-- TimeSlot -->
+  <g transform="translate(335, 470)" filter="url(#shadow)">
+    <rect width="210" height="85" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 204,0 Q 210,0 210,6 L 210,26 L 0,26 Z" fill="#F1F5F9"/>
+    <line x1="0" y1="26" x2="210" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="105" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">TimeSlot</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int day_of_week</text>
+    <text x="12" y="60" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int period_index</text>
+    <text x="12" y="76" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Time starts_at / ends_at</text>
+  </g>
+
+  <!-- ==================== COLUMN 3: TIMETABLE CORE ==================== -->
+
+  <!-- TimetableVersion -->
+  <g transform="translate(635, 40)" filter="url(#shadow)">
+    <rect width="215" height="85" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 209,0 Q 215,0 215,6 L 215,26 L 0,26 Z" fill="#FEF3C7"/>
+    <line x1="0" y1="26" x2="215" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="107" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#92400E" text-anchor="middle">TimetableVersion</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="60" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int version_number</text>
+    <text x="12" y="76" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String status (draft/pub)</text>
+  </g>
+
+  <!-- TimetableEntry (Core Nexus) -->
+  <g transform="translate(635, 175)" filter="url(#shadow)">
+    <rect width="215" height="190" rx="6" fill="#FFFFFF" stroke="#D97706" stroke-width="2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 209,0 Q 215,0 215,6 L 215,28 L 0,28 Z" fill="#F59E0B"/>
+    <line x1="0" y1="28" x2="215" y2="28" stroke="#D97706" stroke-width="1"/>
+    <text x="107" y="19" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">TimetableEntry</text>
+    <text x="12" y="48" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="64" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID version_id</text>
+    <text x="12" y="80" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID section_id</text>
+    <text x="12" y="96" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID course_id</text>
+    <text x="12" y="112" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID faculty_id</text>
+    <text x="12" y="128" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID room_id</text>
+    <text x="12" y="144" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int day_of_week (1-6)</text>
+    <text x="12" y="160" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int period_index (1-7)</text>
+    <text x="12" y="176" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int batch_number (0=All)</text>
+  </g>
+
+  <!-- ==================== COLUMN 4: DYNAMIC SUBSTITUTION ==================== -->
+
+  <!-- SubstitutionRequest -->
+  <g transform="translate(945, 175)" filter="url(#shadow)">
+    <rect width="245" height="145" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 239,0 Q 245,0 245,6 L 245,26 L 0,26 Z" fill="#ECFDF5"/>
+    <line x1="0" y1="26" x2="245" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="122" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#065F46" text-anchor="middle">SubstitutionRequest</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="59" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID timetable_entry_id</text>
+    <text x="12" y="74" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID requester_faculty_id</text>
+    <text x="12" y="89" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID substitute_faculty_id</text>
+    <text x="12" y="104" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Date lecture_date</text>
+    <text x="12" y="119" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String status (pend/acc/exp)</text>
+    <line x1="0" y1="126" x2="245" y2="126" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="139" font-family="Arial, sans-serif" font-size="10" font-style="italic" fill="#047857">+ evaluateResolution()</text>
+  </g>
+
+  <!-- SubstitutionCandidate -->
+  <g transform="translate(945, 360)" filter="url(#shadow)">
+    <rect width="245" height="105" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 239,0 Q 245,0 245,6 L 245,26 L 0,26 Z" fill="#F1F5F9"/>
+    <line x1="0" y1="26" x2="245" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="122" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">SubstitutionCandidate</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID request_id</text>
+    <text x="12" y="59" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID faculty_id</text>
+    <text x="12" y="74" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int priority (1=P1, 2=P2, 3=P3)</text>
+    <text x="12" y="89" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ String response (pending/acc)</text>
+  </g>
+
+  <!-- SubstitutionPenalty -->
+  <g transform="translate(945, 495)" filter="url(#shadow)">
+    <rect width="245" height="95" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+    <path d="M 0,6 Q 0,0 6,0 L 239,0 Q 245,0 245,6 L 245,26 L 0,26 Z" fill="#FFF1F2"/>
+    <line x1="0" y1="26" x2="245" y2="26" stroke="#94A3B8" stroke-width="1"/>
+    <text x="122" y="18" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#9F1239" text-anchor="middle">SubstitutionPenalty</text>
+    <text x="12" y="44" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID id</text>
+    <text x="12" y="59" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID faculty_id</text>
+    <text x="12" y="74" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ UUID request_id</text>
+    <text x="12" y="89" font-family="Arial, sans-serif" font-size="10.5" fill="#334155">+ Int points / reason</text>
+  </g>
+
+  <!-- ==================== CONNECTING RELATIONSHIPS ==================== -->
+  
+  <!-- Department to Program -->
+  <line x1="145" y1="130" x2="145" y2="175" stroke="#475569" stroke-width="1.5" marker-start="url(#diamond)" marker-end="url(#arrow)"/>
+  <text x="155" y="155" font-family="Arial, sans-serif" font-size="10" fill="#475569">1..*</text>
+
+  <!-- Program to Section -->
+  <line x1="145" y1="260" x2="145" y2="305" stroke="#475569" stroke-width="1.5" marker-start="url(#diamond)" marker-end="url(#arrow)"/>
+  <text x="155" y="285" font-family="Arial, sans-serif" font-size="10" fill="#475569">1..*</text>
+
+  <!-- Section to Shift -->
+  <line x1="145" y1="425" x2="145" y2="470" stroke="#64748B" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="155" y="450" font-family="Arial, sans-serif" font-size="9.5" fill="#64748B">assigned</text>
+
+  <!-- Section to TimetableEntry -->
+  <path d="M 250,365 L 440,365 L 440,290 L 635,290" fill="none" stroke="#2563EB" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="260" y="360" font-family="Arial, sans-serif" font-size="10" fill="#2563EB">1</text>
+  <text x="615" y="285" font-family="Arial, sans-serif" font-size="10" fill="#2563EB">0..*</text>
+
+  <!-- Course to TimetableEntry -->
+  <path d="M 545,240 L 635,240" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="555" y="235" font-family="Arial, sans-serif" font-size="10" fill="#475569">1</text>
+  <text x="615" y="235" font-family="Arial, sans-serif" font-size="10" fill="#475569">0..*</text>
+
+  <!-- Faculty to TimetableEntry -->
+  <path d="M 545,95 L 610,95 L 610,210 L 635,210" fill="none" stroke="#701A75" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="555" y="90" font-family="Arial, sans-serif" font-size="10" fill="#701A75">1</text>
+  <text x="615" y="205" font-family="Arial, sans-serif" font-size="10" fill="#701A75">0..*</text>
+
+  <!-- Room to TimetableEntry -->
+  <path d="M 545,375 L 600,375 L 600,320 L 635,320" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="555" y="370" font-family="Arial, sans-serif" font-size="10" fill="#475569">1</text>
+  <text x="615" y="315" font-family="Arial, sans-serif" font-size="10" fill="#475569">0..*</text>
+
+  <!-- TimetableVersion to TimetableEntry -->
+  <line x1="742" y1="125" x2="742" y2="175" stroke="#92400E" stroke-width="1.5" marker-start="url(#diamond)" marker-end="url(#arrow)"/>
+  <text x="752" y="152" font-family="Arial, sans-serif" font-size="10" fill="#92400E">1..*</text>
+
+  <!-- TimetableEntry to SubstitutionRequest -->
+  <line x1="850" y1="240" x2="945" y2="240" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="860" y="232" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#059669">1</text>
+  <text x="918" y="232" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#059669">0..*</text>
+  <text x="898" y="255" font-family="Arial, sans-serif" font-size="9.5" fill="#059669" text-anchor="middle">generates</text>
+
+  <!-- SubstitutionRequest to SubstitutionCandidate -->
+  <line x1="1067" y1="320" x2="1067" y2="360" stroke="#475569" stroke-width="1.5" marker-start="url(#diamond)" marker-end="url(#arrow)"/>
+  <text x="1075" y="345" font-family="Arial, sans-serif" font-size="10" fill="#475569">1..*</text>
+
+  <!-- SubstitutionRequest to SubstitutionPenalty -->
+  <path d="M 1190,250 L 1215,250 L 1215,545 L 1190,545" fill="none" stroke="#9F1239" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="1210" y="400" font-family="Arial, sans-serif" font-size="9" fill="#9F1239" transform="rotate(90, 1210, 400)" text-anchor="middle">triggers on absence</text>
+</svg>
+"""
+
+svg_file = os.path.join(DOCS_DIR, "compact_class_diagram.svg")
+with open(svg_file, "w", encoding="utf-8") as f:
+    f.write(svg_code)
+
+print("Saved compact SVG:", svg_file)
+
+# Backup original tall image if not already backed up
+if os.path.exists(OUTPUT_PNG) and not os.path.exists(BACKUP_PNG):
+    import shutil
+    shutil.copyfile(OUTPUT_PNG, BACKUP_PNG)
+    print("Backed up original tall diagram to:", BACKUP_PNG)
+
+# Render SVG to PNG using Chrome Headless
+chrome = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+file_url = "file:///" + svg_file.replace("\\", "/")
+cmd = [
+    chrome,
+    "--headless=new",
+    f"--screenshot={OUTPUT_PNG}",
+    "--window-size=1260,680",
+    "--default-background-color=00000000",
+    file_url
+]
+
+res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+print("Chrome execution finished with code:", res.returncode)
+
+if os.path.exists(OUTPUT_PNG):
+    im = Image.open(OUTPUT_PNG)
+    print("Rendered PNG Size:", im.size)
+    # Autocrop transparent or white margins
+    from PIL import ImageChops
+    bg = Image.new("RGBA", im.size, (248, 250, 252, 255))
+    diff = ImageChops.difference(im.convert("RGBA"), bg)
+    bbox = diff.getbbox()
+    if bbox:
+        # Add 16px padding
+        p = 16
+        box = (max(0, bbox[0]-p), max(0, bbox[1]-p), min(im.size[0], bbox[2]+p), min(im.size[1], bbox[3]+p))
+        cropped = im.crop(box)
+        im.close()
+        cropped.save(OUTPUT_PNG)
+        print("Cropped and optimized PNG Size:", cropped.size)
+    else:
+        im.close()
+

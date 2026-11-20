@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="650" viewBox="0 0 1260 650">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563EB"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#D97706"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#F8FAFC"/>
+
+  <!-- ==================== TIER 1: CLIENT TIER (LEFT) ==================== -->
+  
+  <g transform="translate(30, 30)">
+    <!-- Container Box -->
+    <rect width="250" height="590" rx="8" fill="#FEFCE8" stroke="#EAB308" stroke-width="1.4" stroke-dasharray="8,4"/>
+    <text x="125" y="26" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#854D0E" text-anchor="middle" letter-spacing="1">CLIENT TIER (BROWSER / MOBILE)</text>
+    
+    <!-- Browser Node -->
+    <g transform="translate(18, 55)" filter="url(#shadow)">
+      <rect width="214" height="230" rx="6" fill="#FFFFFF" stroke="#CA8A04" stroke-width="1.4"/>
+      <path d="M 0,6 Q 0,0 6,0 L 208,0 Q 214,0 214,6 L 214,30 L 0,30 Z" fill="#FEF08A"/>
+      <line x1="0" y1="30" x2="214" y2="30" stroke="#CA8A04" stroke-width="1"/>
+      <text x="107" y="20" font-family="Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#713F12" text-anchor="middle">&lt;&lt;device&gt;&gt; End-User Client</text>
+      
+      <!-- Component Details -->
+      <text x="14" y="52" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0F172A">Modern Web Browser</text>
+      <text x="14" y="68" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Chrome, Safari, Firefox, Edge</text>
+      <text x="14" y="84" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Responsive Viewport (320px–4K)</text>
+      
+      <line x1="14" y1="98" x2="200" y2="98" stroke="#E2E8F0" stroke-width="1"/>
+      
+      <text x="14" y="118" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#0F172A">Client Runtime &amp; Storage</text>
+      <text x="14" y="134" font-family="Arial, sans-serif" font-size="10" fill="#475569">• HTML5 / CSS3 / ES2022</text>
+      <text x="14" y="150" font-family="Arial, sans-serif" font-size="10" fill="#475569">• LocalStorage (Section Passkeys)</text>
+      <text x="14" y="166" font-family="Arial, sans-serif" font-size="10" fill="#475569">• WebSocket Realtime Client</text>
+      <text x="14" y="182" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Print CSS Engine (PDF Matrix)</text>
+      
+      <line x1="14" y1="194" x2="200" y2="194" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="107" y="213" font-family="Arial, sans-serif" font-size="9.5" font-style="italic" fill="#854D0E" text-anchor="middle">Zero-Install Web Application</text>
+    </g>
+
+    <!-- Persona Roles Summary Card -->
+    <g transform="translate(18, 310)" filter="url(#shadow)">
+      <rect width="214" height="245" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2"/>
+      <path d="M 0,6 Q 0,0 6,0 L 208,0 Q 214,0 214,6 L 214,28 L 0,28 Z" fill="#F1F5F9"/>
+      <line x1="0" y1="28" x2="214" y2="28" stroke="#CBD5E1" stroke-width="1"/>
+      <text x="107" y="19" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">Client Personas Supported</text>
+
+      <text x="14" y="50" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#1E3A8A">1. Student Access</text>
+      <text x="14" y="66" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• Section Code + Passkey</text>
+      <text x="14" y="80" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• No database account required</text>
+      <text x="14" y="94" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• Batch 1 / Batch 2 toggle</text>
+
+      <text x="14" y="118" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#701A75">2. Faculty Access</text>
+      <text x="14" y="134" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• Authenticated Faculty Portal</text>
+      <text x="14" y="148" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• Same-day substitution requests</text>
+      <text x="14" y="162" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• Accept/Decline coverage</text>
+
+      <text x="14" y="186" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#92400E">3. Institutional Admin</text>
+      <text x="14" y="202" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• Curriculum &amp; shift management</text>
+      <text x="14" y="216" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• CP-SAT solver execution</text>
+      <text x="14" y="230" font-family="Arial, sans-serif" font-size="9.5" fill="#475569">• Institutional 360° discovery</text>
+    </g>
+  </g>
+
+  <!-- ==================== TIER 2: VERCEL MULTI-SERVICE EDGE (CENTER) ==================== -->
+
+  <g transform="translate(325, 30)">
+    <!-- Container Box -->
+    <rect width="570" height="590" rx="8" fill="#F8FAFC" stroke="#64748B" stroke-width="1.4" stroke-dasharray="8,4"/>
+    <text x="285" y="26" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle" letter-spacing="1">VERCEL MULTI-SERVICE PROJECT (PRODUCTION EDGE)</text>
+
+    <!-- Service 1: Frontend SPA -->
+    <g transform="translate(25, 55)" filter="url(#shadow)">
+      <rect width="520" height="150" rx="6" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.4"/>
+      <path d="M 0,6 Q 0,0 6,0 L 514,0 Q 520,0 520,6 L 520,30 L 0,30 Z" fill="#EFF6FF"/>
+      <line x1="0" y1="30" x2="520" y2="30" stroke="#3B82F6" stroke-width="1"/>
+      <text x="260" y="20" font-family="Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1D4ED8" text-anchor="middle">&lt;&lt;service&gt;&gt; 'frontend' (Vite + React 18 SPA)</text>
+
+      <text x="16" y="52" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0F172A">Client Delivery &amp; Reactive UI Engine</text>
+      <text x="16" y="68" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Public Edge Routing: Route /(.*) with Global CDN Edge Caching</text>
+      <text x="16" y="84" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Responsive Stone &amp; Amber UI (60-30-10 Design System)</text>
+      <text x="16" y="100" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Interactive Weekly Timetable Matrix with Live Batch Filters</text>
+      <text x="16" y="116" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Direct BaaS Client: Supabase SDK for Realtime Subscriptions &amp; RPC</text>
+      <text x="16" y="132" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Infeasibility Visualization &amp; Diagnostic Reporting Panels</text>
+    </g>
+
+    <!-- Service 2: API Gateway -->
+    <g transform="translate(25, 235)" filter="url(#shadow)">
+      <rect width="520" height="135" rx="6" fill="#FFFFFF" stroke="#6366F1" stroke-width="1.4"/>
+      <path d="M 0,6 Q 0,0 6,0 L 514,0 Q 520,0 520,6 L 520,30 L 0,30 Z" fill="#EEF2FF"/>
+      <line x1="0" y1="30" x2="520" y2="30" stroke="#6366F1" stroke-width="1"/>
+      <text x="260" y="20" font-family="Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#4338CA" text-anchor="middle">&lt;&lt;service&gt;&gt; 'api' (FastAPI Public Gateway)</text>
+
+      <text x="16" y="52" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0F172A">Public Routing &amp; Proxy Layer</text>
+      <text x="16" y="68" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Public Route: /api/(.*) with CORS Security Headers</text>
+      <text x="16" y="84" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Reverse Proxy &amp; Health Aggregator for Worker Instances</text>
+      <text x="16" y="100" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Request Validation, Payload Sanitization &amp; Rate Limiting</text>
+      <text x="16" y="116" font-family="Arial, sans-serif" font-size="10" fill="#475569">• IPC Service Binding Dispatcher to Internal Solver Microservice</text>
+    </g>
+
+    <!-- Service 3: Solver Microservice Worker -->
+    <g transform="translate(25, 395)" filter="url(#shadow)">
+      <rect width="520" height="175" rx="6" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
+      <path d="M 0,6 Q 0,0 6,0 L 514,0 Q 520,0 520,6 L 520,30 L 0,30 Z" fill="#FEF3C7"/>
+      <line x1="0" y1="30" x2="520" y2="30" stroke="#D97706" stroke-width="1"/>
+      <text x="260" y="20" font-family="Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#92400E" text-anchor="middle">&lt;&lt;service&gt;&gt; 'solver' (Internal Optimization Worker)</text>
+
+      <text x="16" y="52" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0F172A">Mathematical Constraint Programming Core</text>
+      <text x="16" y="68" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Private Microservice: No Public Route (Internal VPC/IPC Access Only)</text>
+      <text x="16" y="84" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Engine: Google OR-Tools CP-SAT 9.10 + Python 3.11</text>
+      <text x="16" y="100" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Boolean Satisfiability (SAT) Model: Hard &amp; Soft Constraint Formulation</text>
+      <text x="16" y="116" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Hierarchical Infeasibility Relaxation Diagnostic Engine</text>
+      <text x="16" y="132" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Multi-Shift Timing Boundary Verification (Shift 1 &amp; Shift 2)</text>
+      <text x="16" y="148" font-family="Arial, sans-serif" font-size="10" fill="#475569">• University Scale Performance: 75 sections solved in 18.03 seconds</text>
+    </g>
+
+    <!-- Internal Tier 2 Arrows -->
+    <path d="M 120,205 L 120,235" fill="none" stroke="#6366F1" stroke-width="1.6" marker-end="url(#arrow)"/>
+    <text x="128" y="224" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#6366F1">HTTPS /api/*</text>
+
+    <path d="M 230,370 L 230,395" fill="none" stroke="#D97706" stroke-width="1.6" marker-end="url(#arrow-amber)"/>
+    <text x="238" y="386" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#D97706">IPC Binding</text>
+
+    <path d="M 390,395 L 390,370" fill="none" stroke="#059669" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arrow-green)"/>
+    <text x="398" y="386" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#059669">Optimization JSON</text>
+  </g>
+
+  <!-- ==================== TIER 3: SUPABASE CLOUD (RIGHT) ==================== -->
+
+  <g transform="translate(930, 30)">
+    <!-- Container Box -->
+    <rect width="300" height="590" rx="8" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.4" stroke-dasharray="8,4"/>
+    <text x="150" y="26" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#15803D" text-anchor="middle" letter-spacing="1">DATABASE &amp; BAAS TIER (SUPABASE)</text>
+
+    <!-- PostgreSQL 15 Database Node -->
+    <g transform="translate(20, 55)" filter="url(#shadow)">
+      <rect width="260" height="265" rx="6" fill="#FFFFFF" stroke="#15803D" stroke-width="1.4"/>
+      <path d="M 0,6 Q 0,0 6,0 L 254,0 Q 260,0 260,6 L 260,30 L 0,30 Z" fill="#DCFCE7"/>
+      <line x1="0" y1="30" x2="260" y2="30" stroke="#15803D" stroke-width="1"/>
+      <text x="130" y="20" font-family="Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#14532D" text-anchor="middle">&lt;&lt;database&gt;&gt; PostgreSQL 15</text>
+
+      <text x="14" y="52" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#0F172A">Relational Schema &amp; Storage</text>
+      <text x="14" y="68" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Core Tables: rooms, courses, faculty,</text>
+      <text x="24" y="82" font-family="Arial, sans-serif" font-size="10" fill="#475569">sections, shifts, timetable_entries,</text>
+      <text x="24" y="96" font-family="Arial, sans-serif" font-size="10" fill="#475569">substitution_requests, penalties</text>
+      
+      <line x1="14" y1="108" x2="246" y2="108" stroke="#E2E8F0" stroke-width="1"/>
+      
+      <text x="14" y="126" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#0F172A">Engine-Level Security &amp; RPC</text>
+      <text x="14" y="142" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Row-Level Security (RLS) Active</text>
+      <text x="14" y="156" font-family="Arial, sans-serif" font-size="10" fill="#475569">• SECURITY DEFINER Functions:</text>
+      <text x="24" y="170" font-family="Arial, sans-serif" font-size="9.5" fill="#15803D">get_section_timetable(code, passkey)</text>
+      <text x="24" y="184" font-family="Arial, sans-serif" font-size="9.5" fill="#15803D">resolve_substitution_request()</text>
+      
+      <line x1="14" y1="196" x2="246" y2="196" stroke="#E2E8F0" stroke-width="1"/>
+      
+      <text x="14" y="214" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#0F172A">Supabase Realtime (CDC)</text>
+      <text x="14" y="230" font-family="Arial, sans-serif" font-size="10" fill="#475569">• PostgreSQL Replication Engine</text>
+      <text x="14" y="244" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Broadcast slot updates to clients</text>
+    </g>
+
+    <!-- GoTrue Auth Node -->
+    <g transform="translate(20, 345)" filter="url(#shadow)">
+      <rect width="260" height="150" rx="6" fill="#FFFFFF" stroke="#059669" stroke-width="1.4"/>
+      <path d="M 0,6 Q 0,0 6,0 L 254,0 Q 260,0 260,6 L 260,30 L 0,30 Z" fill="#D1FAE5"/>
+      <line x1="0" y1="30" x2="260" y2="30" stroke="#059669" stroke-width="1"/>
+      <text x="130" y="20" font-family="Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#065F46" text-anchor="middle">&lt;&lt;auth&gt;&gt; Supabase GoTrue Auth</text>
+
+      <text x="14" y="52" font-family="Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#0F172A">Identity &amp; Claim Validation</text>
+      <text x="14" y="70" font-family="Arial, sans-serif" font-size="10" fill="#475569">• JWT Token Issuance &amp; Verification</text>
+      <text x="14" y="86" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Role Partitioning: 'admin', 'faculty'</text>
+      <text x="14" y="102" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Obscured Discovery Endpoints</text>
+      <text x="14" y="118" font-family="Arial, sans-serif" font-size="10" fill="#475569">• Session Persistence in Secure Storage</text>
+    </g>
+
+    <!-- Footer Note -->
+    <text x="150" y="540" font-family="Arial, sans-serif" font-size="10" font-style="italic" fill="#15803D" text-anchor="middle">Managed Cloud Infrastructure</text>
+    <text x="150" y="556" font-family="Arial, sans-serif" font-size="9" fill="#475569" text-anchor="middle">High-Availability AWS ap-south-1</text>
+  </g>
+
+  <!-- ==================== CROSS-TIER NETWORK FLOWS ==================== -->
+
+  <!-- Client to Frontend (HTTPS/WSS) -->
+  <line x1="280" y1="130" x2="350" y2="130" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <text x="315" y="122" font-family="Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#2563EB" text-anchor="middle">HTTPS / WSS</text>
+
+  <!-- Frontend to Database (Direct RLS & RPC) -->
+  <path d="M 870,110 L 950,110" fill="none" stroke="#15803D" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <text x="910" y="102" font-family="Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#15803D" text-anchor="middle">HTTPS REST</text>
+  <text x="910" y="124" font-family="Arial, sans-serif" font-size="8.5" fill="#15803D" text-anchor="middle">(RLS &amp; RPC)</text>
+
+  <!-- Frontend to Auth Service -->
+  <path d="M 870,150 L 910,150 L 910,410 L 950,410" fill="none" stroke="#059669" stroke-width="1.6" stroke-dasharray="5,3" marker-end="url(#arrow-green)"/>
+  <text x="898" y="270" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#059669" transform="rotate(90, 898, 270)" text-anchor="middle">JWT Auth Claims</text>
+
+  <!-- Solver to Database (Bulk Commits) -->
+  <path d="M 870,480 L 950,230" fill="none" stroke="#D97706" stroke-width="1.6" stroke-dasharray="5,3" marker-end="url(#arrow-amber)"/>
+  <text x="910" y="340" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#D97706" text-anchor="middle">Publish Version</text>
+
+</svg>

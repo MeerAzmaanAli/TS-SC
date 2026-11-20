@@ -1,0 +1,557 @@
+\*02020603050405020304Times New Roman;\*020b0604020202020204Arial;
+\*02070309020205020404Courier New;\*05050102010706020507Symbol;\*05000000000000000000Wingdings;
+\*02040503050406030204Cambria Math;\*020f0502020204030204Calibri;\*02020603050405020304Times New Roman;
+\*02020603050405020304Times New Roman;\*02040503050406030204Cambria;
+\*02020603050405020304Times New Roman;\*02020603050405020304Times New Roman;
+\*02020603050405020304Times New Roman;\*020f0502020204030204Calibri;
+\*02020603050405020304Times New Roman;Times New Roman CE;Times New Roman Cyr;
+Times New Roman Greek;Times New Roman Tur;Times New Roman (Hebrew);Times New Roman (Arabic);
+Times New Roman Baltic;Times New Roman (Vietnamese);Arial CE;Arial Cyr;
+Arial Greek;Arial Tur;Arial (Hebrew);Arial (Arabic);
+Arial Baltic;Arial (Vietnamese);Courier New CE;Courier New Cyr;
+Courier New Greek;Courier New Tur;Courier New (Hebrew);Courier New (Arabic);
+Courier New Baltic;Courier New (Vietnamese);Cambria Math CE;Cambria Math Cyr;
+Cambria Math Greek;Cambria Math Tur;Cambria Math Baltic;Cambria Math (Vietnamese);
+Calibri CE;Calibri Cyr;Calibri Greek;Calibri Tur;
+Calibri (Hebrew);Calibri (Arabic);Calibri Baltic;Calibri (Vietnamese);
+Times New Roman CE;Times New Roman Cyr;Times New Roman Greek;
+Times New Roman Tur;Times New Roman (Hebrew);Times New Roman (Arabic);
+Times New Roman Baltic;Times New Roman (Vietnamese);Times New Roman CE;
+Times New Roman Cyr;Times New Roman Greek;Times New Roman Tur;
+Times New Roman (Hebrew);Times New Roman (Arabic);Times New Roman Baltic;
+Times New Roman (Vietnamese);Cambria CE;Cambria Cyr;
+Cambria Greek;Cambria Tur;Cambria Baltic;
+Cambria (Vietnamese);Times New Roman CE;Times New Roman Cyr;
+Times New Roman Greek;Times New Roman Tur;Times New Roman (Hebrew);
+Times New Roman (Arabic);Times New Roman Baltic;Times New Roman (Vietnamese);
+Times New Roman CE;Times New Roman Cyr;Times New Roman Greek;
+Times New Roman Tur;Times New Roman (Hebrew);Times New Roman (Arabic);
+Times New Roman Baltic;Times New Roman (Vietnamese);Times New Roman CE;
+Times New Roman Cyr;Times New Roman Greek;Times New Roman Tur;
+Times New Roman (Hebrew);Times New Roman (Arabic);Times New Roman Baltic;
+Times New Roman (Vietnamese);Calibri CE;Calibri Cyr;
+Calibri Greek;Calibri Tur;Calibri (Hebrew);
+Calibri (Arabic);Calibri Baltic;Calibri (Vietnamese);
+Times New Roman CE;Times New Roman Cyr;Times New Roman Greek;
+Times New Roman Tur;Times New Roman (Hebrew);Times New Roman (Arabic);
+Times New Roman Baltic;Times New Roman (Vietnamese);;;;;;
+Normal;\*Default Paragraph Font;\*
+Normal Table;
+List Paragraph;\*
+\'01o;;
+\'01o;;
+\'01?;;\'01o;;
+\'01o;;
+\'01o;;
+\'01o;;\'01?;;
+\'01?;;\'01o;;
+\'01o;;
+\'01o;;
+\'01o;;
+\'01o;;
+\'01o;;
+MANISH KUMARSVVV
+\*GrammarlyDocumentId
+\*http://schemas.microsoft.com/office/word/2003/wordml
+x0\*
+.\*.\*.\*)\*
+()\*()\*()\*
+()\*()
+The sequence
+of Pages to be followed is as
+:
+arsid7361454
+arsid16253863 Title Page
+Declaration
+arsid7361454 Project Approval Sheet
+Certificate
+Acknowledgements
+Abstract
+List of Figures
+Table of Contents (with page numbers)
+CHAPTER 1
+CHAPTER 2
+CHAPTER 3
+CHAPTER 4
+CHAPTER 5
+CHAPTER 6
+CHAPTER 7
+x0
+arsid8942837
+\*page2\*page2    Project Report
+arsid8942837
+on
+arsid928789 TITLE OF PROJECT
+arsid928789
+arsid928789
+arsid3559995
+In partial fulfillment of requirements for the degree
+arsid928789
+arsid928789 of
+arsid928789
+arsid928789 BACHELOR OF
+TECHNOLOGY
+arsid928789 IN
+arsid928789
+arsid928789
+COMPUTER SCIENCE & ENGINEERING
+Submitted by:
+NAME OF THE STUDENT 1 [University Roll Number]
+NAME OF THE STUDENT 2 [University Roll Number]
+NAME OF THE STUDENT 3 [University Roll Number]
+NAME OF THE STUDENT 4 [University Roll Number]
+Under the guidance of
+arsid12413618 PROF. NAME
+arsid12413618
+arsid12413618
+\* SHAPE  \\* MERGEFORMAT
+\*shapeType75fFlipH0fFlipV0
+fLockRotation0fLockPosition0pib
+posrelh3posrelv3fLayoutInCell1fAllowOverlap1fBehindDocument0fPseudoInline1
+fLayoutInCell1fLockPosition1fLockRotation1
+\*shapeType75fFlipH0fFlipV0fLockRotation1fLockPosition1
+fLayoutInCell1fPseudoInline1fLayoutInCell1fLockPosition1fLockRotation1
+x0
+x0
+arsid6383612
+SHRI VAISHNAV VIDYAPEETH VISHWAVIDYALAYA, INDORE
+arsid12413618 SHRI VAISHNAV INSTITUTE OF
+INFORMATIO
+N TECHNOLOG
+Y
+DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING
+arsid6383612
+JUL-DEC-
+arsid13239955
+\*page3\*page3SHRI VAISHNAV VIDYAPEETH VISHWAVIDYALAY
+A, INDORE
+arsid2900659
+SHRI VAISHNAV INSTITUTE OF INFORMATION TECHNOLOGY
+arsid2900659
+arsid5060337
+arsid5060337
+arsid12413618
+DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING
+DECLARATION
+We here declare that work which is being presented in the project entitled \'93XYZ
+\'94 in partial fulfillment of degree of
+Bachelor of Technology
+in
+Computer Science & Engineering
+is an authentic record of our work carried out under the supervision and guidance of
+Mr.
+ABC,
+Asst. Professor
+of
+Computer Science & Engineering. The matter embodied in this project
+has not been submitted for the award of any other degree.
+Student 1   Signature
+Student 2
+Signature
+Date:
+arsid13239955
+\*page4\*page4SHRI VAISHNAV VIDYAPEETH VISHWAVIDYALAY
+A, INDORE
+arsid2900659
+SHRI VAISHNAV INSTITUTE OF INFORMATION TECHNOLOGY
+arsid2900659
+arsid6383848
+arsid12413618 DEPARTMENT OF
+COMPUTER SCIENCE & ENGINEERING
+arsid6383848
+arsid12474030
+PROJECT APPROVAL
+SHEET
+The following
+team has done the appropriate work related to the \'93
+Name of the Project\'94 in partial fulfillment for the award of
+Bachelor of Technology
+in
+Computer Science & Engineering
+of \'93
+SHRI VAISHNAV INSTITUTE OF INFORMATION TECHNOLOGY\'94
+and
+is being submitted to SHRI VAISHNAV VIDYAPEETH VISHWAVIDYALAY
+A, INDORE.
+Team:
+Name of the student 1
+2.	Name of the student 2
+Internal Examiner
+External Examiner
+Date
+arsid13239955
+\*page5\*page5SHRI VAISHNAV VIDYAPEETH VISHWAVIDYALAY
+A, INDORE
+arsid13854779
+SHRI VAISHNAV INSTITUTE OF INFORMATION TECHNOLOGY
+arsid13854779
+arsid11405145
+arsid12413618
+DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING
+arsid11405145
+arsid12474030
+CERTIFICATE
+This is to certify that
+Mr. A,
+Mr. B and
+Mr. C
+working in a team have satisfactorily completed the project entitled \'93PROJECT TITLE
+\'94 under the
+guidance of
+Mr. ABC
+in
+the partial fulfillment of the degree of Bachelor of
+Technology
+in
+Computer Science & Engineering
+awarded by
+SHRI VAISHNAV INSTITUTE OF INFORMATION TECHNOLOGY
+affiliated to SHRI VAISHNAV VIDYAPEETH VISHWAVIDYALAY
+A, INDORE
+during the academic year Jul
+-Dec-
+x0
+arsid1389972
+(Name of Guide)
+arsid12413618
+arsid1447958
+Project Guide
+arsid1447958
+Mr. Neeraj Arya
+arsid1447958
+arsid1447958
+Project Coordinator
+, CSE
+x0
+arsid13247386 Dr.
+Jigyasu Dubey
+Dr.
+Anand Rajavat
+arsid32342 Professor and
+Head,
+Rector and Dean Academic
+CSE, SVIIT
+Director,
+SVIIT
+x0
+\*page6\*page6ACKNOWLEDGE
+MENT
+We are grateful to a number of persons for their advice
+and support during the time of complete our project work. First and foremost our thanks goes to
+Dr. Jigyasu Dubey
+Professor and Head, Computer Science and Engineering Department,  SVIIT
+and Mr./Ms. Name of Guides the m
+entor of our project for providing us valuable suppo
+rt and necessary help whenever required and also helping us explore new technologies by the help of their technical expertise. His direction, supervision and constructive criticism were indeed the source of inspiration for us.
+We would also like to expre
+ss our sincere gratitude towards our Director
+Dr. Anan
+Rajavat, Director, SVIIT
+for providing us valuable support.
+We are really indebted to
+Mr. Neeraj Arya,
+project coordinator for helping us in each aspect of our academics activities. We also owe our sincere thanks to all the
+faculty members of Computer Science & Engineering
+Department who have always been helpful.
+W
+e forward our sincere thanks to all teaching and non-teaching staff
+of Computer Science & Engineering
+department, SVVV
+Indore for providing necessary information and there kind co-operation.
+We would like
+to thanks our parents and family members, our classmates and our friends for their motivation and there valuable suggestion during the project. Last, but not the least, we thank all those people, who have helped us directly or indirectly in accomplishing
+this work. It has been a privilege to study at
+SHRI VAISHNAV VIDYAPEETH VISHWAVIDYALAYA, INDORE
+x0
+\*page7\*page7ABSTRACT
+As per your project
+x0
+\*page8\*page8LIST OF FIGURES
+As per your project
+x0
+\*page9\*page9
+TABLE OF CONTENT
+Declaration
+Project Approval Sheet
+Certificate
+Acknowledgment
+Abstract
+List of Figures
+CHAPTER 1
+INTRODUCTION
+Introduction
+1.2	Problem Statement
+1.3	Need for the proper
+System
+Objective
+Modules of the system
+Scope
+CHAPTER 2 -
+LITERATURE SURVEY
+Existing System
+Proposed System
+Feasibility Study
+Technical Feasibility
+Economical Feasibility
+Operational Feasibility
+CHAPTER 3
+REQUIREMEN
+TS ANALYSIS
+Method used for Requirement analysis
+Data Requirements
+Functional Requirements
+Non Functional Requirements
+System Specification
+Hardware specification
+Software Specification CHAPTER 4  DESIGN
+Software Requirements Specification
+Glossary
+4.1.2	Supplementary Specifications
+4.1.3	Use Case Model
+Conceptual level class diagram
+4.3	Conceptual level activity diagram
+4.4	Data flow Diagram( Level 0,1,2)
+Database Design (ER-Diagram)
+I
+II
+III
+IV
+V
+VI 1-20
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+21-30
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+31-40
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+41-50
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+p.no.
+x0
+\*page10\*page10
+CHAPTER 5  SYSTEM MODELING
+51-60
+Detailed Class Diagram
+p.no.
+Interaction Diagram
+p.no.
+5.2.1 Sequence Diagram
+p.no.
+5.2.2 Collaboration Diagram
+p.no.
+State Diagram
+p.no.
+Activity Diagram
+p.no.
+Object Diagram
+p.no.
+Component Diagram
+p.no.
+Deployment Diagram
+Testing
+p.no.
+CHAPTER 6
+CONCLUSION & FUTURE WORK
+71-72
+Limitation of Project
+p.no.
+Future Enhancement
+p.no.
+CHAPTER 7 -
+BIBLIOGRAPHY & REFERENCES
+73-75
+Reference Books
+Other Documentations & Resources
+7.3	 Snapshot  (with description)
+arsid4614248
+x0
+\*page11\*page11
+EXPLANATION OF CONTENTS
+Title Page
+(page color: Dark blue, font color: Golden)
+Students should follow the given format.
+Declaration
+Students should follow the given format.
+Original Copy of the Approved Pro-forma of the Project Proposal
+Students should follow the given format.
+Certificate
+Students should follow the given format.
+Acknowledgements
+This should express y
+our gratitude to those who have helped you in the preparation of your project.
+Abstract
+This should be one/two short paragraphs (100-150 words total), summarizing the project work. It is important that this is not just a re-statement of the original project outline. A suggested flow is background, project aims and main achievements. From the
+abstract, a reader should be able to ascertain if the project is of interest to them and, it should present results of which they may wish to know more details.
+Table of Figures:
+List of all Figures, Tables, Graphs, Charts etc. along with their page numbers
+in a table of figures.
+Table of Contents:
+The table of contents gives the readers a view of the detailed structure of the
+report. You would need to provide section and subsection headings with associated pages. The formatting details of these sections
+and subsections you will find in unit 2 of this block.
+CHAPTER 1 to CHAPTER 5
+Describe as per your project,
+Limitations of the System:
+Explain the limitations you encountered during the testing of your
+software that you were not able to modify. List the criticisms you accepted during the demonstrations of your software.
+x0
+\*page12\*page12Future Scope of the Project
+describes two things: firstly, new areas of investigation prompted
+by developments in this project, and secondly, parts of the current work that was not completed due to time constraints and/or problems encountered.
+REFERENCES
+arsid5768718
+It is very important that you acknowledge the work of others that you have used or adapted in your own work, or that
+provides the essential background or context to your project. The use of references is the standard way to do this. Please follow the given standard for the references for books, journals, and online material.
+x0
+\*page13\*page13FORMAT OF PROJECT REPORT
+\'ff Paper Size :
+A- 4 size Royal Bond Paper\'20
+Margins :
+Top :
+Bottom :
+1\'94 (2.86cm)
+Left :
+Right :
+Line Spacing: 1.5 line\'20
+Title of Chapter\'20
+Font :
+Times New Roman ( Bold face)
+Size :
+18 point
+Alignment :
+Right Alignment
+One thick
+line (2\'bc point weight) after the name of chapter
+Headings\'20
+First Order Heading:
+(for example
+1. INTRODUCTION
+)
+Font :
+Times New Roman (Bold Face) Size :
+16 point
+One blank line before the heading (12 points)
+Second Order Heading:
+(for example
+1.1. Evolution
+)
+Font :
+Times New Roman ( Bold Face) Size :
+15 point
+One blank line before the heading (12 points)
+Third Order Heading:
+(for example
+1.1.1. Image Processing)
+Font :
+Times New Roman (Bold Face) Size :
+14 point
+One blank line before the heading (12 points)
+Text\'20
+Font :
+Times New Roman
+Size :
+12 point
+Alignment:
+Justified (Full Text)
+x0
+\*\*??????\'ff Abstract ( up to 150 words)
+Heading (i.e. ABSTRACT)
+Font :
+Times New Roman (Bold Face
+)
+Size : 14 point
+Two blank lines after the heading. (12 points)
+Remaining Text
+Font :
+Times New Roman (
+Italic Face )
+Size : 12 point
+Alignment :
+Justified (Full Text)
+Figures and Tables : Centered Placed
+Caption
+Font :
+Times New Roman (Italic Face
+)
+Size :
+12 point
+Alignment :
+Centered
+Figure Caption must be bellow the figure and centered, Table caption must be above the table and centered.
+References / Bibliography Line Spacing :
+1.5 Line
+Font :
+Times New Roman
+Size :
+12 point\'20
+Publication details and/or URL must be in Italics
+Header: Name of the Project (Right Corner)
+Footer:
+Page No. (Center Aligned) ( Numbering of pages would start from
+chapter-1 , i.e\'85. 1,2 ,3 ) But for first 6 points such as declaration,
+Certificate, Abstract, Acknowledgements ,Table of Contents, List of Figures,
+(with Page No. in Romans i.e i, ii, iii, iv \'85\'85..)
+SEPARATOR:
+Before starting of each chapter. It does not contain Header
+and Footer\'20
+x0
+arsid3559995
+\*page15\*page15Note:
+Project Report must be submitted in
+hard binding duly signed by your respective guide.
+Total No of copies of file= (no of group member) + (one copy for department) + (one copy for library)
+\*Normal;heading 1;
+heading 2;heading 3;heading 4;
+heading 5;heading 6;heading 7;
+heading 8;heading 9;toc 1;
+toc 2;toc 3;toc 4;
+toc 5;toc 6;toc 7;
+toc 8;toc 9;caption;
+table of authorities;List;List Bullet;Title;
+Default Paragraph Font;List Continue 2;List Continue 3;List Continue 4;
+List Continue 5;Subtitle;Strong;Emphasis;
+Balloon Text;Table Grid;Placeholder Text;No Spacing;Light Shading;
+Light List;Light Grid;Medium Shading 1;Medium Shading 2;Medium List 1;Medium List 2;
+Medium Grid 1;Medium Grid 2;Medium Grid 3;Dark List;Colorful Shading;Colorful List;
+Colorful Grid;Light Shading Accent 1;Light List Accent 1;Light Grid Accent 1;Medium Shading 1 Accent 1;
+Medium Shading 2 Accent 1;Medium List 1 Accent 1;Revision;List Paragraph;Quote;
+Intense Quote;Medium List 2 Accent 1;Medium Grid 1 Accent 1;Medium Grid 2 Accent 1;Medium Grid 3 Accent 1;
+Dark List Accent 1;Colorful Shading Accent 1;Colorful List Accent 1;Colorful Grid Accent 1;Light Shading Accent 2;
+Light List Accent 2;Light Grid Accent 2;Medium Shading 1 Accent 2;Medium Shading 2 Accent 2;Medium List 1 Accent 2;
+Medium List 2 Accent 2;Medium Grid 1 Accent 2;Medium Grid 2 Accent 2;Medium Grid 3 Accent 2;Dark List Accent 2;
+Colorful Shading Accent 2;Colorful List Accent 2;Colorful Grid Accent 2;Light Shading Accent 3;Light List Accent 3;
+Light Grid Accent 3;Medium Shading 1 Accent 3;Medium Shading 2 Accent 3;Medium List 1 Accent 3;Medium List 2 Accent 3;
+Medium Grid 1 Accent 3;Medium Grid 2 Accent 3;Medium Grid 3 Accent 3;Dark List Accent 3;Colorful Shading Accent 3;
+Colorful List Accent 3;Colorful Grid Accent 3;Light Shading Accent 4;Light List Accent 4;Light Grid Accent 4;
+Medium Shading 1 Accent 4;Medium Shading 2 Accent 4;Medium List 1 Accent 4;Medium List 2 Accent 4;
+Medium Grid 1 Accent 4;Medium Grid 2 Accent 4;Medium Grid 3 Accent 4;Dark List Accent 4;Colorful Shading Accent 4;
+Colorful List Accent 4;Colorful Grid Accent 4;Light Shading Accent 5;Light List Accent 5;Light Grid Accent 5;
+Medium Shading 1 Accent 5;Medium Shading 2 Accent 5;Medium List 1 Accent 5;Medium List 2 Accent 5;
+Medium Grid 1 Accent 5;Medium Grid 2 Accent 5;Medium Grid 3 Accent 5;Dark List Accent 5;Colorful Shading Accent 5;
+Colorful List Accent 5;Colorful Grid Accent 5;Light Shading Accent 6;Light List Accent 6;Light Grid Accent 6;
+Medium Shading 1 Accent 6;Medium Shading 2 Accent 6;Medium List 1 Accent 6;Medium List 2 Accent 6;
+Medium Grid 1 Accent 6;Medium Grid 2 Accent 6;Medium Grid 3 Accent 6;Dark List Accent 6;Colorful Shading Accent 6;
+Colorful List Accent 6;Colorful Grid Accent 6;Subtle Emphasis;Intense Emphasis;
+Subtle Reference;Intense Reference;Book Title;Bibliography;
+TOC Heading;\*

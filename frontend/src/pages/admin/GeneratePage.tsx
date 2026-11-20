@@ -145,8 +145,23 @@ export default function GeneratePage() {
           throw err
         }
       }
-      if (!res.ok) throw new Error(`Solver returned HTTP ${res.status}`)
-      const data = await res.json()
+      if (!res.ok) {
+        const errText = await res.text()
+        try {
+          const errJson = JSON.parse(errText)
+          throw new Error(errJson.message || `Solver returned HTTP ${res.status}`)
+        } catch (e: any) {
+          if (e.message && !e.message.startsWith('Unexpected token')) throw e
+          throw new Error(`Solver returned HTTP ${res.status}: ${errText.slice(0, 150)}`)
+        }
+      }
+      const rawText = await res.text()
+      let data: any
+      try {
+        data = JSON.parse(rawText)
+      } catch {
+        throw new Error(`Solver returned invalid response (${res.status}): ${rawText.slice(0, 150)}`)
+      }
 
       if (data.status === 'infeasible') {
         const causes = (data.causes as string[]) ?? []

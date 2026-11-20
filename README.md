@@ -27,7 +27,7 @@ npm run dev
 cd solver 
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-t
+uvicorn app.main:app --reload --port 8000
 
 # 3. Database
 # Create a Supabase project, then run supabase/migrations/*.sql
