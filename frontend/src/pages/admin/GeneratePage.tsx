@@ -98,7 +98,16 @@ export default function GeneratePage() {
   async function checkHealth() {
     try {
       const res = await fetch(`${SOLVER_URL}/health`, { signal: AbortSignal.timeout(3000) })
-      setSolverOnline(res.ok)
+      if (!res.ok) {
+        setSolverOnline(false)
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      if (data && typeof data === 'object' && 'internal_solver' in data) {
+        setSolverOnline(data.internal_solver === 'connected')
+      } else {
+        setSolverOnline(true)
+      }
     } catch {
       if (SOLVER_URL.includes('localhost')) {
         try {
@@ -289,7 +298,7 @@ export default function GeneratePage() {
                   className={`admin-tag ${solverOnline === true ? 'assigned' : solverOnline === false ? 'unfilled' : ''}`}
                 >
                   {solverOnline === true
-                    ? '● Solver online (:8000)'
+                    ? '● Solver online'
                     : solverOnline === false
                     ? '● Solver offline'
                     : 'Checking solver…'}

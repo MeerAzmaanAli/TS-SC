@@ -25,7 +25,8 @@
     },
     "solver": {
       "root": "solver",
-      "framework": "fastapi"
+      "framework": "fastapi",
+      "entrypoint": "main:app"
     }
   },
   "rewrites": [
