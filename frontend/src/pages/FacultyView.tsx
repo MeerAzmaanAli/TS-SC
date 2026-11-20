@@ -7,6 +7,7 @@ import { FACULTY_TIMES } from '../components/TimetablePreview'
 import SubstitutionInbox from '../components/SubstitutionInbox'
 import {
   createSubstitutionRequest,
+  cancelSubstitutionRequest,
   getLectureTemporalStatus,
   getHeldLectureDate,
   toLocalDateString,
@@ -15,6 +16,8 @@ import {
   sweepAllExpiredRequests,
   tryFinaliseRequest,
 } from '../lib/substitution'
+import { useDeveloperSettings } from '../lib/developerSettings'
+import { buildSlotQueues, SlotSubstitutionQueueItem, getTargetDateFromRequest } from '../lib/substitutionQueue'
 import { useNavigate } from 'react-router-dom'
 import {
   CalendarIcon,
@@ -47,7 +50,7 @@ interface Row {
 interface DispatchedSub {
   id: string
   timetable_entry_id: string
-  status: 'open' | 'assigned' | 'unfilled' | 'expired'
+  status: 'open' | 'assigned' | 'unfilled' | 'expired' | 'completed' | 'cancelled'
   assigned_name?: string | null
   date?: string | null
 }
@@ -68,7 +71,7 @@ interface CoveringSub {
 
 interface OutgoingRequestInfo {
   id: string
-  status: 'open' | 'assigned' | 'unfilled' | 'expired'
+  status: 'open' | 'assigned' | 'unfilled' | 'expired' | 'completed' | 'cancelled'
   created_at: string
   deadline: string
   reason: string | null
@@ -81,6 +84,7 @@ interface OutgoingRequestInfo {
   ends_at: string
   assigned_name: string | null
   is_past_day: boolean
+  target_date?: string
   candidates: {
     faculty_id: string
     faculty_name: string
@@ -109,6 +113,7 @@ export default function FacultyView() {
   const [rows, setRows] = useState<Row[]>([])
   const [facultyMeta, setFacultyMeta] = useState<{ name: string; email: string; departmentName?: string } | null>(null)
   const [dispatchedSubs, setDispatchedSubs] = useState<Map<string, DispatchedSub>>(new Map())
+  const [slotQueues, setSlotQueues] = useState<Map<string, SlotSubstitutionQueueItem[]>>(new Map())
   const [outgoingRequests, setOutgoingRequests] = useState<OutgoingRequestInfo[]>([])
   const [coveringSubs, setCoveringSubs] = useState<CoveringSub[]>([])
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequestInfo[]>([])
@@ -116,10 +121,13 @@ export default function FacultyView() {
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [busyIncomingId, setBusyIncomingId] = useState<string | null>(null)
+  const [cancellingReqId, setCancellingReqId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'schedule' | 'request' | 'inbox' | 'find-faculty'>('schedule')
   const [requestModalSession, setRequestModalSession] = useState<Row | null>(null)
   const [requestReason, setRequestReason] = useState('')
+  const [selectedLectureDate, setSelectedLectureDate] = useState<string>('')
   const [outgoingFilter, setOutgoingFilter] = useState<'active' | 'past'>('active')
+  const { settings: devSettings } = useDeveloperSettings()
 
   // Find Faculty (Colleague Schedules) State
   const [colleagueList, setColleagueList] = useState<PublicFacultyItem[]>([])
@@ -204,28 +212,30 @@ export default function FacultyView() {
         .eq('requester_faculty_id', fId)
         .order('created_at', { ascending: false })
 
+      // Build chronological queues and active timetable overlay map
+      const { slotQueuesMap, activeOverlayMap: overlay } = buildSlotQueues(mySubs ?? [])
+      setSlotQueues(slotQueuesMap)
+
       const subMap = new Map<string, DispatchedSub>()
+      for (const [entryId, front] of overlay.entries()) {
+        subMap.set(entryId, {
+          id: front.id,
+          timetable_entry_id: entryId,
+          status: front.status,
+          assigned_name: front.substituteName,
+          date: front.targetDate,
+        })
+      }
+      setDispatchedSubs(subMap)
+
       const outList: OutgoingRequestInfo[] = []
       for (const s of (mySubs ?? []) as any[]) {
         const te = s.timetable_entries
         const ts = te?.time_slots
 
-        // The held lecture date is when the lecture takes place (day-of or advance tomorrow)
-        const heldDate = ts?.day_of_week ? getHeldLectureDate(ts.day_of_week, s.created_at) : null
-        const heldDateStr = heldDate ? toLocalDateString(heldDate) : null
+        const { dateStr } = getTargetDateFromRequest(s)
+        const isPastDay = s.deadline ? new Date().getTime() > new Date(s.deadline).getTime() : false
 
-        const isPastDay = ts?.day_of_week ? isSubstitutionDayPast(ts.day_of_week, s.created_at) : false
-
-        // Only overlay active (today or upcoming) substitutions onto the weekly timetable grid
-        if (s.timetable_entry_id && !isPastDay && !subMap.has(s.timetable_entry_id)) {
-          subMap.set(s.timetable_entry_id, {
-            id: s.id,
-            timetable_entry_id: s.timetable_entry_id,
-            status: s.status,
-            assigned_name: s.assigned_faculty?.name ?? null,
-            date: heldDateStr,
-          })
-        }
         const cands = (s.substitution_candidates ?? []).map((c: any) => ({
           faculty_id: c.faculty_id,
           faculty_name: c.faculty?.name ?? 'Faculty',
@@ -248,10 +258,10 @@ export default function FacultyView() {
           ends_at: ts?.ends_at ? ts.ends_at.slice(0, 5) : '',
           assigned_name: s.assigned_faculty?.name ?? null,
           is_past_day: isPastDay,
+          target_date: dateStr,
           candidates: cands,
         })
       }
-      setDispatchedSubs(subMap)
       setOutgoingRequests(outList)
 
       // 3. Fetch substitutions this faculty has accepted to cover for colleagues
@@ -368,16 +378,17 @@ export default function FacultyView() {
     e.preventDefault()
     if (!profile?.faculty_id || !requestModalSession || !requestModalSession.time_slots) return
 
-    // Re-validate eligibility at submit time (defence-in-depth)
+    // Re-validate eligibility at submit time with selected lecture date (defence-in-depth)
     const { isEligible, isPast } = getLectureTemporalStatus(
       requestModalSession.time_slots.day_of_week,
       requestModalSession.time_slots.starts_at,
+      selectedLectureDate,
     )
-    if (!isEligible) {
+    if (!isEligible && !devSettings.allowPastLectures) {
       setError(
         isPast
-          ? 'Cannot dispatch: this lecture has already commenced or passed.'
-          : 'Cannot dispatch: substitution requests can only be sent the day before or on the day of the lecture.',
+          ? 'Cannot dispatch: this lecture has already commenced or passed on the selected date.'
+          : 'Cannot dispatch: substitution requests can only be sent the day before or on the day of the lecture (turn off day restriction in Admin Developer Settings to override).',
       )
       setRequestModalSession(null)
       return
@@ -395,7 +406,12 @@ export default function FacultyView() {
         dayOfWeek: requestModalSession.time_slots.day_of_week,
         startsAt: requestModalSession.time_slots.starts_at,
       }
-      await createSubstitutionRequest(session, profile.faculty_id, requestReason.trim() || undefined)
+      await createSubstitutionRequest(
+        session,
+        profile.faculty_id,
+        requestReason.trim() || undefined,
+        selectedLectureDate,
+      )
       setNotice(
         `Coverage request for ${requestModalSession.courses?.code} dispatched to qualified, free faculty colleagues.`,
       )
@@ -407,6 +423,32 @@ export default function FacultyView() {
       console.error('Dispatch failed:', err)
     } finally {
       setBusy(null)
+    }
+  }
+
+  async function handleCancelRequest(requestId: string) {
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel / delete this substitution request? Any invited or assigned colleagues will be notified and your lecture slot will be restored.'
+    )
+    if (!confirmed) return
+    console.log('[FacultyView] Cancelling substitution request:', requestId)
+    setCancellingReqId(requestId)
+    setError(null)
+    try {
+      const res = await cancelSubstitutionRequest(requestId, profile?.faculty_id ?? undefined)
+      if (!res.success) {
+        console.error('[FacultyView] Cancellation failed:', res.error)
+        setError(res.error || 'Failed to cancel substitution request.')
+        return
+      }
+      console.log('[FacultyView] Cancellation succeeded for request:', requestId)
+      setNotice('Substitution request was removed successfully. Lecture session restored.')
+      await loadData()
+    } catch (err: any) {
+      console.error('[FacultyView] Cancellation error caught:', err)
+      setError(err.message || 'Error cancelling substitution request.')
+    } finally {
+      setCancellingReqId(null)
     }
   }
 
@@ -581,22 +623,25 @@ export default function FacultyView() {
     const found = rows.find((r) => r.id === entry.id)
     if (!found || !found.time_slots) return
 
-    // Policy guard: only allow opening modal for eligible sessions
-    const { isEligible } = getLectureTemporalStatus(found.time_slots.day_of_week, found.time_slots.starts_at)
-    if (!isEligible) {
+    // Policy guard: check eligibility with current developer settings
+    const temporal = getLectureTemporalStatus(found.time_slots.day_of_week, found.time_slots.starts_at)
+    if (!temporal.isEligible && !devSettings.allowPastLectures) {
       setError(
-        `Substitution requests can only be dispatched the day before or on the day of the lecture (before it commences). Monday's lecture is not eligible today.`,
+        temporal.reasonMessage ??
+        `Substitution requests can only be dispatched the day before or on the day of the lecture (before it commences).`,
       )
       return
     }
 
     setRequestModalSession(found)
     setRequestReason('')
+    setSelectedLectureDate(temporal.lectureDate.toISOString().split('T')[0])
   }
 
   // 1. Convert own teaching sessions to grid entries
   const ownGridEntries: GridEntry[] = rows.map((r) => {
     const sub = dispatchedSubs.get(r.id)
+    const queue = slotQueues.get(r.id) || []
     const temporalStatus = r.time_slots
       ? getLectureTemporalStatus(r.time_slots.day_of_week, r.time_slots.starts_at)
       : null
@@ -622,6 +667,7 @@ export default function FacultyView() {
             date: sub.date,
           }
         : null,
+      substitution_queue: queue,
     }
   })
 
@@ -893,7 +939,7 @@ export default function FacultyView() {
                       className={`admin-btn admin-btn-sm ${outgoingFilter === 'active' ? '' : 'admin-btn-outline'}`}
                       style={{ fontSize: 11, height: 24, padding: '0 8px' }}
                     >
-                      Active ({outgoingRequests.filter((r) => !r.is_past_day && r.status !== 'expired' && r.status !== 'unfilled').length})
+                      Active ({outgoingRequests.filter((r) => !r.is_past_day && r.status !== 'expired' && r.status !== 'unfilled' && r.status !== 'cancelled').length})
                     </button>
                     <button
                       type="button"
@@ -901,7 +947,7 @@ export default function FacultyView() {
                       className={`admin-btn admin-btn-sm ${outgoingFilter === 'past' ? '' : 'admin-btn-outline'}`}
                       style={{ fontSize: 11, height: 24, padding: '0 8px' }}
                     >
-                      Past / Expired ({outgoingRequests.filter((r) => r.is_past_day || r.status === 'expired' || r.status === 'unfilled').length})
+                      Past / Cancelled ({outgoingRequests.filter((r) => r.is_past_day || r.status === 'expired' || r.status === 'unfilled' || r.status === 'cancelled').length})
                     </button>
                   </div>
                 </div>
@@ -915,8 +961,8 @@ export default function FacultyView() {
               {(() => {
                 const displayedOutgoing = outgoingRequests.filter((r) =>
                   outgoingFilter === 'active'
-                    ? !r.is_past_day && r.status !== 'expired' && r.status !== 'unfilled'
-                    : r.is_past_day || r.status === 'expired' || r.status === 'unfilled'
+                    ? !r.is_past_day && r.status !== 'expired' && r.status !== 'unfilled' && r.status !== 'cancelled'
+                    : r.is_past_day || r.status === 'expired' || r.status === 'unfilled' || r.status === 'cancelled'
                 )
 
                 if (displayedOutgoing.length === 0) {
@@ -935,6 +981,9 @@ export default function FacultyView() {
                       const isAssigned = out.status === 'assigned'
                       const isExpired = out.status === 'expired' || out.status === 'unfilled'
                       const isOpen = out.status === 'open'
+                      const isCancelled = out.status === 'cancelled'
+                      const isUnfilled = out.status === 'unfilled'
+                      const canCancel = (isOpen || isAssigned || isUnfilled || isCancelled)
 
                       return (
                         <div
@@ -965,21 +1014,47 @@ export default function FacultyView() {
                                   </div>
                                 )}
                               </div>
-                              <span
-                                className={`admin-tag ${
-                                  isAssigned ? 'assigned' : isOpen ? 'open' : 'unfilled'
-                                }`}
-                              >
-                                {isAssigned
-                                  ? out.is_past_day
-                                    ? `Completed · Covered by ${out.assigned_name ?? 'Colleague'}`
-                                    : `Covered by ${out.assigned_name ?? 'Colleague'}`
-                                  : isExpired
-                                  ? 'Expired (No substitute assigned)'
-                                  : isOpen
-                                  ? 'Searching substitute'
-                                  : 'Unfilled / Free'}
-                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <span
+                                  className={`admin-tag ${
+                                    isAssigned ? 'assigned' : isOpen ? 'open' : 'unfilled'
+                                  }`}
+                                >
+                                  {isAssigned
+                                    ? out.is_past_day
+                                      ? `Completed · Covered by ${out.assigned_name ?? 'Colleague'}`
+                                      : `Covered by ${out.assigned_name ?? 'Colleague'}`
+                                    : isCancelled
+                                    ? 'Cancelled by You'
+                                    : isExpired
+                                    ? 'Expired (No substitute assigned)'
+                                    : isOpen
+                                    ? 'Searching substitute'
+                                    : 'Unfilled / Free'}
+                                </span>
+
+                                {canCancel && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelRequest(out.id)}
+                                    disabled={cancellingReqId === out.id}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{
+                                      fontSize: 11,
+                                      padding: '2px 8px',
+                                      color: '#DC2626',
+                                      borderColor: '#FECACA',
+                                      backgroundColor: '#FEF2F2',
+                                      height: 24,
+                                    }}
+                                    title={isUnfilled ? 'Delete unfilled request and restore normal lecture' : 'Cancel this coverage request'}
+                                  >
+                                    {cancellingReqId === out.id
+                                      ? isUnfilled ? 'Restoring...' : 'Cancelling...'
+                                      : isUnfilled ? 'Restore Lecture' : 'Cancel Request'}
+                                  </button>
+                                )}
+                              </div>
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
@@ -1108,6 +1183,7 @@ export default function FacultyView() {
                 slotTimes={FACULTY_TIMES}
                 highlightOngoing={true}
                 onRequestSubstitution={handleOpenRequestModal}
+                onCancelSubstitutionRequest={handleCancelRequest}
                 incomingRequests={incomingRequests}
                 onAcceptRequest={handleAcceptIncoming}
                 onRejectRequest={handleRejectIncoming}
@@ -1302,6 +1378,9 @@ export default function FacultyView() {
                       onClick={() => {
                         setRequestModalSession(r)
                         setRequestReason('')
+                        if (status?.lectureDate) {
+                          setSelectedLectureDate(status.lectureDate.toISOString().split('T')[0])
+                        }
                       }}
                       disabled={Boolean(existingSub) || !canRequest}
                       className={`btn ${!existingSub && canRequest ? (status.isAdvanceRequest ? 'btn-secondary' : 'btn-primary') : 'btn-secondary'} btn-sm`}
@@ -1321,6 +1400,25 @@ export default function FacultyView() {
                           : 'Not Available Yet'}
                       </span>
                     </button>
+                    {existingSub && (existingSub.status === 'open' || existingSub.status === 'assigned') && (
+                      <button
+                        type="button"
+                        onClick={() => handleCancelRequest(existingSub.id)}
+                        disabled={cancellingReqId === existingSub.id}
+                        className="btn btn-secondary btn-sm"
+                        style={{
+                          width: '100%',
+                          marginTop: '0.4rem',
+                          color: '#DC2626',
+                          borderColor: '#FECACA',
+                          backgroundColor: '#FEF2F2',
+                          fontSize: '0.78rem',
+                        }}
+                        title="Cancel this coverage request and restore lecture"
+                      >
+                        {cancellingReqId === existingSub.id ? 'Cancelling...' : '✕ Cancel Request'}
+                      </button>
+                    )}
                   </div>
                 </div>
               )
@@ -1498,7 +1596,11 @@ export default function FacultyView() {
       {/* Substitution Request Modal Dialog */}
       {requestModalSession && (() => {
         const modalStatus = requestModalSession.time_slots
-          ? getLectureTemporalStatus(requestModalSession.time_slots.day_of_week, requestModalSession.time_slots.starts_at)
+          ? getLectureTemporalStatus(
+              requestModalSession.time_slots.day_of_week,
+              requestModalSession.time_slots.starts_at,
+              selectedLectureDate,
+            )
           : null
         const modalIsAdvance = modalStatus?.isAdvanceRequest ?? false
         const modalLectureDateStr = modalStatus?.lectureDate
@@ -1508,7 +1610,7 @@ export default function FacultyView() {
           ? new Date(modalStatus.lectureDate.getTime() + 10 * 60 * 1000)
           : null
         const modalDeadlineStr = modalDeadlineDate
-          ? modalDeadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          ? `${modalDeadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} on ${modalDeadlineDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
           : ''
 
         return (
@@ -1520,13 +1622,17 @@ export default function FacultyView() {
                     <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--slate-900)' }}>
                       Request Lecture Substitution
                     </h3>
-                    {modalStatus?.isEligible ? (
+                    {devSettings.disableDayRestriction ? (
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: 99 }}>
+                        🔓 Day Restriction OFF (Dev Mode)
+                      </span>
+                    ) : modalStatus?.isEligible ? (
                       modalIsAdvance ? (
                         <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#292524', color: '#FFB900', padding: '2px 8px', borderRadius: 99 }}>
-                          📅 Advance Request (Tomorrow)
+                          📅 Advance Request
                         </span>
                       ) : (
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: 99 }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#ECFDF5', color: '#065F46', padding: '2px 8px', borderRadius: 99 }}>
                           ⚡ Same-Day Request (Today)
                         </span>
                       )
@@ -1567,7 +1673,7 @@ export default function FacultyView() {
                   </div>
                   {modalDeadlineStr && (
                     <div style={{ fontSize: '0.78rem', color: modalIsAdvance ? '#292524' : '#854d0e', fontWeight: 600, marginTop: 2 }}>
-                      ⏱ Candidates must respond by <strong>{modalDeadlineStr}</strong> on {modalIsAdvance ? 'the lecture date' : 'today'}
+                      ⏱ Candidates must respond by <strong>{modalDeadlineStr}</strong>
                     </div>
                   )}
                 </div>
@@ -1578,13 +1684,13 @@ export default function FacultyView() {
                 <div style={{ padding: '0.6rem 0.9rem', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 'var(--radius-md)', fontSize: '0.82rem', color: '#92400E', marginBottom: '1rem', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   <span style={{ flexShrink: 0 }}>📅</span>
                   <span>
-                    This is an <strong>advance substitution request</strong>. Colleagues will be notified immediately and can accept or decline before the lecture begins.
+                    This is an <strong>advance substitution request</strong> for <strong>{modalLectureDateStr}</strong>. Colleagues will be notified immediately and can accept or decline before the lecture begins.
                   </span>
                 </div>
               )}
 
               {/* Not eligible warning banner */}
-              {modalStatus && !modalStatus.isEligible && (
+              {modalStatus && !modalStatus.isEligible && !devSettings.allowPastLectures && (
                 <div style={{ padding: '0.65rem 0.9rem', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 'var(--radius-md)', fontSize: '0.82rem', color: '#991B1B', marginBottom: '1rem', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   <AlertCircleIcon size={16} style={{ color: '#DC2626', flexShrink: 0, marginTop: 1 }} />
                   <div>
@@ -1594,6 +1700,41 @@ export default function FacultyView() {
               )}
 
               <form onSubmit={handleConfirmRequest}>
+                {/* Interactive Calendar Date Picker */}
+                {devSettings.allowCalendarDatePicker && (
+                  <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <label
+                      className="form-label"
+                      htmlFor="custom-lecture-date"
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <span style={{ fontWeight: 700 }}>📅 Date of Absence / Coverage</span>
+                      {devSettings.disableDayRestriction ? (
+                        <span style={{ fontSize: '0.72rem', color: '#B45309', fontWeight: 700 }}>
+                          🔓 Any date allowed (Dev Mode)
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          Restricted: Today / Tomorrow
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      id="custom-lecture-date"
+                      type="date"
+                      className="input"
+                      value={selectedLectureDate}
+                      min={devSettings.allowPastLectures ? undefined : new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setSelectedLectureDate(e.target.value)}
+                      style={{ width: '100%', maxWidth: 280, fontWeight: 600 }}
+                      required
+                    />
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                      This session is scheduled on <strong>{DAYS[requestModalSession.time_slots?.day_of_week ?? 0]}s</strong>.
+                    </div>
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label className="form-label" htmlFor="reason">
                     Reason for absence / coverage request (optional)

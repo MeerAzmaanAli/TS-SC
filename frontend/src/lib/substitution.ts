@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { SOLVER_URL } from './timetable'
+import { getDeveloperSettings } from './developerSettings'
 
 export interface RankedCandidate {
   faculty_id: string
@@ -41,46 +42,88 @@ export async function sendEmailNotification(payload: SendEmailPayload): Promise<
  * Checks whether a faculty member is eligible to raise a substitution request for a lecture.
  *
  * Policy: Requests can be dispatched on the DAY BEFORE the lecture, or on the SAME DAY before
- * the lecture commences. The deadline is always lecture_start + 10 minutes on the actual lecture date.
+ * the lecture commences.
+ * Developer Mode Override: If `disableDayRestriction` is enabled in Admin Developer Settings,
+ * faculty can request coverage for any future date in the semester.
  */
-export function getLectureTemporalStatus(dayOfWeek: number, startsAt: string): {
-  isEligible: boolean       // true if request window is open (day-before or same-day, pre-start)
-  isAdvanceRequest: boolean // true if today is the day BEFORE the lecture
-  isToday: boolean          // true if today IS the lecture day
-  isPast: boolean           // true if lecture has already started/passed (same-day only)
-  lectureDate: Date         // actual Date the lecture will occur (may be tomorrow for advance)
+export function getLectureTemporalStatus(
+  dayOfWeek: number,
+  startsAt: string,
+  targetDate?: Date | string | null,
+  overrideDayRestriction?: boolean,
+): {
+  isEligible: boolean       // true if request window is open
+  isAdvanceRequest: boolean // true if lecture is on a future date (tomorrow or beyond)
+  isToday: boolean          // true if target date IS today
+  isPast: boolean           // true if lecture has already started/passed
+  lectureDate: Date         // actual calendar Date the lecture will occur
   reasonMessage?: string
 } {
+  const dev = getDeveloperSettings()
+  const disableRestriction = overrideDayRestriction ?? dev.disableDayRestriction
+  const allowPast = dev.allowPastLectures
+
   const now = new Date()
   const todayDayOfWeek = now.getDay() === 0 ? 7 : now.getDay() // 1=Mon..7=Sun (JS Sun=0 → 7)
-
-  const isToday = dayOfWeek === todayDayOfWeek
-  // The day before the lecture (wraps: Monday's prev day = Sunday = 7)
-  const prevDay = dayOfWeek === 1 ? 7 : dayOfWeek - 1
-  const isAdvanceRequest = todayDayOfWeek === prevDay
-
   const [h, m] = startsAt.split(':').map(Number)
 
-  // Compute the actual calendar date of the lecture
-  const lectureDate = new Date(now)
-  if (isAdvanceRequest) {
-    // Lecture is tomorrow — advance one calendar day
-    lectureDate.setDate(lectureDate.getDate() + 1)
+  let lectureDate: Date
+  let isToday = false
+  let isAdvanceRequest = false
+
+  if (targetDate) {
+    // When an explicit date is provided (e.g. from the faculty calendar picker)
+    const base = typeof targetDate === 'string'
+      ? new Date(`${targetDate.split('T')[0]}T12:00:00`)
+      : new Date(targetDate)
+
+    lectureDate = new Date(base)
+    lectureDate.setHours(h || 0, m || 0, 0, 0)
+
+    const todayStr = now.toISOString().split('T')[0]
+    const targetStr = lectureDate.toISOString().split('T')[0]
+    isToday = todayStr === targetStr
+    isAdvanceRequest = lectureDate.getTime() > now.getTime() && !isToday
+  } else {
+    // Default computation without custom date
+    isToday = dayOfWeek === todayDayOfWeek
+    const prevDay = dayOfWeek === 1 ? 7 : dayOfWeek - 1
+    isAdvanceRequest = todayDayOfWeek === prevDay
+
+    lectureDate = new Date(now)
+    if (isAdvanceRequest) {
+      lectureDate.setDate(lectureDate.getDate() + 1)
+    } else if (!isToday) {
+      // Advance to the next occurrence of this dayOfWeek
+      const diff = (dayOfWeek - todayDayOfWeek + 7) % 7
+      lectureDate.setDate(lectureDate.getDate() + (diff === 0 ? 7 : diff))
+    }
+    lectureDate.setHours(h || 0, m || 0, 0, 0)
   }
-  lectureDate.setHours(h || 0, m || 0, 0, 0)
 
-  // "Past" only applies if today IS the lecture day and it has already started
-  const isPast = isToday && now.getTime() >= lectureDate.getTime()
+  // A session is past if its start time on that calendar date has arrived
+  const isPast = now.getTime() >= lectureDate.getTime()
 
-  const isEligible = isAdvanceRequest || (isToday && !isPast)
+  let isEligible = false
+  if (disableRestriction) {
+    // Day restriction disabled: any upcoming lecture date is eligible (or past if demo mode)
+    isEligible = allowPast || !isPast
+  } else {
+    // Standard policy: only day before or same day pre-commencement
+    const prevDay = dayOfWeek === 1 ? 7 : dayOfWeek - 1
+    const isDayBefore = todayDayOfWeek === prevDay
+    isEligible = isDayBefore || (isToday && (!isPast || allowPast))
+  }
 
   let reasonMessage: string | undefined
   if (!isEligible) {
-    if (isToday && isPast) {
-      reasonMessage = 'Lecture has already commenced or passed today.'
+    if (isPast && !allowPast) {
+      reasonMessage = isToday
+        ? 'Lecture has already commenced or passed today.'
+        : 'Selected lecture date/time is in the past.'
     } else {
       const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-      reasonMessage = `Requests open the day before or on ${dayNames[dayOfWeek] ?? 'the lecture day'}.`
+      reasonMessage = `Requests open the day before or on ${dayNames[dayOfWeek] ?? 'the lecture day'}. (You can turn off this restriction in Admin > Developer Settings).`
     }
   }
 
@@ -265,38 +308,47 @@ export async function createSubstitutionRequest(
   session: SessionInfo,
   requesterFacultyId: string,
   reason?: string,
+  customLectureDate?: Date | string,
 ): Promise<void> {
-  // Boundary 1: Eligibility — must be day-before or same-day, lecture not yet started
+  const dev = getDeveloperSettings()
+  // Boundary 1: Eligibility — day-before or same-day (or any future date if day restriction is disabled)
   const { isEligible, isPast, isAdvanceRequest, lectureDate } = getLectureTemporalStatus(
     session.dayOfWeek,
     session.startsAt,
+    customLectureDate,
   )
 
-  if (!isEligible) {
+  if (!isEligible && !dev.allowPastLectures) {
     if (isPast) {
       throw new Error(
         'Invalid request: Cannot request substitution for a lecture that has already started or passed.',
       )
     }
     throw new Error(
-      'Invalid request: Substitution requests can only be dispatched the day before or on the same day as the lecture.',
+      'Invalid request: Substitution requests can only be dispatched the day before or on the same day as the lecture (disable day restriction in Admin Developer Settings to override).',
     )
   }
 
   const version = await publishedVersion()
   const versionId = version.id
 
-  // Boundary 2: Prevent Duplicate Active Requests for the same session
-  const { data: existingActive } = await supabase
+  // Boundary 2: Prevent Duplicate Active Requests for the same session on the exact same date
+  const { data: existingActiveList } = await supabase
     .from('substitution_requests')
-    .select('id, status')
+    .select('id, status, deadline')
     .eq('timetable_entry_id', session.entryId)
-    .eq('status', 'open')
-    .maybeSingle()
+    .in('status', ['open', 'assigned'])
 
-  if (existingActive) {
+  const targetDateStr = toLocalDateString(lectureDate)
+  const isDuplicateDate = (existingActiveList ?? []).some((r: any) => {
+    if (!r.deadline) return false
+    const held = new Date(new Date(r.deadline).getTime() - 10 * 60 * 1000)
+    return toLocalDateString(held) === targetDateStr
+  })
+
+  if (isDuplicateDate) {
     throw new Error(
-      'A substitution request is already active and open for this scheduled lecture.',
+      `A substitution request is already active for this lecture on ${targetDateStr}.`,
     )
   }
 
@@ -365,30 +417,50 @@ export async function createSubstitutionRequest(
   // For advance requests (day-before), lectureDate is tomorrow — deadline is still lecture_start + 10min
   const deadline = new Date(lectureDate.getTime() + 10 * 60 * 1000)
 
-  const { data: req, error: rErr } = await supabase
-    .from('substitution_requests')
-    .insert({
-      institution_id: version.institution_id,
-      requester_faculty_id: requesterFacultyId,
-      timetable_entry_id: session.entryId,
-      reason: reason ?? null,
-      deadline: deadline.toISOString(),
-      status: 'open',
-    })
-    .select('id')
-    .single()
-  if (rErr || !req) throw new Error(`Failed to create request: ${rErr?.message}`)
+  // 1. Transactional Creation: Try atomic database RPC first
+  let requestId: string | null = null
+  const { data: rpcRes, error: rpcErr } = await supabase.rpc('create_substitution_request_atomic', {
+    p_institution_id: version.institution_id,
+    p_timetable_entry_id: session.entryId,
+    p_requester_faculty_id: requesterFacultyId,
+    p_reason: reason ?? null,
+    p_deadline: deadline.toISOString(),
+    p_candidates: candidates.map((c) => ({ faculty_id: c.faculty_id, priority: c.priority })),
+  })
 
-  const requestId = (req as { id: string }).id
+  if (!rpcErr && rpcRes?.success && rpcRes.request_id) {
+    requestId = rpcRes.request_id
+  } else {
+    // Client fallback: Ensure rollback if candidates fail
+    const { data: req, error: rErr } = await supabase
+      .from('substitution_requests')
+      .insert({
+        institution_id: version.institution_id,
+        requester_faculty_id: requesterFacultyId,
+        timetable_entry_id: session.entryId,
+        reason: reason ?? null,
+        deadline: deadline.toISOString(),
+        status: 'open',
+      })
+      .select('id')
+      .single()
+    if (rErr || !req) throw new Error(`Failed to create request: ${rErr?.message}`)
 
-  const { error: cErr } = await supabase.from('substitution_candidates').insert(
-    candidates.map((c) => ({
-      request_id: requestId,
-      faculty_id: c.faculty_id,
-      priority: c.priority,
-    })),
-  )
-  if (cErr) throw new Error(`Failed to create candidates: ${cErr.message}`)
+    requestId = (req as { id: string }).id
+
+    const { error: cErr } = await supabase.from('substitution_candidates').insert(
+      candidates.map((c) => ({
+        request_id: requestId,
+        faculty_id: c.faculty_id,
+        priority: c.priority,
+      })),
+    )
+    if (cErr) {
+      // Discard all changes: Rollback by deleting the request
+      await supabase.from('substitution_requests').delete().eq('id', requestId)
+      throw new Error(`Transaction aborted: Failed to create candidates (${cErr.message}). All changes discarded.`)
+    }
+  }
 
   // Dispatch Email Notification to candidate faculty members
   const courseName = courseRes.data ? `${courseRes.data.code} - ${courseRes.data.name}` : 'Course'
@@ -650,3 +722,180 @@ export async function tryFinaliseRequest(requestId: string): Promise<boolean> {
   }
   return true
 }
+
+/**
+ * Deletes a substitution request and restores the session cleanly.
+ * Transactional: Either completes completely or discards all changes.
+ */
+export async function deleteSubstitutionRequest(
+  requestId: string,
+  _requesterFacultyId?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('[TS-SC] Calling delete_substitution_request RPC for:', requestId)
+    // 1. Try atomic database transaction RPC
+    const { data: rpcData, error: rpcErr } = await supabase.rpc('delete_substitution_request', {
+      p_request_id: requestId,
+    })
+
+    if (!rpcErr && rpcData?.success) {
+      console.log('[TS-SC] delete_substitution_request RPC succeeded:', rpcData)
+      return { success: true }
+    }
+
+    if (rpcData && rpcData.success === false) {
+      console.warn('[TS-SC] delete_substitution_request RPC returned error:', rpcData.error)
+    }
+    if (rpcErr) {
+      console.warn('[TS-SC] delete_substitution_request RPC error:', rpcErr)
+    }
+
+    // 2. Client fallback with transactional cleanup order:
+    // First clear penalties and candidates, then delete request
+    await supabase.from('substitution_penalties').delete().eq('request_id', requestId)
+    await supabase.from('substitution_candidates').delete().eq('request_id', requestId)
+    const { data: delData, error: delErr } = await supabase
+      .from('substitution_requests')
+      .delete()
+      .eq('id', requestId)
+      .select('id')
+
+    if (delErr) {
+      console.error('[TS-SC] Client direct delete error:', delErr)
+      return {
+        success: false,
+        error: `Transaction failed: ${delErr.message}. Ensure migration 0028 is applied in Supabase.`,
+      }
+    }
+
+    if (!delData || delData.length === 0) {
+      const errMsg = rpcData?.error || rpcErr?.message || 'Database security rules prevented deletion. Please run migration 0028 in Supabase.'
+      console.error('[TS-SC] Deletion failed: 0 rows affected.', errMsg)
+      return {
+        success: false,
+        error: `Deletion rejected by database: ${errMsg}`,
+      }
+    }
+
+    console.log('[TS-SC] Client direct delete succeeded:', delData)
+    return { success: true }
+  } catch (err: any) {
+    console.error('[TS-SC] deleteSubstitutionRequest caught error:', err)
+    return { success: false, error: err.message || 'Failed to delete request.' }
+  }
+}
+
+/**
+ * Cancels an active or assigned substitution request initiated by a faculty member.
+ * Transaction-based consistency: Either completes or discards all changes.
+ * Never silently degrades to 'unfilled' free period.
+ */
+export async function cancelSubstitutionRequest(
+  requestId: string,
+  requesterFacultyId?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('[TS-SC] Initiating cancellation for request:', requestId, 'requesterFacultyId:', requesterFacultyId)
+
+    // 1. Fetch request details to get assigned faculty info for email notification
+    const { data: reqData } = await supabase
+      .from('substitution_requests')
+      .select(`
+        id, status, assigned_faculty_id, requester_faculty_id,
+        timetable_entries (
+          courses (name, code),
+          time_slots (day_of_week, starts_at, ends_at)
+        ),
+        assigned_faculty:faculty!substitution_requests_assigned_faculty_id_fkey (name, email),
+        requester:faculty!substitution_requests_requester_faculty_id_fkey (name)
+      `)
+      .eq('id', requestId)
+      .maybeSingle()
+
+    // 2. Execute atomic transactional cancellation / deletion
+    const { data: rpcData, error: rpcErr } = await supabase.rpc('cancel_substitution_request', {
+      p_request_id: requestId,
+    })
+
+    let cancelled = false
+    if (!rpcErr && rpcData?.success) {
+      console.log('[TS-SC] cancel_substitution_request RPC succeeded:', rpcData)
+      cancelled = true
+    } else {
+      if (rpcData && rpcData.success === false) {
+        console.warn('[TS-SC] cancel_substitution_request RPC returned error:', rpcData.error)
+      }
+      if (rpcErr) {
+        console.warn('[TS-SC] cancel_substitution_request RPC error:', rpcErr)
+      }
+
+      // Direct deletion fallback
+      const delRes = await deleteSubstitutionRequest(requestId, requesterFacultyId)
+      if (!delRes.success) {
+        console.error('[TS-SC] Cancellation fallback delete failed:', delRes.error)
+        return {
+          success: false,
+          error: `Transaction failed: ${delRes.error || rpcData?.error || rpcErr?.message}. Ensure migration 0028 has been applied in Supabase.`,
+        }
+      }
+      cancelled = true
+    }
+
+    // 3. Courtesy notification if a colleague had accepted
+    if (cancelled && (reqData as any)?.assigned_faculty?.email) {
+      const assignedFac = (reqData as any).assigned_faculty
+      const requesterName = (reqData as any)?.requester?.name || 'Your colleague'
+      const courseName = (reqData as any)?.timetable_entries?.courses?.name || 'Lecture'
+
+      sendEmailNotification({
+        to_email: assignedFac.email,
+        to_name: assignedFac.name,
+        subject: '[TS-SC] Coverage Request Cancelled by Requester',
+        body_html: `
+          <div style="font-family: sans-serif; line-height: 1.6; color: #1f2937;">
+            <h2 style="color: #6B7280;">Coverage Request Cancelled</h2>
+            <p>Dear <strong>${assignedFac.name}</strong>,</p>
+            <p>Please note that <strong>${requesterName}</strong> has cancelled their substitution request for <strong>${courseName}</strong>.</p>
+            <p>You are no longer scheduled to cover this lecture. Thank you for your support.</p>
+          </div>
+        `,
+      }).catch((e) => console.warn('Could not dispatch cancellation email:', e))
+    }
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('[TS-SC] cancelSubstitutionRequest exception:', err)
+    return {
+      success: false,
+      error: err.message || 'Transaction aborted: failed to cancel substitution request.',
+    }
+  }
+}
+
+/**
+ * Purges all erroneous unfilled / cancelled substitution requests from the database.
+ */
+export async function purgeUnfilledSubstitutions(): Promise<{ success: boolean; purgedCount?: number; error?: string }> {
+  try {
+    const { data: rpcData, error: rpcErr } = await supabase.rpc('purge_unfilled_substitutions')
+    if (!rpcErr && rpcData?.success) {
+      return { success: true, purgedCount: rpcData.purged_count }
+    }
+
+    // Direct fallback
+    await supabase.from('substitution_penalties').delete().not('id', 'is', null)
+    await supabase.from('substitution_candidates').delete().not('id', 'is', null)
+    const { error } = await supabase
+      .from('substitution_requests')
+      .delete()
+      .in('status', ['unfilled', 'cancelled'])
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to purge unfilled requests.' }
+  }
+}
+

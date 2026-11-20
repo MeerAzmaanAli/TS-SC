@@ -1,5 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSharedClock } from '../lib/clock'
+import { SlotSubstitutionQueueItem } from '../lib/substitutionQueue'
+import SlotSubstitutionQueueModal from './SlotSubstitutionQueueModal'
 import {
   MapPinIcon,
   UsersIcon,
@@ -29,12 +31,13 @@ export interface GridEntry {
   can_request?: boolean
   is_advance?: boolean
   substitution?: {
-    status: 'open' | 'assigned' | 'unfilled' | 'expired'
+    status: 'open' | 'assigned' | 'unfilled' | 'expired' | 'completed' | 'cancelled'
     substitute_name?: string | null
     requester_name?: string | null
     role?: 'requester' | 'covering'
     date?: string | null
   } | null
+  substitution_queue?: SlotSubstitutionQueueItem[]
 }
 
 export interface IncomingRequestInfo {
@@ -81,6 +84,8 @@ export interface WeeklyGridProps {
   showSummaryTable?: boolean
   /** Highlight the currently ongoing day + period in the timetable matrix */
   highlightOngoing?: boolean
+  /** Optional handler to cancel an active/assigned substitution request from the queue modal */
+  onCancelSubstitutionRequest?: (requestId: string) => Promise<void> | void
 }
 
 const DAY_NAMES = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -144,7 +149,9 @@ export default function WeeklyGrid({
   orientation = 'responsive',
   showSummaryTable = true,
   highlightOngoing = false,
+  onCancelSubstitutionRequest,
 }: WeeklyGridProps) {
+  const [activeQueueEntry, setActiveQueueEntry] = useState<GridEntry | null>(null)
   const now = useSharedClock(30000, highlightOngoing)
   const todayDayOfWeek = now.getDay() === 0 ? 7 : now.getDay() // 1=Mon..7=Sun
   const nowMinutes = now.getHours() * 60 + now.getMinutes()
@@ -564,6 +571,37 @@ export default function WeeklyGrid({
                       <span>{e.is_elective ? (e.room_name && e.room_name !== '—' ? e.room_name : 'Generic Elective') : (e.room_name || 'Classroom')}</span>
                     </span>
                   </div>
+
+                  {/* Slot Substitution Queue Indicator Button */}
+                  {e.substitution_queue && e.substitution_queue.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={(ev) => {
+                        ev.stopPropagation()
+                        setActiveQueueEntry(e)
+                      }}
+                      className="no-print"
+                      style={{
+                        marginTop: '0.4rem',
+                        width: '100%',
+                        fontSize: '0.7rem',
+                        padding: '0.22rem 0.45rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 5,
+                        backgroundColor: e.substitution_queue.length > 1 ? '#FEF3C7' : '#F5F5F4',
+                        color: e.substitution_queue.length > 1 ? '#92400E' : '#44403C',
+                        border: e.substitution_queue.length > 1 ? '1px solid #F59E0B' : '1px solid var(--border-light)',
+                        borderRadius: '5px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                      title={`View all ${e.substitution_queue.length} substitution request(s) queued for this slot`}
+                    >
+                      <span>🗓️ Sub Queue ({e.substitution_queue.length})</span>
+                    </button>
+                  )}
 
                   {/* Direct in-timetable Action Menu for Faculty */}
                   {viewMode === 'faculty' && onRequestSubstitution && !isCovering && !e.substitution && (
@@ -1219,11 +1257,33 @@ export default function WeeklyGrid({
     )
   }
 
+  const renderQueueModal = () => {
+    if (!activeQueueEntry || !activeQueueEntry.substitution_queue) return null
+    return (
+      <SlotSubstitutionQueueModal
+        isOpen={Boolean(activeQueueEntry)}
+        onClose={() => setActiveQueueEntry(null)}
+        slotTitle={`${activeQueueEntry.course_code} — ${activeQueueEntry.course_name}`}
+        slotDetails={`${activeQueueEntry.section_name ? `Section ${activeQueueEntry.section_name} · ` : ''}${activeQueueEntry.room_name ? `Room ${activeQueueEntry.room_name} · ` : ''}${DAY_NAMES[activeQueueEntry.day_of_week] || ''} Period ${activeQueueEntry.period}`}
+        queue={activeQueueEntry.substitution_queue}
+        onCancelRequest={
+          onCancelSubstitutionRequest
+            ? async (reqId) => {
+                await onCancelSubstitutionRequest(reqId)
+                setActiveQueueEntry(null)
+              }
+            : undefined
+        }
+      />
+    )
+  }
+
   if (orientation === 'day-rows') {
     return (
       <>
         {renderDayRowsTable()}
         {renderBreakdownTable()}
+        {renderQueueModal()}
       </>
     )
   }
@@ -1233,6 +1293,7 @@ export default function WeeklyGrid({
       <>
         {renderTimeRowsTable()}
         {renderBreakdownTable()}
+        {renderQueueModal()}
       </>
     )
   }
@@ -1247,6 +1308,7 @@ export default function WeeklyGrid({
         {renderTimeRowsTable('mob-')}
       </div>
       {renderBreakdownTable()}
+      {renderQueueModal()}
     </>
   )
 }

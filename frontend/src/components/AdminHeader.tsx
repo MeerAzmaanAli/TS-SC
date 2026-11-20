@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { SparklesIcon, LogOutIcon, RefreshIcon } from './Icons'
 
-export type AdminDashboardTab = 'overview' | 'shifts' | 'access' | 'faculty-auth'
+export type AdminDashboardTab = 'overview' | 'shifts' | 'access' | 'faculty-auth' | 'developer'
 
 interface AdminHeaderProps {
   activeTab?: AdminDashboardTab
@@ -80,6 +80,7 @@ export default function AdminHeader({ activeTab, onTabChange, onRefresh }: Admin
         </Link>
         {renderTabButton('access', 'Access & Passkeys')}
         {renderTabButton('faculty-auth', 'Faculty Logins')}
+        {renderTabButton('developer', 'Developer Settings')}
       </nav>
 
       <div className="admin-cal-topbar-actions">

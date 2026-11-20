@@ -6,6 +6,7 @@ import AdminHeader, { type AdminDashboardTab } from '../components/AdminHeader'
 import SectionPasskeyManager from '../components/SectionPasskeyManager'
 import AcademicShiftManager from '../components/AcademicShiftManager'
 import FacultyAuthManager from '../components/FacultyAuthManager'
+import DeveloperSettingsManager from '../components/DeveloperSettingsManager'
 import { sweepAllExpiredRequests, isSubstitutionDayPast } from '../lib/substitution'
 import {
   InboxIcon,
@@ -67,7 +68,7 @@ interface VersionSummary {
 
 const DAY_NAMES = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-const VALID_TABS: AdminDashboardTab[] = ['overview', 'shifts', 'access', 'faculty-auth']
+const VALID_TABS: AdminDashboardTab[] = ['overview', 'shifts', 'access', 'faculty-auth', 'developer']
 
 export default function AdminDashboard() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -398,6 +399,10 @@ export default function AdminDashboard() {
       ) : activeTab === 'faculty-auth' ? (
         <div style={{ marginTop: 8 }}>
           <FacultyAuthManager />
+        </div>
+      ) : activeTab === 'developer' ? (
+        <div style={{ marginTop: 8 }}>
+          <DeveloperSettingsManager />
         </div>
       ) : (
         /* Two-Column Responsive Layout */

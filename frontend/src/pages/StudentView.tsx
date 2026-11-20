@@ -4,6 +4,7 @@ import WeeklyGrid, { GridEntry } from '../components/WeeklyGrid'
 import TimetablePrintHeader from '../components/TimetablePrintHeader'
 import { SHIFT_1_TIMES, SHIFT_2_TIMES, FACULTY_TIMES } from '../components/TimetablePreview'
 import { getHeldLectureDate, isSubstitutionDayPast, toLocalDateString } from '../lib/substitution'
+import { buildSlotQueues } from '../lib/substitutionQueue'
 import {
   AlertCircleIcon,
   RefreshIcon,
@@ -150,28 +151,24 @@ export default function StudentView() {
       setSection(data.section)
       setHasPublishedTimetable(data.has_published_timetable)
       const rawSubs: TodaySubstitution[] = data.today_substitutions || []
-      // Exclude past-day substitutions so timetable slots & today's updates reset after the lecture day ends
-      const activeSubs = rawSubs.filter(
-        (sub) => !isSubstitutionDayPast(sub.day_of_week, sub.created_at ?? sub.date),
-      )
-      setTodaySubstitutions(activeSubs)
+      // Build chronological queues and current active overlay for section slots
+      const { slotQueuesMap, activeOverlayMap } = buildSlotQueues(rawSubs)
 
-      // Map active substitutions strictly by exact timetable_entry_id
-      // to ensure a substitution ONLY highlights its specific scheduled lecture slot
-      const subByEntryId = new Map<string, TodaySubstitution>()
-      for (const sub of activeSubs) {
-        if (sub.entry_id) subByEntryId.set(sub.entry_id, sub)
-      }
+      // Only display in "Today's Substitution Updates" if it actually occurs TODAY
+      const todayOnlySubs = rawSubs.filter((s) => {
+        const queueItem = Array.from(activeOverlayMap.values()).find((q) => q.id === s.id)
+        return queueItem?.isToday ?? false
+      })
+      setTodaySubstitutions(todayOnlySubs)
 
       const isShift2 =
         data.section?.shift === 2 ||
         (data.section?.semester ? [3, 4, 5, 6].includes(data.section.semester) : false)
 
       const gridEntries: GridEntry[] = (data.entries || []).map((e: RawEntry) => {
-        // Strictly match by exact entry ID
-        const sub = subByEntryId.get(e.id) || null
-        const heldDate = sub ? getHeldLectureDate(e.day_of_week, sub.created_at ?? sub.date) : null
-        const heldDateStr = heldDate ? toLocalDateString(heldDate) : sub?.date ?? null
+        // Overlay front of queue if matching current day/week
+        const activeSub = activeOverlayMap.get(e.id) || null
+        const queue = slotQueuesMap.get(e.id) || []
 
         let period = e.period
         if (isShift2 && period >= 3 && period <= 8) {
@@ -188,14 +185,15 @@ export default function StudentView() {
           faculty_name: e.is_elective ? '' : (e.faculty_name || '—'),
           is_elective: e.is_elective,
           batch: e.batch,
-          substitution: sub
+          substitution: activeSub
             ? {
-                status: sub.status,
-                substitute_name: sub.substitute_name,
-                requester_name: sub.requester_name,
-                date: heldDateStr,
+                status: activeSub.status,
+                substitute_name: activeSub.substituteName,
+                requester_name: activeSub.requesterName,
+                date: activeSub.targetDate,
               }
             : null,
+          substitution_queue: queue,
         }
       })
       setEntries(gridEntries)
@@ -282,13 +280,14 @@ export default function StudentView() {
         return
       }
       setSelectedFacultyMeta(data.faculty as PublicFacultyItem)
-      const activeSubs = ((data.substitutions || []) as any[]).filter(
-        (s) => !isSubstitutionDayPast(s.day_of_week, s.created_at),
-      )
-      const ownSubByEntry = new Map<string, any>()
+      const allSubs = (data.substitutions || []) as any[]
+      const { slotQueuesMap, activeOverlayMap } = buildSlotQueues(allSubs)
+
       const coveringEntries: GridEntry[] = []
-      for (const s of activeSubs) {
+      for (const s of allSubs) {
         if (s.role === 'covering') {
+          if (isSubstitutionDayPast(s.day_of_week, s.created_at)) continue
+          const heldDate = getHeldLectureDate(s.day_of_week, s.created_at)
           coveringEntries.push({
             id: `cov-${s.id}`,
             day_of_week: s.day_of_week,
@@ -303,16 +302,15 @@ export default function StudentView() {
               status: 'assigned',
               requester_name: s.requester_name,
               role: 'covering',
-              date: toLocalDateString(getHeldLectureDate(s.day_of_week, s.created_at)),
+              date: toLocalDateString(heldDate),
             },
           })
-        } else if (s.entry_id && !ownSubByEntry.has(s.entry_id)) {
-          ownSubByEntry.set(s.entry_id, s)
         }
       }
 
       const ownMapped: GridEntry[] = ((data.entries || []) as any[]).map((e) => {
-        const sub = ownSubByEntry.get(e.id)
+        const activeSub = activeOverlayMap.get(e.id) || null
+        const queue = slotQueuesMap.get(e.id) || []
         return {
           id: e.id,
           day_of_week: e.day_of_week,
@@ -323,14 +321,15 @@ export default function StudentView() {
           section_name: e.section_name ? `${e.section_name}${e.batch ? ` (B${e.batch})` : ''}` : '',
           is_elective: Boolean(e.is_elective),
           batch: e.batch ?? null,
-          substitution: sub
+          substitution: activeSub
             ? {
-                status: sub.status,
-                substitute_name: sub.substitute_name,
+                status: activeSub.status,
+                substitute_name: activeSub.substituteName,
                 role: 'requester',
-                date: toLocalDateString(getHeldLectureDate(e.day_of_week, sub.created_at)),
+                date: activeSub.targetDate,
               }
             : null,
+          substitution_queue: queue,
         }
       })
 
