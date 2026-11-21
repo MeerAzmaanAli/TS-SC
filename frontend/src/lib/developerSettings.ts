@@ -18,6 +18,11 @@ export interface DeveloperSettings {
    * passed or started (useful for testing solver resolution and email cascades).
    */
   allowPastLectures: boolean
+
+  /**
+   * Google OR-Tools CP-SAT solver search budget in seconds (default: 120s / 2 minutes).
+   */
+  solverTimeLimitSeconds: number
 }
 
 const STORAGE_KEY = 'ts_sc_developer_settings'
@@ -27,6 +32,7 @@ export const DEFAULT_DEVELOPER_SETTINGS: DeveloperSettings = {
   disableDayRestriction: false,
   allowCalendarDatePicker: true,
   allowPastLectures: false,
+  solverTimeLimitSeconds: 120,
 }
 
 /**

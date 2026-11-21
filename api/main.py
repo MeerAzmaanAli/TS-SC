@@ -60,10 +60,21 @@ async def proxy_to_solver(request: Request, path: str):
 
     target_url = f"{SOLVER_URL.rstrip('/')}/{clean_subpath.lstrip('/')}"
 
-    # Use 60s read timeout for CP-SAT computation, but fail fast (5s connect) if host is unreachable
-    timeout_cfg = httpx.Timeout(60.0, connect=5.0)
+    body = await request.body()
+
+    # Dynamic read timeout: accommodate solver budgets (default 2 mins / 120s up to 5 mins / 300s)
+    read_timeout = 300.0
+    try:
+        if body and b"time_limit_seconds" in body:
+            import json
+            data = json.loads(body)
+            custom_limit = float(data.get("time_limit_seconds", 120.0))
+            read_timeout = max(300.0, custom_limit + 60.0)
+    except Exception:
+        pass
+
+    timeout_cfg = httpx.Timeout(read_timeout, connect=5.0)
     async with httpx.AsyncClient(timeout=timeout_cfg) as client:
-        body = await request.body()
         req_headers = {
             k: v
             for k, v in request.headers.items()
@@ -86,7 +97,7 @@ async def proxy_to_solver(request: Request, path: str):
             )
         except httpx.ReadTimeout:
             return Response(
-                content='{"status": "error", "message": "Solver calculation timed out after 60s. Try increasing solver time limit or reducing constraint complexity."}',
+                content=f'{{"status": "error", "message": "Solver calculation timed out after {int(read_timeout)}s. Try increasing solver time limit in Admin Developer Settings or reducing constraint complexity."}}',
                 status_code=504,
                 media_type="application/json",
             )

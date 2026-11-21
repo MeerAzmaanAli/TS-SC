@@ -10,9 +10,11 @@ import {
   AlertCircleIcon,
   ArrowRightIcon,
   RefreshIcon,
+  ClockIcon,
 } from '../../components/Icons'
 import TimetablePreview from '../../components/TimetablePreview'
 import AcademicShiftManager from '../../components/AcademicShiftManager'
+import { useDeveloperSettings } from '../../lib/developerSettings'
 
 interface SolverEntry {
   section_id: string
@@ -25,6 +27,7 @@ interface SolverEntry {
 }
 
 export default function GeneratePage() {
+  const { settings: devSettings } = useDeveloperSettings()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<string | null>(null)
@@ -60,31 +63,33 @@ export default function GeneratePage() {
     setProgress(5)
     setProgressStage('Extracting curriculum data and validating academic shifts…')
     const startTime = Date.now()
+    const timeLimit = devSettings.solverTimeLimitSeconds || 120
 
     const interval = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000
 
-      // Fast-Start: 0s to 3s -> 5% to 25%
-      // Stage 1: 3s to 8s -> 25% to 48%
-      // Stage 2: 8s to 22s -> 48% to 75%
-      // Slow-End: 22s+ -> 75% slowly asymptotes towards 94%
       let p = 5
       let stageText = 'Extracting curriculum data and validating academic shifts…'
 
-      if (elapsed < 3) {
-        p = 5 + (elapsed / 3) * 20
+      const t1 = Math.max(3, timeLimit * 0.05)
+      const t2 = Math.max(8, timeLimit * 0.20)
+      const t3 = Math.max(20, timeLimit * 0.60)
+      const t4 = Math.max(35, timeLimit * 0.85)
+
+      if (elapsed < t1) {
+        p = 5 + (elapsed / t1) * 20
         stageText = 'Assembling institutional entities & shift constraints…'
-      } else if (elapsed < 8) {
-        p = 25 + ((elapsed - 3) / 5) * 23
+      } else if (elapsed < t2) {
+        p = 25 + ((elapsed - t1) / (t2 - t1)) * 23
         stageText = 'Stage 1: Allocating faculty workloads (Max 24 hrs/week balance)…'
-      } else if (elapsed < 24) {
-        p = 48 + ((elapsed - 8) / 16) * 28
+      } else if (elapsed < t3) {
+        p = 48 + ((elapsed - t2) / (t3 - t2)) * 28
         stageText = 'Stage 2: CP-SAT solving core section periods & parallel lab batches…'
-      } else if (elapsed < 40) {
-        p = 76 + ((elapsed - 24) / 16) * 14
+      } else if (elapsed < t4) {
+        p = 76 + ((elapsed - t3) / (t4 - t3)) * 14
         stageText = 'Stage 3: Physical room matching and elective block verification…'
       } else {
-        p = 90 + Math.min(4, (elapsed - 40) * 0.1)
+        p = 90 + Math.min(5, (elapsed - t4) * 0.1)
         stageText = 'Optimizing student schedule continuity & finalizing entries…'
       }
 
@@ -93,7 +98,7 @@ export default function GeneratePage() {
     }, 250)
 
     return () => clearInterval(interval)
-  }, [busy, result])
+  }, [busy, result, devSettings.solverTimeLimitSeconds])
 
   async function checkHealth() {
     try {
@@ -317,6 +322,40 @@ export default function GeneratePage() {
             <p className="admin-mu" style={{ fontSize: 13, lineHeight: 1.6, margin: '0 0 16px 0' }}>
               When you initiate generation, all institutional courses, sections, room configurations, faculty qualifications, and time slot grids are assembled into an exact constraint satisfaction problem.
             </p>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 14,
+                padding: '9px 12px',
+                background: 'var(--bg-app)',
+                borderRadius: 6,
+                border: '1px solid var(--border-light)',
+                fontSize: 12.5,
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#44403C' }}>
+                <ClockIcon size={14} style={{ color: '#D97706' }} />
+                <span>CP-SAT Solver Search Budget:</span>
+                <strong style={{ color: '#1C1917' }}>
+                  {devSettings.solverTimeLimitSeconds || 120}s (
+                  {Math.round(((devSettings.solverTimeLimitSeconds || 120) / 60) * 10) / 10}m)
+                </strong>
+              </span>
+              <Link
+                to="/admin?tab=developer"
+                style={{
+                  color: '#D97706',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  fontSize: 12,
+                }}
+              >
+                Configure in Settings →
+              </Link>
+            </div>
 
             <button
               onClick={handleGenerate}

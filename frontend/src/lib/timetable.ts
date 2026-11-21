@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { GenericElectiveConfigData } from '../components/GenericElectiveConfig'
+import { getDeveloperSettings } from './developerSettings'
 
 /** Shape expected by the solver's POST /generate (see solver/app/schemas.py). */
 export interface GenerateRequest {
@@ -213,7 +214,7 @@ export async function buildSnapshot(geConfig?: GenericElectiveConfigData): Promi
       qualifications: [],
       elective_blocks: finalElectiveBlocks,
       weights,
-      time_limit_seconds: !import.meta.env.VITE_SOLVER_URL || import.meta.env.VITE_SOLVER_URL === '/api' ? 15 : 120,
+      time_limit_seconds: getDeveloperSettings().solverTimeLimitSeconds || 120,
     },
     rawSections,
     electiveCourses: courses.filter((c) => c.is_elective),

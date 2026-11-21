@@ -66,7 +66,7 @@ class GenerateRequest(BaseModel):
     qualifications: list[Qualification] = Field(default_factory=list)
     elective_blocks: list[str] = Field(default_factory=list)
     weights: Weights = Field(default_factory=Weights)
-    time_limit_seconds: float = 60.0
+    time_limit_seconds: float = 120.0
 
 
 class TimetableEntry(BaseModel):

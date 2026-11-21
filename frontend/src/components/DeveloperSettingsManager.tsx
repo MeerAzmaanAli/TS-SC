@@ -7,6 +7,7 @@ import {
   RefreshIcon,
   CheckCircleIcon,
   AlertCircleIcon,
+  ClockIcon,
 } from './Icons'
 
 export default function DeveloperSettingsManager() {
@@ -409,6 +410,97 @@ export default function DeveloperSettingsManager() {
               />
             </span>
           </label>
+        </div>
+
+        {/* Setting 4: CP-SAT Solver Search Time Limit */}
+        <div
+          style={{
+            padding: 16,
+            background: 'var(--bg-app)',
+            border: '1px solid var(--border-light)',
+            borderRadius: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <ClockIcon size={18} style={{ color: '#D97706' }} />
+              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+                CP-SAT Solver Search Time Limit
+              </span>
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: '2px 8px',
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  background: 'var(--primary-100)',
+                  color: 'var(--primary-800)',
+                }}
+              >
+                {settings.solverTimeLimitSeconds || 120}s ({Math.round(((settings.solverTimeLimitSeconds || 120) / 60) * 10) / 10} min{(settings.solverTimeLimitSeconds || 120) >= 120 ? 's' : ''})
+              </span>
+            </div>
+
+            {/* Presets */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[30, 60, 120, 180, 300].map((sec) => {
+                const isSelected = (settings.solverTimeLimitSeconds || 120) === sec
+                const label = sec >= 60 ? `${sec / 60}m (${sec}s)` : `${sec}s`
+                return (
+                  <button
+                    key={sec}
+                    type="button"
+                    onClick={() => {
+                      updateSettings({ solverTimeLimitSeconds: sec })
+                      showSavedNotice(`⏱️ Solver time limit set to ${sec}s (${sec / 60} mins).`)
+                    }}
+                    className={`admin-btn admin-btn-sm ${isSelected ? 'admin-btn-primary' : 'admin-btn-outline'}`}
+                    style={{ fontSize: 11, height: 26, padding: '0 8px' }}
+                  >
+                    {label} {sec === 120 ? '★ Default' : ''}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.45 }}>
+            Controls the search budget given to Google OR-Tools CP-SAT for resolving institutional timetables. Complex constraint models with multi-shift academic years, lab batching, and elective blocks benefit from <strong>120s (2 minutes)</strong> or higher to find optimal, clash-free schedules without timing out.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+            <span style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600 }}>15s</span>
+            <input
+              type="range"
+              min={15}
+              max={300}
+              step={15}
+              value={settings.solverTimeLimitSeconds || 120}
+              onChange={(e) => {
+                const val = Number(e.target.value)
+                updateSettings({ solverTimeLimitSeconds: val })
+              }}
+              style={{ flex: 1, accentColor: '#FFB900', cursor: 'pointer' }}
+            />
+            <span style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600 }}>300s (5m)</span>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                minWidth: 54,
+                textAlign: 'right',
+                color: '#1C1917',
+                background: '#FEF3C7',
+                padding: '2px 8px',
+                borderRadius: 4,
+              }}
+            >
+              {settings.solverTimeLimitSeconds || 120}s
+            </span>
+          </div>
         </div>
       </div>
 
